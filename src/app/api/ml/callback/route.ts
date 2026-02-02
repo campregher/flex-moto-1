@@ -82,16 +82,18 @@ export async function GET(request: Request) {
 
   const expiresAt = new Date(Date.now() + tokenJson.expires_in * 1000).toISOString()
 
-  const { error: upsertError } = await supabase
+  const upsertPayload: Database['public']['Tables']['mercadolivre_integrations']['Insert'] = {
+    lojista_id: lojista.id,
+    ml_user_id: tokenJson.user_id,
+    site_id: meJson.site_id,
+    access_token: tokenJson.access_token,
+    refresh_token: tokenJson.refresh_token,
+    expires_at: expiresAt,
+  }
+
+  const { error: upsertError } = await (supabase as any)
     .from('mercadolivre_integrations')
-    .upsert({
-      lojista_id: lojista.id,
-      ml_user_id: tokenJson.user_id,
-      site_id: meJson.site_id,
-      access_token: tokenJson.access_token,
-      refresh_token: tokenJson.refresh_token,
-      expires_at: expiresAt,
-    }, { onConflict: 'lojista_id' })
+    .upsert(upsertPayload, { onConflict: 'lojista_id' })
 
   if (upsertError) {
     console.error('ML save error:', upsertError)
