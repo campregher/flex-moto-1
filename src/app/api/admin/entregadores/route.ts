@@ -51,15 +51,17 @@ export async function PATCH(request: Request) {
 
   const body = await request.json().catch(() => null)
   const userId = body?.userId as string | undefined
-  const status = body?.status as string | undefined
+  const status = body?.status as Database['public']['Enums']['user_status'] | undefined
 
   if (!userId || !status || !['ativo', 'bloqueado'].includes(status)) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }
 
+  const updatePayload: Database['public']['Tables']['users']['Update'] = { status }
+
   const { error: updateError } = await supabaseAdmin
     .from('users')
-    .update({ status })
+    .update(updatePayload)
     .eq('id', userId)
 
   if (updateError) {
