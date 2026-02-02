@@ -14,7 +14,7 @@ async function requireAdmin() {
 
   const { data: profile, error } = await supabase
     .from('users')
-    .select('is_admin')
+    .select('*')
     .eq('id', user.id)
     .single()
 
