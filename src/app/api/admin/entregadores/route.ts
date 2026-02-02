@@ -14,11 +14,13 @@ async function requireAdmin() {
 
   const { data: profile, error } = await supabase
     .from('users')
-    .select('*')
+    .select('is_admin')
     .eq('id', user.id)
     .single()
 
-  if (error || !profile?.is_admin) {
+  const isAdmin = (profile as { is_admin: boolean | null } | null)?.is_admin
+
+  if (error || !isAdmin) {
     return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
   }
 
