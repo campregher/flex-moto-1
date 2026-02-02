@@ -80,10 +80,16 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
   }
 
+  const lojistaId = (lojista as { id: string } | null)?.id
+
+  if (!lojistaId) {
+    return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
+  }
+
   const expiresAt = new Date(Date.now() + tokenJson.expires_in * 1000).toISOString()
 
   const upsertPayload: Database['public']['Tables']['mercadolivre_integrations']['Insert'] = {
-    lojista_id: lojista.id,
+    lojista_id: lojistaId,
     ml_user_id: tokenJson.user_id,
     site_id: meJson.site_id,
     access_token: tokenJson.access_token,

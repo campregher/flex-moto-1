@@ -98,7 +98,10 @@ export async function POST(request: Request) {
     .eq('user_id', user.id)
     .single()
 
-  if (!lojista) {
+  const lojistaRow = lojista as Database['public']['Tables']['lojistas']['Row'] | null
+  const lojistaId = lojistaRow?.id
+
+  if (!lojistaId) {
     return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
   }
 
@@ -119,7 +122,7 @@ export async function POST(request: Request) {
     const { data: coletaData } = await supabase
       .from('lojista_coletas')
       .select('id, endereco, latitude, longitude, logradouro, numero, bairro, cidade, uf, cep')
-      .eq('lojista_id', lojista.id)
+      .eq('lojista_id', lojistaId)
       .eq('id', coletaId)
       .maybeSingle()
 
@@ -132,7 +135,7 @@ export async function POST(request: Request) {
     const { data: coletaDefault } = await supabase
       .from('lojista_coletas')
       .select('id, endereco, latitude, longitude, logradouro, numero, bairro, cidade, uf, cep')
-      .eq('lojista_id', lojista.id)
+      .eq('lojista_id', lojistaId)
       .order('is_default', { ascending: false })
       .order('created_at', { ascending: true })
       .limit(1)
@@ -144,14 +147,16 @@ export async function POST(request: Request) {
   const { data: integration } = await supabase
     .from('mercadolivre_integrations')
     .select('access_token')
-    .eq('lojista_id', lojista.id)
+    .eq('lojista_id', lojistaId)
     .single()
 
-  if (!integration?.access_token) {
+  const integrationRow = integration as { access_token: string | null } | null
+
+  if (!integrationRow?.access_token) {
     return NextResponse.json({ error: 'Mercado Livre not connected' }, { status: 400 })
   }
 
-  const token = integration.access_token
+  const token = integrationRow.access_token
 
   const orderRes = await fetch(`https://api.mercadolibre.com/orders/${orderId}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -189,8 +194,8 @@ export async function POST(request: Request) {
   const { volumeCm3, weightKg } = parseDimensions(shipment.shipping_items?.[0]?.dimensions)
 
   const pickupCoords = normalizeCoords(
-    parseNumber(coleta?.latitude ?? lojista.endereco_latitude),
-    parseNumber(coleta?.longitude ?? lojista.endereco_longitude)
+    parseNumber(coleta?.latitude ?? lojistaRow?.endereco_latitude),
+    parseNumber(coleta?.longitude ?? lojistaRow?.endereco_longitude)
   )
   const deliveryCoords = normalizeCoords(
     parseNumber(receiver.latitude),
@@ -220,48 +225,50 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join(' - ')
 
-  const { data: corrida, error: corridaError } = await supabase
+  const corridaPayload: Database['public']['Tables']['corridas']['Insert'] = {
+    lojista_id: lojistaId,
+    plataforma: 'ml_flex',
+    status: 'aguardando',
+    valor_total: valorTotal,
+    valor_reservado: valorTotal,
+    codigo_entrega: generateCode(6),
+    total_pacotes: totalPacotes,
+    distancia_total_km: distanciaTotalKm,
+    endereco_coleta: coleta?.endereco || lojistaRow?.endereco_base || '',
+    coleta_latitude: pickupCoords?.lat || 0,
+    coleta_longitude: pickupCoords?.lng || 0,
+    coleta_complemento: null,
+    coleta_observacoes: null,
+    coleta_logradouro: coleta?.logradouro || lojistaRow?.endereco_logradouro || null,
+    coleta_numero: coleta?.numero || lojistaRow?.endereco_numero || null,
+    coleta_bairro: coleta?.bairro || lojistaRow?.endereco_bairro || null,
+    coleta_cidade: coleta?.cidade || lojistaRow?.endereco_cidade || null,
+    coleta_uf: coleta?.uf || lojistaRow?.endereco_uf || null,
+    coleta_cep: coleta?.cep || lojistaRow?.endereco_cep || null,
+    frete_valor: freteValor,
+    peso_kg: weightKg,
+    volume_cm3: volumeCm3,
+  }
+
+  const { data: corrida, error: corridaError } = await (supabase as any)
     .from('corridas')
-    .insert({
-      lojista_id: lojista.id,
-      plataforma: 'ml_flex',
-      status: 'aguardando',
-      valor_total: valorTotal,
-      valor_reservado: valorTotal,
-      codigo_entrega: generateCode(6),
-      total_pacotes: totalPacotes,
-      distancia_total_km: distanciaTotalKm,
-      endereco_coleta: coleta?.endereco || lojista.endereco_base || '',
-      coleta_latitude: pickupCoords?.lat || 0,
-      coleta_longitude: pickupCoords?.lng || 0,
-      coleta_complemento: null,
-      coleta_observacoes: null,
-      coleta_logradouro: coleta?.logradouro || lojista.endereco_logradouro || null,
-      coleta_numero: coleta?.numero || lojista.endereco_numero || null,
-      coleta_bairro: coleta?.bairro || lojista.endereco_bairro || null,
-      coleta_cidade: coleta?.cidade || lojista.endereco_cidade || null,
-      coleta_uf: coleta?.uf || lojista.endereco_uf || null,
-      coleta_cep: coleta?.cep || lojista.endereco_cep || null,
-      frete_valor: freteValor,
-      peso_kg: weightKg,
-      volume_cm3: volumeCm3,
-    })
+    .insert(corridaPayload)
     .select()
     .single()
 
-  if (corridaError || !corrida) {
+  const corridaRow = corrida as Database['public']['Tables']['corridas']['Row'] | null
+
+  if (corridaError || !corridaRow) {
     return NextResponse.json({ error: 'Failed to create corrida', details: corridaError }, { status: 500 })
   }
 
-  const { error: enderecosError } = await supabase
-    .from('enderecos_entrega')
-    .insert({
-      corrida_id: corrida.id,
-      endereco: enderecoEntregaCompleto || enderecoEntrega || '',
-      latitude: parseNumber(receiver.latitude) || 0,
-      longitude: parseNumber(receiver.longitude) || 0,
-      complemento: receiver.comment || null,
-      observacoes: null,
+  const enderecoPayload: Database['public']['Tables']['enderecos_entrega']['Insert'] = {
+    corrida_id: corridaRow.id,
+    endereco: enderecoEntregaCompleto || enderecoEntrega || '',
+    latitude: parseNumber(receiver.latitude) || 0,
+    longitude: parseNumber(receiver.longitude) || 0,
+    complemento: receiver.comment || null,
+    observacoes: null,
       pacotes: totalPacotes,
       ordem: 0,
       codigo_confirmacao: generateCode(6),
@@ -271,11 +278,15 @@ export async function POST(request: Request) {
       cidade: receiver.city?.name || null,
       uf: normalizeUf(receiver.state?.id, receiver.state?.name),
       cep: receiver.zip_code || null,
-      receiver_name: receiver.receiver_name || buyerName,
-      receiver_phone: receiver.receiver_phone || null,
-      peso_kg: weightKg,
-      volume_cm3: volumeCm3,
-    })
+    receiver_name: receiver.receiver_name || buyerName,
+    receiver_phone: receiver.receiver_phone || null,
+    peso_kg: weightKg,
+    volume_cm3: volumeCm3,
+  }
+
+  const { error: enderecosError } = await (supabase as any)
+    .from('enderecos_entrega')
+    .insert(enderecoPayload)
 
   if (enderecosError) {
     return NextResponse.json(
@@ -292,5 +303,5 @@ export async function POST(request: Request) {
     )
   }
 
-  return NextResponse.json({ ok: true, corrida_id: corrida.id })
+  return NextResponse.json({ ok: true, corrida_id: corridaRow.id })
 }

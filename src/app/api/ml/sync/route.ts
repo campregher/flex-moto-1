@@ -71,22 +71,27 @@ export async function POST(request: Request) {
     .eq('user_id', user.id)
     .single()
 
-  if (!lojista) {
+  const lojistaRow = lojista as Database['public']['Tables']['lojistas']['Row'] | null
+  const lojistaId = lojistaRow?.id
+
+  if (!lojistaId) {
     return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
   }
 
   const { data: integration } = await supabase
     .from('mercadolivre_integrations')
     .select('access_token, ml_user_id')
-    .eq('lojista_id', lojista.id)
+    .eq('lojista_id', lojistaId)
     .single()
 
-  if (!integration?.access_token || !integration?.ml_user_id) {
+  const integrationRow = integration as { access_token: string | null; ml_user_id: number | null } | null
+
+  if (!integrationRow?.access_token || !integrationRow?.ml_user_id) {
     return NextResponse.json({ error: 'Mercado Livre not connected' }, { status: 400 })
   }
 
-  const token = integration.access_token
-  const sellerId = integration.ml_user_id
+  const token = integrationRow.access_token
+  const sellerId = integrationRow.ml_user_id
 
   const now = new Date()
   const fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -117,18 +122,20 @@ export async function POST(request: Request) {
   const { data: existingRows } = await supabase
     .from('mercadolivre_pedidos')
     .select('ml_order_id, endereco, logradouro, numero, complemento, bairro, cidade, uf, cep, latitude, longitude, receiver_name, receiver_phone, pacotes, observacoes, coleta_id, coleta_endereco, coleta_latitude, coleta_longitude, selected, imported_at')
-    .eq('lojista_id', lojista.id)
+    .eq('lojista_id', lojistaId)
     .in('ml_order_id', orderIds)
 
+  const existingRowsList = (existingRows as Database['public']['Tables']['mercadolivre_pedidos']['Row'][] | null) || []
+
   const existingMap = new Map<number, any>()
-  for (const row of existingRows || []) {
+  for (const row of existingRowsList) {
     existingMap.set(row.ml_order_id, row)
   }
 
   const { data: defaultColeta } = await supabase
     .from('lojista_coletas')
     .select('id, endereco, latitude, longitude')
-    .eq('lojista_id', lojista.id)
+    .eq('lojista_id', lojistaId)
     .order('is_default', { ascending: false })
     .order('created_at', { ascending: true })
     .limit(1)
@@ -170,7 +177,7 @@ export async function POST(request: Request) {
     const useColeta = existing?.coleta_id ? existing : defaultColeta
 
     rows.push({
-      lojista_id: lojista.id,
+      lojista_id: lojistaId,
       ml_order_id: order.id,
       ml_shipment_id: shipmentId,
       order_status: order.status || null,
@@ -200,7 +207,7 @@ export async function POST(request: Request) {
   }
 
   if (rows.length > 0) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('mercadolivre_pedidos')
       .upsert(rows, { onConflict: 'lojista_id,ml_order_id' })
 
