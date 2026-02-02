@@ -53,7 +53,7 @@ function parseDimensions(dimensions?: string) {
   return { volumeCm3, weightKg }
 }
 
-function parseNumber(value?: string | number) {
+function parseNumber(value?: string | number | null) {
   if (value === undefined || value === null) return null
   if (typeof value === 'number') return value
   const normalized = value.replace(',', '.')
