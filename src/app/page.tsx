@@ -1,7 +1,4 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { HiOutlineTruck, HiOutlineShoppingBag, HiOutlineLocationMarker, HiOutlineCurrencyDollar } from 'react-icons/hi'
 
 export default function HomePage() {
@@ -12,12 +9,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
+          <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
               Flex Entregas
             </h1>
@@ -42,27 +34,21 @@ export default function HomePage() {
                 Cadastre-se
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
       {/* Features Section */}
       <div className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Por que escolher o Flex?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Uma plataforma completa para gerenciar suas entregas de forma eficiente
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
@@ -86,13 +72,9 @@ export default function HomePage() {
                 title: 'Multi-plataforma',
                 description: 'Suporte para Mercado Livre Flex e Shopee',
               },
-            ].map((feature, index) => (
-              <motion.div
+            ].map((feature) => (
+              <div
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="text-center p-6"
               >
                 <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -102,7 +84,7 @@ export default function HomePage() {
                   {feature.title}
                 </h3>
                 <p className="text-gray-600">{feature.description}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -113,13 +95,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Lojista CTA */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="card p-8 hover:shadow-lg transition-shadow"
-            >
+            <div className="card p-8 hover:shadow-lg transition-shadow">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-mercadolivre rounded-xl flex items-center justify-center">
                   <HiOutlineShoppingBag className="w-6 h-6 text-gray-900" />
@@ -140,16 +116,10 @@ export default function HomePage() {
               >
                 Cadastrar como Lojista
               </Link>
-            </motion.div>
+            </div>
 
             {/* Entregador CTA */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="card p-8 hover:shadow-lg transition-shadow"
-            >
+            <div className="card p-8 hover:shadow-lg transition-shadow">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center">
                   <HiOutlineTruck className="w-6 h-6 text-secondary-600" />
@@ -167,7 +137,7 @@ export default function HomePage() {
               >
                 Cadastrar como Entregador
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
