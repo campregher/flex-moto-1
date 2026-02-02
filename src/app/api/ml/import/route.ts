@@ -193,9 +193,22 @@ export async function POST(request: Request) {
 
   const { volumeCm3, weightKg } = parseDimensions(shipment.shipping_items?.[0]?.dimensions)
 
+  const coletaRow = coleta as {
+    id: string
+    endereco: string
+    latitude: number | null
+    longitude: number | null
+    logradouro: string | null
+    numero: string | null
+    bairro: string | null
+    cidade: string | null
+    uf: string | null
+    cep: string | null
+  } | null
+
   const pickupCoords = normalizeCoords(
-    parseNumber(coleta?.latitude ?? lojistaRow?.endereco_latitude),
-    parseNumber(coleta?.longitude ?? lojistaRow?.endereco_longitude)
+    parseNumber(coletaRow?.latitude ?? lojistaRow?.endereco_latitude),
+    parseNumber(coletaRow?.longitude ?? lojistaRow?.endereco_longitude)
   )
   const deliveryCoords = normalizeCoords(
     parseNumber(receiver.latitude),
@@ -234,17 +247,17 @@ export async function POST(request: Request) {
     codigo_entrega: generateCode(6),
     total_pacotes: totalPacotes,
     distancia_total_km: distanciaTotalKm,
-    endereco_coleta: coleta?.endereco || lojistaRow?.endereco_base || '',
+    endereco_coleta: coletaRow?.endereco || lojistaRow?.endereco_base || '',
     coleta_latitude: pickupCoords?.lat || 0,
     coleta_longitude: pickupCoords?.lng || 0,
     coleta_complemento: null,
     coleta_observacoes: null,
-    coleta_logradouro: coleta?.logradouro || lojistaRow?.endereco_logradouro || null,
-    coleta_numero: coleta?.numero || lojistaRow?.endereco_numero || null,
-    coleta_bairro: coleta?.bairro || lojistaRow?.endereco_bairro || null,
-    coleta_cidade: coleta?.cidade || lojistaRow?.endereco_cidade || null,
-    coleta_uf: coleta?.uf || lojistaRow?.endereco_uf || null,
-    coleta_cep: coleta?.cep || lojistaRow?.endereco_cep || null,
+    coleta_logradouro: coletaRow?.logradouro || lojistaRow?.endereco_logradouro || null,
+    coleta_numero: coletaRow?.numero || lojistaRow?.endereco_numero || null,
+    coleta_bairro: coletaRow?.bairro || lojistaRow?.endereco_bairro || null,
+    coleta_cidade: coletaRow?.cidade || lojistaRow?.endereco_cidade || null,
+    coleta_uf: coletaRow?.uf || lojistaRow?.endereco_uf || null,
+    coleta_cep: coletaRow?.cep || lojistaRow?.endereco_cep || null,
     frete_valor: freteValor,
     peso_kg: weightKg,
     volume_cm3: volumeCm3,
@@ -269,15 +282,15 @@ export async function POST(request: Request) {
     longitude: parseNumber(receiver.longitude) || 0,
     complemento: receiver.comment || null,
     observacoes: null,
-      pacotes: totalPacotes,
-      ordem: 0,
-      codigo_confirmacao: generateCode(6),
-      logradouro: receiver.street_name || null,
-      numero: receiver.street_number || null,
-      bairro: receiver.neighborhood?.name || null,
-      cidade: receiver.city?.name || null,
-      uf: normalizeUf(receiver.state?.id, receiver.state?.name),
-      cep: receiver.zip_code || null,
+    pacotes: totalPacotes,
+    ordem: 0,
+    codigo_confirmacao: generateCode(6),
+    logradouro: receiver.street_name || null,
+    numero: receiver.street_number || null,
+    bairro: receiver.neighborhood?.name || null,
+    cidade: receiver.city?.name || null,
+    uf: normalizeUf(receiver.state?.id, receiver.state?.name),
+    cep: receiver.zip_code || null,
     receiver_name: receiver.receiver_name || buyerName,
     receiver_phone: receiver.receiver_phone || null,
     peso_kg: weightKg,
