@@ -1,0 +1,19 @@
+$token = "APP_USR-4729802825322632-013016-39b816fd6154b0f75da6415530941c3b-2385874970"; Invoke-RestMethod -Method Post -Uri "https://api.mercadolibre.com/users/test_user" -Headers @{ Authorization = "Bearer $token" } -ContentType "application/json" -Body '{ "site_id": "MLB" }'
+
+
+vendas
+id          : 3169940268
+email       : test_user_7432264278398606838@testuser.com
+nickname    : TESTUSER7432264278398606838
+site_status : active
+password    : vrIXkeeBPC
+
+compras
+id          : 3169940270
+email       : test_user_2506584320872496@testuser.com
+nickname    : TESTUSER2506584320872496
+site_status : active
+password    : VNe4VttMNq
+
+
+https://produto.mercadolivre.com.br/MLB-6214347640-produto-teste-flex-_JM
