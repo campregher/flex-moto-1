@@ -57,11 +57,9 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }
 
-  const updatePayload: Database['public']['Tables']['users']['Update'] = { status }
-
-  const { error: updateError } = await supabaseAdmin
+  const { error: updateError } = await (supabaseAdmin as any)
     .from('users')
-    .update(updatePayload)
+    .update({ status })
     .eq('id', userId)
 
   if (updateError) {
