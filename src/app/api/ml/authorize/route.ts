@@ -20,7 +20,9 @@ export async function GET() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.tipo !== 'lojista') {
+  const userTipo = (profile as { tipo: Database['public']['Enums']['user_type'] } | null)?.tipo
+
+  if (userTipo !== 'lojista') {
     return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_APP_URL))
   }
 
