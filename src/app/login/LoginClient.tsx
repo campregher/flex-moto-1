@@ -61,7 +61,13 @@ export default function LoginClient() {
           .single()
 
         if (userData) {
-          const redirectPath = redirect || (userData.tipo === 'lojista' ? '/lojista' : '/entregador')
+          const redirectPath =
+            redirect ||
+            (userData.tipo === 'admin'
+              ? '/admin'
+              : userData.tipo === 'lojista'
+              ? '/lojista'
+              : '/entregador')
           router.push(redirectPath)
           router.refresh()
         }

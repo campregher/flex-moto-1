@@ -641,7 +641,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_type: 'lojista' | 'entregador'
+      user_type: 'lojista' | 'entregador' | 'admin'
       user_status: 'pendente' | 'ativo' | 'bloqueado'
       corrida_status: 'aguardando' | 'aceita' | 'coletando' | 'em_entrega' | 'finalizada' | 'cancelada'
       plataforma: 'ml_flex' | 'shopee_direta'

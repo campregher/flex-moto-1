@@ -69,12 +69,16 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isLojistaRoute && userRow.tipo !== 'lojista') {
-    // Entregador trying to access lojista routes
+    if (userRow.tipo === 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
     return NextResponse.redirect(new URL('/entregador', request.url))
   }
 
   if (isEntregadorRoute && userRow.tipo !== 'entregador') {
-    // Lojista trying to access entregador routes
+    if (userRow.tipo === 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
     return NextResponse.redirect(new URL('/lojista', request.url))
   }
 

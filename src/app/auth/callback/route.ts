@@ -22,7 +22,12 @@ export async function GET(request: Request) {
       const userRow = userData as { tipo: Database['public']['Enums']['user_type'] } | null
 
       if (userRow) {
-        const redirectPath = userRow.tipo === 'lojista' ? '/lojista' : '/entregador'
+        const redirectPath =
+          userRow.tipo === 'admin'
+            ? '/admin'
+            : userRow.tipo === 'lojista'
+            ? '/lojista'
+            : '/entregador'
         return NextResponse.redirect(new URL(redirectPath, requestUrl.origin))
       }
     }
