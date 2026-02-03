@@ -73,6 +73,15 @@ export default function EntregadorDashboard() {
             toast('Nova corrida disponível!', { icon: '🚀' })
           }
 
+          if (payload.eventType === 'UPDATE' && oldStatus === 'aguardando' && newStatus !== 'aguardando') {
+            setCorridasDisponiveis((prev) => prev.filter((corrida) => corrida.id !== payload.new.id))
+          }
+
+          if (payload.eventType === 'DELETE' && oldStatus === 'aguardando') {
+            setCorridasDisponiveis((prev) => prev.filter((corrida) => corrida.id !== payload.old.id))
+          }
+
+          // If a corrida leaves "aguardando" (accepted/cancelled), refresh available list
           if (touchesDisponiveis) {
             loadCorridasDisponiveis()
           }
