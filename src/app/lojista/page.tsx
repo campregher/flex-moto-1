@@ -270,7 +270,14 @@ export default function LojistaDashboard() {
         .order('created_at', { ascending: false })
 
       setMlPedidos((pedidosData || []) as MlPedido[])
-      setImportMessage('Pedidos sincronizados com sucesso!')
+      const count = typeof payload.count === 'number' ? payload.count : null
+      if (count === 0) {
+        setImportMessage('Nenhum pedido novo encontrado. Verifique status do envio e período.')
+      } else if (count !== null) {
+        setImportMessage(`Pedidos sincronizados: ${count}.`)
+      } else {
+        setImportMessage('Pedidos sincronizados com sucesso!')
+      }
     } catch (err) {
       setImportMessage(err instanceof Error ? err.message : 'Erro ao sincronizar pedidos')
     } finally {

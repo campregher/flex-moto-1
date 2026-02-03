@@ -97,7 +97,7 @@ export async function POST(request: Request) {
   const sellerId = integrationUserId
 
   const now = new Date()
-  const fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const fromDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
   const fromIso = fromDate.toISOString()
 
   const searchUrl = new URL('https://api.mercadolibre.com/orders/search')
@@ -119,7 +119,14 @@ export async function POST(request: Request) {
   const orderSearch = (await orderRes.json()) as MlOrderSearch
   const orders = orderSearch.results || []
 
-  const allowedShipmentStatuses = new Set(['pending', 'handling', 'ready_to_ship'])
+  const allowedShipmentStatuses = new Set([
+    'pending',
+    'handling',
+    'ready_to_ship',
+    'ready_to_print',
+    'shipped',
+    'delivered',
+  ])
 
   const orderIds = orders.map((o) => o.id)
   const { data: existingRows } = await supabase
@@ -152,18 +159,34 @@ export async function POST(request: Request) {
   } | null
 
   const rows = []
+  const stats = {
+    orders: orders.length,
+    shipmentsFetched: 0,
+    skippedNoShipment: 0,
+    skippedShipmentStatus: 0,
+    skippedShipmentFetch: 0,
+    upserted: 0,
+  }
   for (const order of orders) {
     const shipmentId = order.shipping.id
-    if (!shipmentId) continue
+    if (!shipmentId) {
+      stats.skippedNoShipment += 1
+      continue
+    }
 
     const shipmentRes = await fetch(`https://api.mercadolibre.com/shipments/${shipmentId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
 
-    if (!shipmentRes.ok) continue
+    if (!shipmentRes.ok) {
+      stats.skippedShipmentFetch += 1
+      continue
+    }
     const shipment = (await shipmentRes.json()) as MlShipment
+    stats.shipmentsFetched += 1
 
     if (shipment.status && !allowedShipmentStatuses.has(shipment.status)) {
+      stats.skippedShipmentStatus += 1
       continue
     }
 
@@ -240,14 +263,15 @@ export async function POST(request: Request) {
   }
 
   if (rows.length > 0) {
-    const { error } = await (supabase as any)
+    const { error, data } = await (supabase as any)
       .from('mercadolivre_pedidos')
       .upsert(rows, { onConflict: 'lojista_id,ml_order_id' })
 
     if (error) {
       return NextResponse.json({ error: 'Sync failed', details: error }, { status: 500 })
     }
+    stats.upserted = data?.length ?? rows.length
   }
 
-  return NextResponse.json({ ok: true, count: rows.length })
+  return NextResponse.json({ ok: true, count: rows.length, stats, fromDate: fromIso })
 }
