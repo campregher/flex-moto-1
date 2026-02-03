@@ -122,6 +122,10 @@ export default function CorridasDisponiveisPage() {
         toast.error('Lojista sem saldo suficiente para reservar a corrida')
         return
       }
+      if (!lojista?.user_id) {
+        toast.error('Não foi possível identificar o usuário do lojista')
+        return
+      }
 
       const { error } = await supabase
         .from('corridas')
@@ -152,7 +156,7 @@ export default function CorridasDisponiveisPage() {
       await supabase
         .from('financeiro')
         .insert({
-          user_id: lojista?.user_id || corrida.lojista_id,
+          user_id: lojista.user_id,
           tipo: 'corrida',
           valor: -corrida.valor_total,
           saldo_anterior: saldoAtual,
