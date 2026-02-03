@@ -11,7 +11,7 @@ import { HiOutlineUser, HiOutlineMail, HiOutlinePhone, HiOutlineLockClosed, HiOu
 import { createClient } from '@/lib/supabase/client'
 import { AddressAutocomplete, type AddressDetails } from '@/components/AddressAutocomplete'
 import { validateCPF, validateCNPJ, validateWhatsApp, validatePlaca } from '@/lib/utils/validators'
-import type { UserType } from '@/lib/database.types'
+import type { Database, UserType } from '@/lib/database.types'
 
 const baseSchema = z.object({
   nome: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
@@ -124,7 +124,7 @@ export default function CadastroPage() {
       }
 
       // 2. Create user profile
-      const { error: userError } = await supabase.from('users').insert({
+      const userPayload: Database['public']['Tables']['users']['Insert'] = {
         id: authData.user.id,
         nome: data.nome,
         email: data.email,
@@ -132,7 +132,11 @@ export default function CadastroPage() {
         cpf: data.cpf.replace(/\D/g, ''),
         tipo: data.tipo,
         status: data.tipo === 'entregador' ? 'pendente' : 'ativo',
-      })
+      }
+
+      const { error: userError } = await (supabase as any)
+        .from('users')
+        .insert(userPayload)
 
       if (userError) {
         toast.error('Erro ao criar perfil')
@@ -141,7 +145,7 @@ export default function CadastroPage() {
 
       // 3. Create specific profile (lojista or entregador)
       if (data.tipo === 'lojista') {
-        const { error: lojistaError } = await supabase.from('lojistas').insert({
+        const lojistaPayload: Database['public']['Tables']['lojistas']['Insert'] = {
           user_id: authData.user.id,
           cnpj: data.cnpj?.replace(/\D/g, '') || null,
           endereco_base: data.endereco_base || null,
@@ -154,7 +158,11 @@ export default function CadastroPage() {
           endereco_uf: enderecoBaseDetails?.state || null,
           endereco_cep: enderecoBaseDetails?.postalCode || null,
           saldo: 0,
-        })
+        }
+
+        const { error: lojistaError } = await (supabase as any)
+          .from('lojistas')
+          .insert(lojistaPayload)
 
         if (lojistaError) {
           toast.error('Erro ao criar perfil de lojista')
@@ -191,7 +199,7 @@ export default function CadastroPage() {
           }
         }
 
-        const { error: entregadorError } = await supabase.from('entregadores').insert({
+        const entregadorPayload: Database['public']['Tables']['entregadores']['Insert'] = {
           user_id: authData.user.id,
           foto_url: fotoUrl,
           cnh_url: cnhUrl,
@@ -200,7 +208,11 @@ export default function CadastroPage() {
           cidade: data.cidade,
           uf: data.uf.toUpperCase(),
           saldo: 0,
-        })
+        }
+
+        const { error: entregadorError } = await (supabase as any)
+          .from('entregadores')
+          .insert(entregadorPayload)
 
         if (entregadorError) {
           toast.error('Erro ao criar perfil de entregador')
