@@ -10,17 +10,18 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
     const url = new URL(request.url)
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
     const storedState = cookies().get('ml_oauth_state')?.value ?? null
 
     if (!code || !state) {
-      return NextResponse.redirect(new URL('/lojista?ml=missing-code', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/lojista?ml=missing-code', baseUrl))
     }
 
     if (!storedState || state !== storedState) {
-      return NextResponse.redirect(new URL('/lojista?ml=state-mismatch', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/lojista?ml=state-mismatch', baseUrl))
     }
 
     cookies().delete('ml_oauth_state')
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/login', baseUrl))
     }
 
     const clientId = process.env.ML_CLIENT_ID
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     const redirectUri = process.env.ML_REDIRECT_URI
 
     if (!clientId || !clientSecret || !redirectUri) {
-      return NextResponse.redirect(new URL('/lojista?ml=missing-env', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/lojista?ml=missing-env', baseUrl))
     }
 
     const tokenRes = await fetch(ML_TOKEN_URL, {
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
     if (!tokenRes.ok) {
       const details = await tokenRes.text().catch(() => '')
       console.error('ML token error:', tokenRes.status, details)
-      return NextResponse.redirect(new URL('/lojista?ml=token-error', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/lojista?ml=token-error', baseUrl))
     }
 
     const tokenJson = await tokenRes.json() as {
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
     if (!meRes.ok) {
       const details = await meRes.text().catch(() => '')
       console.error('ML me error:', meRes.status, details)
-      return NextResponse.redirect(new URL('/lojista?ml=me-error', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/lojista?ml=me-error', baseUrl))
     }
 
     const meJson = await meRes.json() as { site_id: string }
@@ -84,13 +85,13 @@ export async function GET(request: Request) {
       .single()
 
     if (!lojista) {
-      return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', baseUrl))
     }
 
     const lojistaId = (lojista as { id: string } | null)?.id ?? null
 
     if (!lojistaId) {
-      return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
+      return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', baseUrl))
     }
 
     const expiresAt = new Date(Date.now() + tokenJson.expires_in * 1000).toISOString()
@@ -114,13 +115,14 @@ export async function GET(request: Request) {
         upsertError.details || upsertError.message || upsertError.code || 'unknown'
       )
       return NextResponse.redirect(
-        new URL(`/lojista?ml=save-error&reason=${reason}`, process.env.NEXT_PUBLIC_APP_URL)
+        new URL(`/lojista?ml=save-error&reason=${reason}`, baseUrl)
       )
     }
 
-    return NextResponse.redirect(new URL('/lojista?ml=connected', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojista?ml=connected', baseUrl))
   } catch (err) {
     console.error('ML callback error:', err)
-    return NextResponse.redirect(new URL('/lojista?ml=callback-error', process.env.NEXT_PUBLIC_APP_URL))
+    const fallbackBase = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
+    return NextResponse.redirect(new URL('/lojista?ml=callback-error', fallbackBase))
   }
 }
