@@ -94,7 +94,7 @@ export async function POST(request: Request) {
 
   const { data: lojista } = await supabase
     .from('lojistas')
-    .select('id, endereco_base, endereco_latitude, endereco_longitude, endereco_logradouro, endereco_numero, endereco_bairro, endereco_cidade, endereco_uf, endereco_cep')
+    .select('id, saldo, endereco_base, endereco_latitude, endereco_longitude, endereco_logradouro, endereco_numero, endereco_bairro, endereco_cidade, endereco_uf, endereco_cep')
     .eq('user_id', user.id)
     .single()
 
@@ -105,6 +105,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
   }
   const lojistaData = lojistaRow as Database['public']['Tables']['lojistas']['Row']
+  const saldoDisponivel = lojistaData.saldo ?? 0
 
   let coleta = null as null | {
     id: string
@@ -237,6 +238,16 @@ export async function POST(request: Request) {
   ]
     .filter(Boolean)
     .join(' - ')
+
+  if (saldoDisponivel < valorTotal) {
+    return NextResponse.json(
+      {
+        error: 'Saldo insuficiente para importar pedido',
+        details: { required: valorTotal, available: saldoDisponivel },
+      },
+      { status: 400 }
+    )
+  }
 
   const corridaPayload = {
     lojista_id: lojistaId,
