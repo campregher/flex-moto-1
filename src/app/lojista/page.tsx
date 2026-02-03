@@ -481,7 +481,7 @@ export default function LojistaDashboard() {
               <h2 className="text-lg font-semibold text-gray-900">Mercado Livre (Flex)</h2>
               <p className="text-sm text-gray-600">
                 {mlIntegration
-                  ? `Conectado • ${mlIntegration.site_id} • Usuário ${mlIntegration.ml_user_id}`
+                  ? `Conectado • ${user?.nome || 'Usuário'}`
                   : 'Não conectado'}
               </p>
             </div>
