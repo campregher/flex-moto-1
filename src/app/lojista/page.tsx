@@ -129,6 +129,42 @@ export default function LojistaDashboard() {
     }
   }
 
+  async function loadStats() {
+    if (!lojistaProfile.id) return
+    if (!user?.id) return
+
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+
+    const { count: totalCorridas } = await supabase
+      .from('corridas')
+      .select('*', { count: 'exact', head: true })
+      .eq('lojista_id', lojistaProfile.id)
+
+    const { count: corridasHoje } = await supabase
+      .from('corridas')
+      .select('*', { count: 'exact', head: true })
+      .eq('lojista_id', lojistaProfile.id)
+      .gte('created_at', hoje.toISOString())
+
+    const { data: gastoData } = await supabase
+      .from('financeiro')
+      .select('valor')
+      .eq('user_id', user.id)
+      .eq('tipo', 'corrida')
+      .gte('created_at', inicioMes.toISOString())
+
+    const gastoRows = (gastoData as { valor: number }[] | null) || []
+    const gastoMes = gastoRows.reduce((acc, item) => acc + Math.abs(item.valor), 0)
+
+    setStats({
+      totalCorridas: totalCorridas || 0,
+      corridasHoje: corridasHoje || 0,
+      gastoMes,
+    })
+  }
+
   useEffect(() => {
     async function loadData() {
       if (!lojistaProfile.id) return
@@ -136,36 +172,7 @@ export default function LojistaDashboard() {
 
       await loadCorridasAtivas()
 
-      const hoje = new Date()
-      hoje.setHours(0, 0, 0, 0)
-      const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
-
-      const { count: totalCorridas } = await supabase
-        .from('corridas')
-        .select('*', { count: 'exact', head: true })
-        .eq('lojista_id', lojistaProfile.id)
-
-      const { count: corridasHoje } = await supabase
-        .from('corridas')
-        .select('*', { count: 'exact', head: true })
-        .eq('lojista_id', lojistaProfile.id)
-        .gte('created_at', hoje.toISOString())
-
-      const { data: gastoData } = await supabase
-        .from('financeiro')
-        .select('valor')
-        .eq('user_id', user.id)
-        .eq('tipo', 'corrida')
-        .gte('created_at', inicioMes.toISOString())
-
-      const gastoRows = (gastoData as { valor: number }[] | null) || []
-      const gastoMes = gastoRows.reduce((acc, item) => acc + Math.abs(item.valor), 0)
-
-      setStats({
-        totalCorridas: totalCorridas || 0,
-        corridasHoje: corridasHoje || 0,
-        gastoMes,
-      })
+      await loadStats()
 
       const { data: mlData } = await supabase
         .from('mercadolivre_integrations')
@@ -215,6 +222,7 @@ export default function LojistaDashboard() {
           const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
           if (lojistaId !== lojistaProfile.id) return
           loadCorridasAtivas()
+          loadStats()
         }
       )
       .subscribe()

@@ -54,7 +54,7 @@ export default function EntregadorDashboard() {
     refreshUserStatus()
     loadData()
     
-    // Set up realtime subscription for corridas availability changes
+    // Set up realtime subscription for corridas availability and assignment changes
     const channel = supabase
       .channel('corridas-disponiveis')
       .on(
@@ -64,6 +64,10 @@ export default function EntregadorDashboard() {
           const newStatus = payload.new?.status
           const oldStatus = payload.old?.status
           const touchesDisponiveis = newStatus === 'aguardando' || oldStatus === 'aguardando'
+          const entregadorId = entregadorProfile.id
+          const touchesEntregador =
+            (payload.new?.entregador_id && payload.new.entregador_id === entregadorId) ||
+            (payload.old?.entregador_id && payload.old.entregador_id === entregadorId)
 
           if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
             toast('Nova corrida disponível!', { icon: '🚀' })
@@ -72,6 +76,11 @@ export default function EntregadorDashboard() {
           if (touchesDisponiveis) {
             loadCorridasDisponiveis()
           }
+
+          if (touchesEntregador) {
+            loadCorridasAtivas()
+            loadStats()
+          }
         }
       )
       .subscribe()
@@ -79,7 +88,7 @@ export default function EntregadorDashboard() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [entregadorProfile.id])
 
   useEffect(() => {
     function handleVisibility() {
