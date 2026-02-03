@@ -297,8 +297,8 @@ export default function CorridaDisponivelDetalhePage() {
             <h3 className="font-semibold text-gray-900 mb-4">Lojista</h3>
             <div className="flex items-center gap-4">
               <Avatar
-                src={corrida.lojista.foto_url}
-                name={corrida.lojista.user?.nome || ''}
+                src={corrida.lojista?.foto_url || null}
+                name={corrida.lojista?.user?.nome || 'Lojista'}
                 size="lg"
                 className=""
               />

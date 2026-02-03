@@ -155,7 +155,7 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
           <div className="p-4 border-b">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
               <div className="relative">
-                <Avatar src={entregadorProfile.foto_url} name={user?.nome || ''} size="lg" className="" />
+                <Avatar src={entregadorProfile?.foto_url || null} name={user?.nome || ''} size="lg" className="" />
                 {entregadorProfile.online && (
                   <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full pulse-online"></span>
                 )}
@@ -222,7 +222,7 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </Link>
             <div className="lg:hidden">
-              <Avatar src={entregadorProfile.foto_url} name={user?.nome || ''} size="sm" className="" />
+              <Avatar src={entregadorProfile?.foto_url || null} name={user?.nome || ''} size="sm" className="" />
             </div>
           </div>
         </header>

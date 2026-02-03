@@ -139,8 +139,8 @@ export default function EntregasPage() {
                   {entrega.lojista && (
                     <>
                       <Avatar
-                        src={entrega.lojista.foto_url}
-                        name={entrega.lojista.user?.nome || ''}
+                        src={entrega.lojista?.foto_url || null}
+                        name={entrega.lojista?.user?.nome || 'Lojista'}
                         size="sm"
                         className=""
                       />

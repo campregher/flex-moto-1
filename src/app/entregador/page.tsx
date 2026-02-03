@@ -364,8 +364,8 @@ export default function EntregadorDashboard() {
               >
                 <div className="flex items-center gap-4">
                   <Avatar
-                    src={corrida.lojista.foto_url}
-                    name={corrida.lojista.user?.nome || ''}
+                    src={corrida.lojista?.foto_url || null}
+                    name={corrida.lojista?.user?.nome || 'Lojista'}
                     size="md"
                     className=""
                   />
@@ -431,8 +431,8 @@ export default function EntregadorDashboard() {
               >
                 <div className="flex items-center gap-4">
                   <Avatar
-                    src={corrida.lojista.foto_url}
-                    name={corrida.lojista.user?.nome || ''}
+                    src={corrida.lojista?.foto_url || null}
+                    name={corrida.lojista?.user?.nome || 'Lojista'}
                     size="md"
                     className=""
                   />

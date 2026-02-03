@@ -223,8 +223,8 @@ export default function CorridasDisponiveisPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Avatar
-                    src={corrida.lojista.foto_url}
-                    name={corrida.lojista.user?.nome || ''}
+                    src={corrida.lojista?.foto_url || null}
+                    name={corrida.lojista?.user?.nome || 'Lojista'}
                     size="lg"
                     className=""
                   />

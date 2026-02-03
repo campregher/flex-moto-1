@@ -473,8 +473,8 @@ export default function EntregaDetalhePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Avatar
-                src={corrida.lojista.foto_url}
-                name={corrida.lojista.user?.nome || ''}
+                src={corrida.lojista?.foto_url || null}
+                name={corrida.lojista?.user?.nome || 'Lojista'}
                 size="lg"
                 className=""
               />
@@ -764,8 +764,8 @@ export default function EntregaDetalhePage() {
             
             <div className="flex justify-center mb-4">
               <Avatar
-                src={corrida.lojista.foto_url}
-                name={corrida.lojista.user?.nome || ''}
+                src={corrida.lojista?.foto_url || null}
+                name={corrida.lojista?.user?.nome || 'Lojista'}
                 size="xl"
                 className=""
               />
