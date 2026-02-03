@@ -501,7 +501,7 @@ export default function NovaCorridaPage() {
           lojista_id: lojistaProfile.id,
           plataforma: data.plataforma,
           valor_total: valorTotal,
-          valor_reservado: valorTotal,
+            valor_reservado: null,
           codigo_entrega: codigoEntrega,
           total_pacotes: totalPacotes,
           distancia_total_km: distanciaRota,
@@ -549,27 +549,7 @@ export default function NovaCorridaPage() {
 
       if (enderecosError) throw enderecosError
 
-      // Reserve balance
-      const novoSaldo = lojistaProfile.saldo - valorTotal
-      
-      await supabase
-        .from('lojistas')
-        .update({ saldo: novoSaldo })
-        .eq('id', lojistaProfile.id)
-
-      await supabase
-        .from('financeiro')
-        .insert({
-          user_id: user!.id,
-          tipo: 'corrida',
-          valor: -valorTotal,
-          saldo_anterior: lojistaProfile.saldo,
-          saldo_posterior: novoSaldo,
-          descricao: `Corrida #${corrida.id.slice(0, 8)} - ${totalPacotes} pacote(s)`,
-          corrida_id: corrida.id,
-        })
-
-      toast.success('Corrida criada com sucesso!')
+        toast.success('Corrida criada com sucesso!')
       router.push(`/lojista/corridas/${corrida.id}`)
     } catch (err) {
       console.error(err)

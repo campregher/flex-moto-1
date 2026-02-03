@@ -25,6 +25,7 @@ interface Corrida {
   plataforma: 'ml_flex' | 'shopee_direta'
   status: string
   valor_total: number
+  valor_reservado: number | null
   frete_valor: number | null
   peso_kg: number | null
   volume_cm3: number | null
@@ -78,6 +79,8 @@ export default function EntregaDetalhePage() {
   const [rating, setRating] = useState(5)
   const [comentario, setComentario] = useState('')
   const supabase = createClient()
+  const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || ''
+  const TRANSACTION_FEE = 2
   const statusRef = useRef<string | null>(null)
 
   const entregadorProfile = profile as any
@@ -227,11 +230,13 @@ export default function EntregaDetalhePage() {
           .update({
             status: 'finalizada',
             finalizada_em: new Date().toISOString(),
+            valor_reservado: null,
           })
           .eq('id', corrida!.id)
 
-        // Credit entregador
-        const novoSaldo = (entregadorProfile.saldo || 0) + corrida!.valor_total
+        // Credit entregador (valor_total - taxa)
+        const valorEntregador = Math.max(0, corrida!.valor_total - TRANSACTION_FEE)
+        const novoSaldo = (entregadorProfile.saldo || 0) + valorEntregador
         await supabase
           .from('entregadores')
           .update({
@@ -243,12 +248,25 @@ export default function EntregaDetalhePage() {
         await supabase.from('financeiro').insert({
           user_id: user!.id,
           tipo: 'corrida',
-          valor: corrida!.valor_total,
+          valor: valorEntregador,
           saldo_anterior: entregadorProfile.saldo || 0,
           saldo_posterior: novoSaldo,
           descricao: `Corrida #${corrida!.id.slice(0, 8)} finalizada`,
           corrida_id: corrida!.id,
         })
+
+        // Admin fee
+        if (ADMIN_USER_ID) {
+          await supabase.from('financeiro').insert({
+            user_id: ADMIN_USER_ID,
+            tipo: 'multa',
+            valor: TRANSACTION_FEE,
+            saldo_anterior: 0,
+            saldo_posterior: 0,
+            descricao: `Taxa transacional corrida #${corrida!.id.slice(0, 8)}`,
+            corrida_id: corrida!.id,
+          })
+        }
 
         setProfile({ ...entregadorProfile, saldo: novoSaldo })
         toast.success('Corrida finalizada!')
@@ -274,12 +292,39 @@ export default function EntregaDetalhePage() {
 
     setActionLoading(true)
     try {
+      const { data: lojistaRow } = await supabase
+        .from('lojistas')
+        .select('id, saldo, user_id')
+        .eq('id', corrida.lojista.id)
+        .single()
+
+      const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
+      const reservado = corrida.valor_reservado || 0
+      if (lojista && reservado > 0) {
+        const novoSaldoLojista = (lojista.saldo || 0) + reservado
+        await supabase
+          .from('lojistas')
+          .update({ saldo: novoSaldoLojista })
+          .eq('id', lojista.id)
+
+        await supabase.from('financeiro').insert({
+          user_id: lojista.user_id,
+          tipo: 'estorno',
+          valor: reservado,
+          saldo_anterior: lojista.saldo || 0,
+          saldo_posterior: novoSaldoLojista,
+          descricao: `Estorno corrida #${corrida.id.slice(0, 8)}`,
+          corrida_id: corrida.id,
+        })
+      }
+
       await supabase
         .from('corridas')
         .update({
           status: 'aguardando',
           entregador_id: null,
           aceita_em: null,
+          valor_reservado: null,
         })
         .eq('id', corrida.id)
 

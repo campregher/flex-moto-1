@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-store'
@@ -42,7 +42,6 @@ export default function CorridasPage() {
   const [corridas, setCorridas] = useState<Corrida[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
-  const statusMapRef = useRef<Map<string, string>>(new Map())
   const supabase = createClient()
 
   const lojistaProfile = profile as any
@@ -106,9 +105,6 @@ export default function CorridasPage() {
 
     if (data) {
       setCorridas(data as any)
-      statusMapRef.current = new Map(
-        (data as Corrida[]).map((item) => [item.id, item.status])
-      )
     }
     setLoading(false)
   }

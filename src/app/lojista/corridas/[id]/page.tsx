@@ -24,9 +24,11 @@ import {
 
 interface Corrida {
   id: string
+  lojista_id: string
   plataforma: 'ml_flex' | 'shopee_direta'
   status: string
   valor_total: number
+  valor_reservado: number | null
   frete_valor: number | null
   peso_kg: number | null
   volume_cm3: number | null
@@ -174,12 +176,41 @@ export default function CorridaDetalhePage() {
     if (!corrida || corrida.status !== 'aguardando') return
 
     try {
+      const reservado = corrida.valor_reservado || 0
+      if (reservado > 0) {
+        const { data: lojistaRow } = await supabase
+          .from('lojistas')
+          .select('id, saldo, user_id')
+          .eq('id', corrida.lojista_id)
+          .single()
+
+        const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
+        if (lojista) {
+          const novoSaldoLojista = (lojista.saldo || 0) + reservado
+          await supabase
+            .from('lojistas')
+            .update({ saldo: novoSaldoLojista })
+            .eq('id', lojista.id)
+
+          await supabase.from('financeiro').insert({
+            user_id: lojista.user_id,
+            tipo: 'estorno',
+            valor: reservado,
+            saldo_anterior: lojista.saldo || 0,
+            saldo_posterior: novoSaldoLojista,
+            descricao: `Estorno corrida #${corrida.id.slice(0, 8)}`,
+            corrida_id: corrida.id,
+          })
+        }
+      }
+
       await supabase
         .from('corridas')
         .update({
           status: 'cancelada',
           cancelada_em: new Date().toISOString(),
           motivo_cancelamento: 'Cancelado pelo lojista',
+          valor_reservado: null,
         })
         .eq('id', corrida.id)
 

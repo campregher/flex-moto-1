@@ -125,12 +125,38 @@ export default function CorridaDisponivelDetalhePage() {
 
     setAccepting(true)
     try {
+      const { data: corridaRow } = await supabase
+        .from('corridas')
+        .select('id, lojista_id, valor_total, valor_reservado, status')
+        .eq('id', corridaId)
+        .single()
+
+      const corridaAtual = corridaRow as { id: string; lojista_id: string; valor_total: number; valor_reservado: number | null; status: string } | null
+      if (!corridaAtual || corridaAtual.status !== 'aguardando') {
+        toast.error('Corrida já foi aceita ou não está disponível')
+        return
+      }
+
+      const { data: lojistaRow } = await supabase
+        .from('lojistas')
+        .select('id, saldo, user_id')
+        .eq('id', corridaAtual.lojista_id)
+        .single()
+
+      const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
+      const saldoAtual = lojista?.saldo ?? 0
+      if (saldoAtual < corridaAtual.valor_total) {
+        toast.error('Lojista sem saldo suficiente para reservar a corrida')
+        return
+      }
+
       const { error } = await supabase
         .from('corridas')
         .update({
           entregador_id: entregadorProfile.id,
           status: 'aceita',
           aceita_em: new Date().toISOString(),
+          valor_reservado: corridaAtual.valor_total,
         })
         .eq('id', corridaId)
         .eq('status', 'aguardando')
@@ -143,6 +169,24 @@ export default function CorridaDisponivelDetalhePage() {
         }
         return
       }
+
+      const novoSaldo = saldoAtual - corridaAtual.valor_total
+      await supabase
+        .from('lojistas')
+        .update({ saldo: novoSaldo })
+        .eq('id', corridaAtual.lojista_id)
+
+      await supabase
+        .from('financeiro')
+        .insert({
+          user_id: lojista?.user_id || corridaAtual.lojista_id,
+          tipo: 'corrida',
+          valor: -corridaAtual.valor_total,
+          saldo_anterior: saldoAtual,
+          saldo_posterior: novoSaldo,
+          descricao: `Reserva corrida #${corridaAtual.id.slice(0, 8)}`,
+          corrida_id: corridaAtual.id,
+        })
 
       toast.success('Corrida aceita!')
       router.push(`/entregador/entregas/${corridaId}`)

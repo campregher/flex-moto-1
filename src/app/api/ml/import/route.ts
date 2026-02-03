@@ -243,7 +243,7 @@ export async function POST(request: Request) {
     plataforma: 'ml_flex',
     status: 'aguardando',
     valor_total: valorTotal,
-    valor_reservado: valorTotal,
+    valor_reservado: null,
     codigo_entrega: generateCode(6),
     total_pacotes: totalPacotes,
     distancia_total_km: distanciaTotalKm,

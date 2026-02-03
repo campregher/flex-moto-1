@@ -98,12 +98,38 @@ export default function CorridasDisponiveisPage() {
 
     setAccepting(corridaId)
     try {
+      const { data: corridaRow } = await supabase
+        .from('corridas')
+        .select('id, lojista_id, valor_total, valor_reservado, status')
+        .eq('id', corridaId)
+        .single()
+
+      const corrida = corridaRow as { id: string; lojista_id: string; valor_total: number; valor_reservado: number | null; status: string } | null
+      if (!corrida || corrida.status !== 'aguardando') {
+        toast.error('Corrida já foi aceita ou não está disponível')
+        return
+      }
+
+      const { data: lojistaRow } = await supabase
+        .from('lojistas')
+        .select('id, saldo, user_id')
+        .eq('id', corrida.lojista_id)
+        .single()
+
+      const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
+      const saldoAtual = lojista?.saldo ?? 0
+      if (saldoAtual < corrida.valor_total) {
+        toast.error('Lojista sem saldo suficiente para reservar a corrida')
+        return
+      }
+
       const { error } = await supabase
         .from('corridas')
         .update({
           entregador_id: entregadorProfile.id,
           status: 'aceita',
           aceita_em: new Date().toISOString(),
+          valor_reservado: corrida.valor_total,
         })
         .eq('id', corridaId)
         .eq('status', 'aguardando') // Ensure still available
@@ -116,6 +142,24 @@ export default function CorridasDisponiveisPage() {
         }
         return
       }
+
+      const novoSaldo = saldoAtual - corrida.valor_total
+      await supabase
+        .from('lojistas')
+        .update({ saldo: novoSaldo })
+        .eq('id', corrida.lojista_id)
+
+      await supabase
+        .from('financeiro')
+        .insert({
+          user_id: lojista?.user_id || corrida.lojista_id,
+          tipo: 'corrida',
+          valor: -corrida.valor_total,
+          saldo_anterior: saldoAtual,
+          saldo_posterior: novoSaldo,
+          descricao: `Reserva corrida #${corrida.id.slice(0, 8)}`,
+          corrida_id: corrida.id,
+        })
 
       toast.success('Corrida aceita!')
       loadCorridas()
