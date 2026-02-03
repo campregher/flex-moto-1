@@ -48,7 +48,7 @@ export default function EntregadorDashboard() {
   const [togglingOnline, setTogglingOnline] = useState(false)
   const supabase = createClient()
 
-  const entregadorProfile = profile as any
+  const entregadorProfile = (profile as any) || {}
 
   useEffect(() => {
     refreshUserStatus()

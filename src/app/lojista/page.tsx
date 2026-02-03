@@ -93,7 +93,7 @@ export default function LojistaDashboard() {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  const lojistaProfile = profile as any
+  const lojistaProfile = (profile as any) || {}
 
   const formatMlAddress = (pedido: MlPedido) => {
     if (pedido.endereco?.trim()) return pedido.endereco
