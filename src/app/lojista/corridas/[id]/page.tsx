@@ -92,6 +92,7 @@ export default function CorridaDetalhePage() {
   const [rating, setRating] = useState(5)
   const [comentario, setComentario] = useState('')
   const suppressReloadRef = useRef(false)
+  const statusRef = useRef<string | null>(null)
   const supabase = createClient()
   const corridaId = params?.id
 
@@ -142,6 +143,14 @@ export default function CorridaDetalhePage() {
       .single()
 
     if (data) {
+      if (statusRef.current && statusRef.current !== data.status) {
+        if (data.status === 'aceita') toast('Corrida aceita por entregador', { icon: '✅' })
+        if (data.status === 'coletando') toast('Entregador a caminho da coleta', { icon: '📦' })
+        if (data.status === 'em_entrega') toast('Pedido em entrega', { icon: '🚚' })
+        if (data.status === 'finalizada') toast('Corrida finalizada', { icon: '🎉' })
+        if (data.status === 'cancelada') toast('Corrida cancelada', { icon: '⚠️' })
+      }
+      statusRef.current = data.status
       setCorrida(data as any)
       
       // Show rating modal if corrida just finished

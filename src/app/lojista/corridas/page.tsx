@@ -1,11 +1,12 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-store'
 import { Avatar, StatusBadge, PlatformBadge, EmptyState, LoadingSpinner } from '@/components/ui'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import toast from 'react-hot-toast'
 import {
   HiOutlineTruck,
   HiOutlineCube,
@@ -41,6 +42,7 @@ export default function CorridasPage() {
   const [corridas, setCorridas] = useState<Corrida[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const statusMapRef = useRef<Map<string, string>>(new Map())
   const supabase = createClient()
 
   const lojistaProfile = profile as any
@@ -61,6 +63,17 @@ export default function CorridasPage() {
           const oldRow = payload.old
           const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
           if (lojistaId !== lojistaProfile.id) return
+          if (payload.eventType === 'UPDATE') {
+            const nextStatus = newRow?.status
+            const prevStatus = oldRow?.status
+            if (nextStatus && prevStatus && nextStatus !== prevStatus) {
+              if (nextStatus === 'aceita') toast('Corrida aceita por entregador', { icon: '✅' })
+              if (nextStatus === 'coletando') toast('Entregador a caminho da coleta', { icon: '📦' })
+              if (nextStatus === 'em_entrega') toast('Pedido em entrega', { icon: '🚚' })
+              if (nextStatus === 'finalizada') toast('Corrida finalizada', { icon: '🎉' })
+              if (nextStatus === 'cancelada') toast('Corrida cancelada', { icon: '⚠️' })
+            }
+          }
           loadCorridas()
         }
       )
@@ -93,6 +106,9 @@ export default function CorridasPage() {
 
     if (data) {
       setCorridas(data as any)
+      statusMapRef.current = new Map(
+        (data as Corrida[]).map((item) => [item.id, item.status])
+      )
     }
     setLoading(false)
   }

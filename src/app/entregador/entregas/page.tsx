@@ -42,13 +42,19 @@ export default function EntregasPage() {
   const [filter, setFilter] = useState('all')
   const supabase = createClient()
 
-  const entregadorProfile = profile as any
+  const entregadorProfile = (profile as any) || {}
 
   useEffect(() => {
+    if (!entregadorProfile?.id) return
     loadEntregas()
-  }, [filter])
+  }, [filter, entregadorProfile?.id])
 
   async function loadEntregas() {
+    if (!entregadorProfile?.id) {
+      setEntregas([])
+      setLoading(false)
+      return
+    }
     let query = supabase
       .from('corridas')
       .select(`
@@ -139,7 +145,7 @@ export default function EntregasPage() {
                         className=""
                       />
                       <span className="text-sm text-gray-600">
-                        {entrega.lojista.user.nome}
+                        {entrega.lojista.user?.nome || '-'}
                       </span>
                     </>
                   )}
