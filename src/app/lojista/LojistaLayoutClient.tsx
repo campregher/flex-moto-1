@@ -75,6 +75,34 @@ export default function LojistaLayoutClient({ children }: { children: React.Reac
   }, [router, setUser, setProfile, supabase])
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    async function subscribeProfile() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      channel = supabase
+        .channel(`lojista-profile-${session.user.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'lojistas', filter: `user_id=eq.${session.user.id}` },
+          (payload: any) => {
+            if (payload.new) {
+              setProfile(payload.new)
+            }
+          }
+        )
+        .subscribe()
+    }
+
+    subscribeProfile()
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [setProfile, supabase])
+
+  useEffect(() => {
     async function loadUnread() {
       if (!user?.id) return
       const { count } = await supabase
