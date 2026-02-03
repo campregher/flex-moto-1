@@ -12,127 +12,134 @@ function normalizeCoords(lat: number | null, lng: number | null) {
 }
 
 export async function POST() {
-  const supabase = createRouteHandlerClient<Database>({ cookies })
-  const { data: { user } } = await supabase.auth.getUser()
+  try {
+    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-  const { data: lojista } = await supabase
-    .from('lojistas')
-    .select('id, endereco_base, endereco_latitude, endereco_longitude, endereco_logradouro, endereco_numero, endereco_bairro, endereco_cidade, endereco_uf, endereco_cep')
-    .eq('user_id', user.id)
-    .single()
-
-  const lojistaRow = lojista as Database['public']['Tables']['lojistas']['Row'] | null
-  const lojistaId = lojistaRow?.id ?? null
-
-  if (!lojistaId) {
-    return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
-  }
-  const lojistaData = lojistaRow as Database['public']['Tables']['lojistas']['Row']
-
-  const { data: pedidos } = await supabase
-    .from('mercadolivre_pedidos')
-    .select('*')
-    .eq('lojista_id', lojistaId)
-    .eq('selected', true)
-    .is('imported_at', null)
-
-  const pedidosRows = (pedidos as Database['public']['Tables']['mercadolivre_pedidos']['Row'][] | null) || []
-
-  if (pedidosRows.length === 0) {
-    return NextResponse.json({ error: 'No selected orders' }, { status: 400 })
-  }
-
-  const importedIds: string[] = []
-
-  for (const pedido of pedidosRows) {
-    const pickupCoords = normalizeCoords(pedido.coleta_latitude, pedido.coleta_longitude)
-    const deliveryCoords = normalizeCoords(pedido.latitude, pedido.longitude)
-    const distanciaTotalKm =
-      pickupCoords && deliveryCoords
-        ? calculateDistance(pickupCoords.lat, pickupCoords.lng, deliveryCoords.lat, deliveryCoords.lng)
-        : 0
-
-    const totalPacotes = pedido.pacotes || 1
-    const valorTotal = calculateDeliveryPrice(totalPacotes, distanciaTotalKm)
-
-    const corridaPayload = {
-      lojista_id: lojistaId,
-      plataforma: 'ml_flex',
-      status: 'aguardando',
-      valor_total: valorTotal,
-      valor_reservado: null,
-      codigo_entrega: generateCode(6),
-      total_pacotes: totalPacotes,
-      distancia_total_km: distanciaTotalKm,
-      endereco_coleta: pedido.coleta_endereco || lojistaData.endereco_base || '',
-      coleta_latitude: pickupCoords?.lat ?? lojistaData.endereco_latitude ?? 0,
-      coleta_longitude: pickupCoords?.lng ?? lojistaData.endereco_longitude ?? 0,
-      coleta_complemento: null,
-      coleta_observacoes: null,
-      coleta_logradouro: lojistaData.endereco_logradouro || null,
-      coleta_numero: lojistaData.endereco_numero || null,
-      coleta_bairro: lojistaData.endereco_bairro || null,
-      coleta_cidade: lojistaData.endereco_cidade || null,
-      coleta_uf: lojistaData.endereco_uf || null,
-      coleta_cep: lojistaData.endereco_cep || null,
-      frete_valor: valorTotal,
-      peso_kg: null,
-      volume_cm3: null,
-    } as Database['public']['Tables']['corridas']['Insert']
-
-    const { data: corrida, error: corridaError } = await (supabase as any)
-      .from('corridas')
-      .insert(corridaPayload)
-      .select()
+    const { data: lojista } = await supabase
+      .from('lojistas')
+      .select('id, endereco_base, endereco_latitude, endereco_longitude, endereco_logradouro, endereco_numero, endereco_bairro, endereco_cidade, endereco_uf, endereco_cep')
+      .eq('user_id', user.id)
       .single()
 
-    const corridaRow = corrida as Database['public']['Tables']['corridas']['Row'] | null
+    const lojistaRow = lojista as Database['public']['Tables']['lojistas']['Row'] | null
+    const lojistaId = lojistaRow?.id ?? null
 
-    if (corridaError || !corridaRow) {
-      return NextResponse.json({ error: 'Failed to create corrida', details: corridaError }, { status: 500 })
+    if (!lojistaId) {
+      return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
     }
+    const lojistaData = lojistaRow as Database['public']['Tables']['lojistas']['Row']
 
-    const enderecoPayload = {
-      corrida_id: corridaRow.id,
-      endereco: pedido.endereco || '',
-      latitude: pedido.latitude || 0,
-      longitude: pedido.longitude || 0,
-      complemento: pedido.complemento || null,
-      observacoes: pedido.observacoes || null,
-      pacotes: totalPacotes,
-      ordem: 0,
-      codigo_confirmacao: generateCode(6),
-      logradouro: null,
-      numero: null,
-      bairro: pedido.bairro || null,
-      cidade: pedido.cidade || null,
-      uf: pedido.uf || null,
-      cep: pedido.cep || null,
-      receiver_name: pedido.receiver_name || pedido.buyer_name || null,
-      receiver_phone: pedido.receiver_phone || null,
-      peso_kg: null,
-      volume_cm3: null,
-    } as Database['public']['Tables']['enderecos_entrega']['Insert']
-
-    const { error: enderecosError } = await (supabase as any)
-      .from('enderecos_entrega')
-      .insert(enderecoPayload)
-
-    if (enderecosError) {
-      return NextResponse.json({ error: 'Failed to create endereco', details: enderecosError }, { status: 500 })
-    }
-
-    await (supabase as any)
+    const { data: pedidos } = await supabase
       .from('mercadolivre_pedidos')
-      .update({ selected: false, imported_at: new Date().toISOString() })
-      .eq('id', pedido.id)
+      .select('*')
+      .eq('lojista_id', lojistaId)
+      .eq('selected', true)
+      .is('imported_at', null)
 
-    importedIds.push(corridaRow.id)
+    const pedidosRows = (pedidos as Database['public']['Tables']['mercadolivre_pedidos']['Row'][] | null) || []
+
+    if (pedidosRows.length === 0) {
+      return NextResponse.json({ error: 'No selected orders' }, { status: 400 })
+    }
+
+    const importedIds: string[] = []
+
+    for (const pedido of pedidosRows) {
+      const pickupCoords = normalizeCoords(pedido.coleta_latitude, pedido.coleta_longitude)
+      const deliveryCoords = normalizeCoords(pedido.latitude, pedido.longitude)
+      const distanciaTotalKm =
+        pickupCoords && deliveryCoords
+          ? calculateDistance(pickupCoords.lat, pickupCoords.lng, deliveryCoords.lat, deliveryCoords.lng)
+          : 0
+
+      const totalPacotes = pedido.pacotes || 1
+      const valorTotal = calculateDeliveryPrice(totalPacotes, distanciaTotalKm)
+
+      const corridaPayload = {
+        lojista_id: lojistaId,
+        plataforma: 'ml_flex',
+        status: 'aguardando',
+        valor_total: valorTotal,
+        valor_reservado: null,
+        codigo_entrega: generateCode(6),
+        total_pacotes: totalPacotes,
+        distancia_total_km: distanciaTotalKm,
+        endereco_coleta: pedido.coleta_endereco || lojistaData.endereco_base || '',
+        coleta_latitude: pickupCoords?.lat ?? lojistaData.endereco_latitude ?? 0,
+        coleta_longitude: pickupCoords?.lng ?? lojistaData.endereco_longitude ?? 0,
+        coleta_complemento: null,
+        coleta_observacoes: null,
+        coleta_logradouro: lojistaData.endereco_logradouro || null,
+        coleta_numero: lojistaData.endereco_numero || null,
+        coleta_bairro: lojistaData.endereco_bairro || null,
+        coleta_cidade: lojistaData.endereco_cidade || null,
+        coleta_uf: lojistaData.endereco_uf || null,
+        coleta_cep: lojistaData.endereco_cep || null,
+        frete_valor: valorTotal,
+        peso_kg: null,
+        volume_cm3: null,
+      } as Database['public']['Tables']['corridas']['Insert']
+
+      const { data: corrida, error: corridaError } = await (supabase as any)
+        .from('corridas')
+        .insert(corridaPayload)
+        .select()
+        .single()
+
+      const corridaRow = corrida as Database['public']['Tables']['corridas']['Row'] | null
+
+      if (corridaError || !corridaRow) {
+        console.error('ML import-selected corrida error:', corridaError)
+        return NextResponse.json({ error: 'Failed to create corrida', details: corridaError }, { status: 500 })
+      }
+
+      const enderecoPayload = {
+        corrida_id: corridaRow.id,
+        endereco: pedido.endereco || '',
+        latitude: pedido.latitude || 0,
+        longitude: pedido.longitude || 0,
+        complemento: pedido.complemento || null,
+        observacoes: pedido.observacoes || null,
+        pacotes: totalPacotes,
+        ordem: 0,
+        codigo_confirmacao: generateCode(6),
+        logradouro: null,
+        numero: null,
+        bairro: pedido.bairro || null,
+        cidade: pedido.cidade || null,
+        uf: pedido.uf || null,
+        cep: pedido.cep || null,
+        receiver_name: pedido.receiver_name || pedido.buyer_name || null,
+        receiver_phone: pedido.receiver_phone || null,
+        peso_kg: null,
+        volume_cm3: null,
+      } as Database['public']['Tables']['enderecos_entrega']['Insert']
+
+      const { error: enderecosError } = await (supabase as any)
+        .from('enderecos_entrega')
+        .insert(enderecoPayload)
+
+      if (enderecosError) {
+        console.error('ML import-selected endereco error:', enderecosError)
+        return NextResponse.json({ error: 'Failed to create endereco', details: enderecosError }, { status: 500 })
+      }
+
+      await (supabase as any)
+        .from('mercadolivre_pedidos')
+        .update({ selected: false, imported_at: new Date().toISOString() })
+        .eq('id', pedido.id)
+
+      importedIds.push(corridaRow.id)
+    }
+
+    return NextResponse.json({ ok: true, imported: importedIds.length })
+  } catch (err) {
+    console.error('ML import-selected fatal error:', err)
+    return NextResponse.json({ error: 'Import failed' }, { status: 500 })
   }
-
-  return NextResponse.json({ ok: true, imported: importedIds.length })
 }
