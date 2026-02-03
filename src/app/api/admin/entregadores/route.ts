@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/lib/database.types'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 async function requireAdmin() {
   const supabase = createRouteHandlerClient<Database>({ cookies })
@@ -31,6 +31,7 @@ export async function GET() {
   const { error } = await requireAdmin()
   if (error) return error
 
+  const supabaseAdmin = getSupabaseAdmin()
   const { data, error: listError } = await supabaseAdmin
     .from('users')
     .select('id, nome, email, whatsapp, status, created_at, entregadores(placa, cidade, uf, foto_url, cnh_url)')
@@ -57,6 +58,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }
 
+  const supabaseAdmin = getSupabaseAdmin()
   const { error: updateError } = await (supabaseAdmin as any)
     .from('users')
     .update({ status })
