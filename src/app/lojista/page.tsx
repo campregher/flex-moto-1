@@ -19,6 +19,7 @@ import {
 
 interface CorridaAtiva {
   id: string
+  entregador_id?: string | null
   plataforma: 'ml_flex' | 'shopee_direta'
   status: string
   valor_total: number
@@ -108,6 +109,7 @@ export default function LojistaDashboard() {
       .from('corridas')
       .select(`
         id,
+        entregador_id,
         plataforma,
         status,
         valor_total,
@@ -125,7 +127,22 @@ export default function LojistaDashboard() {
       .limit(5)
 
     if (corridas) {
-      setCorridasAtivas(corridas as any)
+      const rows = corridas as CorridaAtiva[]
+      const missing = rows.filter((item) => item.entregador_id && !item.entregador)
+      if (missing.length > 0) {
+        const ids = missing.map((item) => item.entregador_id).filter(Boolean) as string[]
+        const { data: entregadores } = await supabase
+          .from('entregadores')
+          .select('id, foto_url, avaliacao_media, user:users(nome)')
+          .in('id', ids)
+        const map = new Map((entregadores || []).map((e: any) => [e.id, e]))
+        setCorridasAtivas(rows.map((item) => ({
+          ...item,
+          entregador: item.entregador || map.get(item.entregador_id || '') || null,
+        })) as any)
+      } else {
+        setCorridasAtivas(rows as any)
+      }
     }
   }
 

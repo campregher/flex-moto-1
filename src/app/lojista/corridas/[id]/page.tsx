@@ -24,6 +24,7 @@ import {
 
 interface Corrida {
   id: string
+  entregador_id?: string | null
   lojista_id: string
   plataforma: 'ml_flex' | 'shopee_direta'
   status: string
@@ -135,6 +136,7 @@ export default function CorridaDetalhePage() {
       .from('corridas')
       .select(`
         *,
+        entregador_id,
         entregador:entregadores(
           id, foto_url, avaliacao_media, latitude, longitude,
           user:users(id, nome, whatsapp)
@@ -145,6 +147,16 @@ export default function CorridaDetalhePage() {
       .single()
 
     if (data) {
+      if (!data.entregador && data.entregador_id) {
+        const { data: entregadorExtra } = await supabase
+          .from('entregadores')
+          .select('id, foto_url, avaliacao_media, latitude, longitude, user:users(id, nome, whatsapp)')
+          .eq('id', data.entregador_id)
+          .single()
+        if (entregadorExtra) {
+          data.entregador = entregadorExtra
+        }
+      }
       if (statusRef.current && statusRef.current !== data.status) {
         if (data.status === 'aceita') toast('Corrida aceita por entregador', { icon: '✅' })
         if (data.status === 'coletando') toast('Entregador a caminho da coleta', { icon: '📦' })
