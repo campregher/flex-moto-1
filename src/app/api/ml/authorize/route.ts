@@ -37,7 +37,7 @@ export async function GET() {
 
   const state = crypto.randomBytes(16).toString('hex')
   const res = NextResponse.redirect(
-    `${ML_AUTH_URL}response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
+    `${ML_AUTH_URL}?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
   )
 
   res.cookies.set('ml_oauth_state', state, {
