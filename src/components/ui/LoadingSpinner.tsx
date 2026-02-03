@@ -1,8 +1,8 @@
 'use client'
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
+  size: 'sm' | 'md' | 'lg'
+  className: string
 }
 
 const sizeClasses = {

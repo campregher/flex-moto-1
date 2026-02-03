@@ -81,7 +81,7 @@ export function calculateRouteDistance(
 export function validateOrder(
   totalPackages: number,
   addresses: { packages: number }[]
-): { valid: boolean; error?: string } {
+): { valid: boolean; error: string } {
   // Check total packages
   if (totalPackages > PRICING.MAX_PACKAGES_TOTAL) {
     return {
@@ -100,5 +100,5 @@ export function validateOrder(
     }
   }
 
-  return { valid: true }
+  return { valid: true, error: '' }
 }

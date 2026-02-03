@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
   // Check if user is blocked
   if (userRow.status === 'bloqueado') {
     await supabase.auth.signOut()
-    return NextResponse.redirect(new URL('/login?error=blocked', request.url))
+    return NextResponse.redirect(new URL('/loginerror=blocked', request.url))
   }
 
   // Check route access based on user type
@@ -64,7 +64,7 @@ export async function middleware(request: NextRequest) {
   const isEntregadorRoute = entregadorRoutes.some(route => pathname.startsWith(route))
   const isAdminRoute = pathname.startsWith('/admin')
 
-  if (isAdminRoute && !userRow?.is_admin) {
+  if (isAdminRoute && !userRow.is_admin) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
@@ -98,6 +98,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+   '/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

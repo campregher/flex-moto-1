@@ -4,10 +4,10 @@ import { ReactNode } from 'react'
 import { HiOutlineInbox } from 'react-icons/hi'
 
 interface EmptyStateProps {
-  icon?: ReactNode
+  icon: ReactNode
   title: string
-  description?: string
-  action?: ReactNode
+  description: string
+  action: ReactNode
 }
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {

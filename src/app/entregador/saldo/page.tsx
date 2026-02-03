@@ -57,18 +57,18 @@ export default function EntregadorSaldoPage() {
   async function handleSaque() {
     const valorNum = parseFloat(valor.replace(',', '.'))
     if (isNaN(valorNum) || valorNum <= 0) {
-      toast.error('Valor invÃ¡lido')
+      toast.error('Valor inválido')
       return
     }
 
-    if (valorNum > (entregadorProfile?.saldo || 0)) {
+    if (valorNum > (entregadorProfile.saldo || 0)) {
       toast.error('Saldo insuficiente')
       return
     }
 
     setProcessing(true)
     try {
-      const novoSaldo = (entregadorProfile?.saldo || 0) - valorNum
+      const novoSaldo = (entregadorProfile.saldo || 0) - valorNum
 
       await supabase
         .from('entregadores')
@@ -81,7 +81,7 @@ export default function EntregadorSaldoPage() {
           user_id: user!.id,
           tipo: 'saque',
           valor: -valorNum,
-          saldo_anterior: entregadorProfile?.saldo || 0,
+          saldo_anterior: entregadorProfile.saldo || 0,
           saldo_posterior: novoSaldo,
           descricao: 'Saque de ganhos',
         })
@@ -139,9 +139,9 @@ export default function EntregadorSaldoPage() {
 
       {/* Balance Card */}
       <div className="card p-6 mb-6 bg-gradient-to-br from-secondary-600 to-secondary-700 text-white">
-        <p className="text-secondary-100 mb-1">Saldo disponÃ­vel</p>
+        <p className="text-secondary-100 mb-1">Saldo disponível</p>
         <p className="text-4xl font-bold mb-4">
-          {formatCurrency(entregadorProfile?.saldo || 0)}
+          {formatCurrency(entregadorProfile.saldo || 0)}
         </p>
         <button
           onClick={() => setShowWithdrawModal(true)}
@@ -167,18 +167,19 @@ export default function EntregadorSaldoPage() {
       {/* Transaction History */}
       <div className="card">
         <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">HistÃ³rico</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Histórico</h2>
         </div>
 
         {loading ? (
           <div className="p-8 flex justify-center">
-            <LoadingSpinner />
+            <LoadingSpinner size="md" className="" />
           </div>
         ) : transacoes.length === 0 ? (
           <EmptyState
             icon={<HiOutlineCash className="w-8 h-8 text-gray-400" />}
-            title="Nenhuma transaÃ§Ã£o"
-            description="Seus ganhos aparecerÃ£o aqui"
+            title="Nenhuma transação"
+            description="Seus ganhos aparecerão aqui"
+            action={null}
           />
         ) : (
           <div className="divide-y">
@@ -223,7 +224,7 @@ export default function EntregadorSaldoPage() {
                 />
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                DisponÃ­vel: {formatCurrency(entregadorProfile?.saldo || 0)}
+                Disponível: {formatCurrency(entregadorProfile.saldo || 0)}
               </p>
             </div>
             <div className="flex gap-3">

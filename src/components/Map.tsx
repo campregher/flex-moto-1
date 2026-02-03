@@ -4,17 +4,17 @@ import { useEffect, useRef, useState } from 'react'
 import { loadGoogleMaps } from '@/lib/google-maps'
 
 interface MapProps {
-  center?: { lat: number; lng: number }
-  zoom?: number
-  markers?: {
+  center: { lat: number; lng: number }
+  zoom: number
+  markers: {
     position: { lat: number; lng: number }
-    title?: string
-    icon?: 'pickup' | 'delivery' | 'driver'
+    title: string
+    icon: 'pickup' | 'delivery' | 'driver'
   }[]
-  driverLocation?: { lat: number; lng: number } | null
-  showRoute?: boolean
-  onMapLoad?: (map: google.maps.Map) => void
-  className?: string
+  driverLocation: { lat: number; lng: number } | null
+  showRoute: boolean
+  onMapLoad: (map: google.maps.Map) => void
+  className: string
 }
 
 const markerIcons = {

@@ -86,13 +86,14 @@ export default function LojistaNotificacoesPage() {
 
       {loading ? (
         <div className="p-8 flex justify-center">
-          <LoadingSpinner />
+          <LoadingSpinner size="md" className="" />
         </div>
       ) : notificacoes.length === 0 ? (
         <EmptyState
           icon={<HiOutlineBell className="w-8 h-8 text-gray-400" />}
-          title="Nenhuma notificacao"
-          description="Quando houver novidades, elas aparecerao aqui."
+          title="Nenhuma notificação"
+          description="Quando houver novidades, elas aparecerão aqui."
+          action={null}
         />
       ) : (
         <div className="space-y-3">

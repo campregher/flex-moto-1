@@ -5,8 +5,8 @@ type Corrida = Tables<'corridas'>
 type EnderecoEntrega = Tables<'enderecos_entrega'>
 
 interface CorridaWithDetails extends Corrida {
-  enderecos?: EnderecoEntrega[]
-  lojista?: {
+  enderecos: EnderecoEntrega[]
+  lojista: {
     user_id: string
     foto_url: string | null
     avaliacao_media: number
@@ -15,7 +15,7 @@ interface CorridaWithDetails extends Corrida {
       whatsapp: string
     }
   }
-  entregador?: {
+  entregador: {
     user_id: string
     foto_url: string | null
     avaliacao_media: number

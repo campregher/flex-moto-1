@@ -64,7 +64,7 @@ export default function SaldoPage() {
 
     setProcessing(true)
     try {
-      const novoSaldo = (lojistaProfile?.saldo || 0) + valorNum
+      const novoSaldo = (lojistaProfile.saldo || 0) + valorNum
 
       await supabase
         .from('lojistas')
@@ -77,7 +77,7 @@ export default function SaldoPage() {
           user_id: user!.id,
           tipo: 'deposito',
           valor: valorNum,
-          saldo_anterior: lojistaProfile?.saldo || 0,
+          saldo_anterior: lojistaProfile.saldo || 0,
           saldo_posterior: novoSaldo,
           descricao: 'Depósito de créditos',
         })
@@ -101,14 +101,14 @@ export default function SaldoPage() {
       return
     }
 
-    if (valorNum > (lojistaProfile?.saldo || 0)) {
+    if (valorNum > (lojistaProfile.saldo || 0)) {
       toast.error('Saldo insuficiente')
       return
     }
 
     setProcessing(true)
     try {
-      const novoSaldo = (lojistaProfile?.saldo || 0) - valorNum
+      const novoSaldo = (lojistaProfile.saldo || 0) - valorNum
 
       await supabase
         .from('lojistas')
@@ -121,7 +121,7 @@ export default function SaldoPage() {
           user_id: user!.id,
           tipo: 'saque',
           valor: -valorNum,
-          saldo_anterior: lojistaProfile?.saldo || 0,
+          saldo_anterior: lojistaProfile.saldo || 0,
           saldo_posterior: novoSaldo,
           descricao: 'Saque de créditos',
         })
@@ -163,7 +163,7 @@ export default function SaldoPage() {
       <div className="card p-6 mb-6 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
         <p className="text-primary-100 mb-1">Saldo disponível</p>
         <p className="text-4xl font-bold mb-4">
-          {formatCurrency(lojistaProfile?.saldo || 0)}
+          {formatCurrency(lojistaProfile.saldo || 0)}
         </p>
         <div className="flex gap-3">
           <button
@@ -191,13 +191,14 @@ export default function SaldoPage() {
 
         {loading ? (
           <div className="p-8 flex justify-center">
-            <LoadingSpinner />
+            <LoadingSpinner size="md" className="" />
           </div>
         ) : transacoes.length === 0 ? (
           <EmptyState
             icon={<HiOutlineCash className="w-8 h-8 text-gray-400" />}
             title="Nenhuma transação"
             description="Suas transações aparecerão aqui"
+            action={null}
           />
         ) : (
           <div className="divide-y">
@@ -283,7 +284,7 @@ export default function SaldoPage() {
                 />
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Disponível: {formatCurrency(lojistaProfile?.saldo || 0)}
+                Disponível: {formatCurrency(lojistaProfile.saldo || 0)}
               </p>
             </div>
             <div className="flex gap-3">

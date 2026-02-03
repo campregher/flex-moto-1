@@ -20,7 +20,7 @@ interface Entrega {
   total_pacotes: number
   created_at: string
   finalizada_em: string | null
-  lojista?: {
+  lojista: {
     foto_url: string | null
     user: {
       nome: string
@@ -55,7 +55,7 @@ export default function EntregasPage() {
         id, plataforma, status, valor_total, total_pacotes, created_at, finalizada_em,
         lojista:lojistas(foto_url, user:users(nome))
       `)
-      .eq('entregador_id', entregadorProfile?.id)
+      .eq('entregador_id', entregadorProfile.id)
       .order('created_at', { ascending: false })
 
     if (filter !== 'all') {
@@ -99,7 +99,7 @@ export default function EntregasPage() {
       {/* Entregas List */}
       {loading ? (
         <div className="card p-8 flex justify-center">
-          <LoadingSpinner />
+          <LoadingSpinner size="md" className="" />
         </div>
       ) : entregas.length === 0 ? (
         <div className="card p-8">
@@ -107,6 +107,7 @@ export default function EntregasPage() {
             icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
             title="Nenhuma entrega encontrada"
             description={filter === 'all' ? 'Suas entregas aparecerão aqui' : 'Não há entregas com esse filtro'}
+            action={null}
           />
         </div>
       ) : (
@@ -133,8 +134,9 @@ export default function EntregasPage() {
                     <>
                       <Avatar
                         src={entrega.lojista.foto_url}
-                        name={entrega.lojista.user.nome}
+                        name={entrega.lojista.user?.nome || ''}
                         size="sm"
+                        className=""
                       />
                       <span className="text-sm text-gray-600">
                         {entrega.lojista.user.nome}

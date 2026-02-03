@@ -20,7 +20,7 @@ interface Corrida {
   total_pacotes: number
   created_at: string
   finalizada_em: string | null
-  entregador?: {
+  entregador: {
     foto_url: string | null
     user: {
       nome: string
@@ -56,7 +56,7 @@ export default function CorridasPage() {
         id, plataforma, status, valor_total, total_pacotes, created_at, finalizada_em,
         entregador:entregadores(foto_url, user:users(nome))
       `)
-      .eq('lojista_id', lojistaProfile?.id)
+      .eq('lojista_id', lojistaProfile.id)
       .order('created_at', { ascending: false })
 
     if (filter !== 'all') {
@@ -93,7 +93,7 @@ export default function CorridasPage() {
             onClick={() => setFilter(sf.value)}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
               filter === sf.value
-              ? 'bg-primary-600 text-white'
+                ? 'bg-primary-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -105,7 +105,7 @@ export default function CorridasPage() {
       {/* Corridas List */}
       {loading ? (
         <div className="card p-8 flex justify-center">
-          <LoadingSpinner />
+          <LoadingSpinner size="md" className="" />
         </div>
       ) : corridas.length === 0 ? (
         <div className="card p-8">
@@ -113,6 +113,7 @@ export default function CorridasPage() {
             icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
             title="Nenhuma corrida encontrada"
             description={filter === 'all' ? 'Suas corridas aparecerão aqui' : 'Não há corridas com esse filtro'}
+            action={null}
           />
         </div>
       ) : (
@@ -141,6 +142,7 @@ export default function CorridasPage() {
                         src={corrida.entregador.foto_url}
                         name={corrida.entregador.user?.nome || ''}
                         size="sm"
+                        className=""
                       />
                       <span className="text-sm text-gray-600">
                         {corrida.entregador.user?.nome || '-'}

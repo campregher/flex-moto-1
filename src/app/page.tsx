@@ -43,7 +43,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Por que escolher o Flex?
+              Por que escolher o Flex
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Uma plataforma completa para gerenciar suas entregas de forma eficiente
@@ -111,7 +111,7 @@ export default function HomePage() {
                 Cadastre-se e comece a enviar suas encomendas do Mercado Livre Flex e Shopee com entregadores verificados.
               </p>
               <Link
-                href="/cadastro?tipo=lojista"
+                href="/cadastrotipo=lojista"
                 className="btn-primary w-full"
               >
                 Cadastrar como Lojista
@@ -132,7 +132,7 @@ export default function HomePage() {
                 Ganhe dinheiro fazendo entregas com sua moto. Horários flexíveis e pagamento garantido.
               </p>
               <Link
-                href="/cadastro?tipo=entregador"
+                href="/cadastrotipo=entregador"
                 className="btn-secondary w-full"
               >
                 Cadastrar como Entregador

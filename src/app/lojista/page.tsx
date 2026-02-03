@@ -24,7 +24,7 @@ interface CorridaAtiva {
   valor_total: number
   total_pacotes: number
   created_at: string
-  entregador?: {
+  entregador: {
     foto_url: string | null
     avaliacao_media: number
     user: {
@@ -38,8 +38,8 @@ interface ColetaOption {
   label: string | null
   endereco: string
   is_default: boolean | null
-  latitude?: number | null
-  longitude?: number | null
+  latitude: number | null
+  longitude: number | null
 }
 
 interface MlPedido {
@@ -102,7 +102,8 @@ export default function LojistaDashboard() {
 
   useEffect(() => {
     async function loadData() {
-      if (!lojistaProfile?.id) return
+      if (!lojistaProfile.id) return
+      if (!user?.id) return
 
       const { data: corridas } = await supabase
         .from('corridas')
@@ -146,7 +147,7 @@ export default function LojistaDashboard() {
       const { data: gastoData } = await supabase
         .from('financeiro')
         .select('valor')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('tipo', 'corrida')
         .gte('created_at', inicioMes.toISOString())
 
@@ -191,7 +192,7 @@ export default function LojistaDashboard() {
     }
 
     loadData()
-  }, [lojistaProfile?.id, user?.id, supabase])
+  }, [lojistaProfile.id, user?.id, supabase])
 
   const mlStatus = searchParams?.get('ml') ?? null
 
@@ -202,14 +203,14 @@ export default function LojistaDashboard() {
       const res = await fetch('/api/ml/sync', { method: 'POST' })
       const payload = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const details = payload?.details?.message || payload?.details?.error || ''
-        throw new Error(`${payload?.error || 'Erro ao sincronizar'} ${details}`.trim())
+        const details = payload.details.message || payload.details.error || ''
+        throw new Error(`${payload.error || 'Erro ao sincronizar'} ${details}`.trim())
       }
 
       const { data: pedidosData } = await supabase
         .from('mercadolivre_pedidos')
         .select('*')
-        .eq('lojista_id', lojistaProfile?.id)
+        .eq('lojista_id', lojistaProfile.id)
         .is('imported_at', null)
         .order('created_at', { ascending: false })
 
@@ -272,7 +273,7 @@ export default function LojistaDashboard() {
       pacotes: Math.max(1, editPedido.pacotes || 1),
       observacoes: editPedido.observacoes || null,
       coleta_id: editPedido.coleta_id || null,
-      coleta_endereco: coletaSelecionada?.endereco || null,
+      coleta_endereco: coletaSelecionada?.endereco ?? null,
       coleta_latitude: coletaSelecionada?.latitude ?? null,
       coleta_longitude: coletaSelecionada?.longitude ?? null,
     }
@@ -302,14 +303,14 @@ export default function LojistaDashboard() {
       const res = await fetch('/api/ml/import-selected', { method: 'POST' })
       const payload = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const details = payload?.details?.message || payload?.details?.code || ''
-        throw new Error(`${payload?.error || 'Erro ao importar'} ${details}`.trim())
+        const details = payload.details.message || payload.details.code || ''
+        throw new Error(`${payload.error || 'Erro ao importar'} ${details}`.trim())
       }
 
       const { data: pedidosData } = await supabase
         .from('mercadolivre_pedidos')
         .select('*')
-        .eq('lojista_id', lojistaProfile?.id)
+        .eq('lojista_id', lojistaProfile.id)
         .is('imported_at', null)
         .order('created_at', { ascending: false })
 
@@ -328,7 +329,7 @@ export default function LojistaDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            OlÃƒÂ¡, {user?.nome?.split(' ')[0] || ''}!
+            Olá, {(user?.nome || '').split(' ')[0] || ''}!
           </h1>
           <p className="text-gray-600">Gerencie suas entregas</p>
         </div>
@@ -348,7 +349,7 @@ export default function LojistaDashboard() {
             <div>
               <p className="text-sm text-gray-600">Saldo</p>
               <p className="text-lg font-bold text-gray-900">
-                {formatCurrency(lojistaProfile?.saldo || 0)}
+                {formatCurrency(lojistaProfile.saldo || 0)}
               </p>
             </div>
           </div>
@@ -384,9 +385,9 @@ export default function LojistaDashboard() {
               <HiOutlineStar className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">AvaliaÃƒÂ§ÃƒÂ£o</p>
+              <p className="text-sm text-gray-600">Avaliação</p>
               <p className="text-lg font-bold text-gray-900">
-                {(lojistaProfile?.avaliacao_media || 5.0).toFixed(1)}
+                {(lojistaProfile.avaliacao_media || 5.0).toFixed(1)}
               </p>
             </div>
           </div>
@@ -395,12 +396,12 @@ export default function LojistaDashboard() {
 
       {mlStatus === 'connected' && (
         <div className="bg-green-50 rounded-lg p-4 border border-green-200 text-green-800">
-          IntegraÃƒÂ§ÃƒÂ£o com Mercado Livre conectada com sucesso.
+          Integração com Mercado Livre conectada com sucesso.
         </div>
       )}
       {mlStatus && mlStatus !== 'connected' && (
         <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 text-yellow-800">
-          NÃƒÂ£o foi possÃƒÂ­vel conectar ao Mercado Livre. Tente novamente.
+          Não foi possível conectar ao Mercado Livre. Tente novamente.
         </div>
       )}
 
@@ -415,7 +416,7 @@ export default function LojistaDashboard() {
           </div>
           <div>
             <p className="font-medium text-gray-900">Depositar Saldo</p>
-            <p className="text-sm text-gray-600">Adicionar crÃƒÂ©ditos</p>
+            <p className="text-sm text-gray-600">Adicionar créditos</p>
           </div>
         </Link>
 
@@ -427,7 +428,7 @@ export default function LojistaDashboard() {
             <HiOutlineClipboardCheck className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <p className="font-medium text-gray-900">HistÃƒ³rico</p>
+            <p className="font-medium text-gray-900">Histórico</p>
             <p className="text-sm text-gray-600">Ver todas as corridas</p>
           </div>
         </Link>
@@ -441,7 +442,7 @@ export default function LojistaDashboard() {
               <h2 className="text-lg font-semibold text-gray-900">Mercado Livre (Flex)</h2>
               <p className="text-sm text-gray-600">
                 {mlIntegration
-                  ? `Conectado Â• ${mlIntegration.site_id} Â• Usuário ${mlIntegration.ml_user_id}`
+                  ? `Conectado • ${mlIntegration.site_id} • Usuário ${mlIntegration.ml_user_id}`
                   : 'Não conectado'}
               </p>
             </div>
@@ -562,6 +563,13 @@ export default function LojistaDashboard() {
                             }
                             placeholder="Rua, Número, bairro, cidade"
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                            id="edit_pedido_endereco"
+                            name="edit_pedido_endereco"
+                            disabled={false}
+                            country="br"
+                            autoComplete="street-address"
+                            preferLegacy={false}
+                            enableLiveGeocode={false}
                           />
                         </div>
 
@@ -621,13 +629,13 @@ export default function LojistaDashboard() {
                             value={editPedido.receiver_name || ''}
                             onChange={(e) => setEditPedido({ ...editPedido, receiver_name: e.target.value })}
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="Nome do destinat?rio"
+                            placeholder="Nome do destinatrio"
                           />
                           <input
                             value={editPedido.receiver_phone || ''}
                             onChange={(e) => setEditPedido({ ...editPedido, receiver_phone: e.target.value })}
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="Telefone do destinat?rio"
+                            placeholder="Telefone do destinatrio"
                           />
                         </div>
 
@@ -685,13 +693,13 @@ export default function LojistaDashboard() {
 
         {loading ? (
           <div className="p-8 flex justify-center">
-            <LoadingSpinner />
+            <LoadingSpinner size="md" className="" />
           </div>
         ) : corridasAtivas.length === 0 ? (
           <div className="p-8 text-center">
             <HiOutlineTruck className="w-8 h-8 text-gray-400 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhuma corrida ativa</h3>
-            <p className="text-gray-600 mb-4">Solicite uma nova corrida para comeÃƒÂ§ar</p>
+            <p className="text-gray-600 mb-4">Solicite uma nova corrida para começar</p>
             <Link href="/lojista/nova-corrida" className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm">
               <HiOutlinePlusCircle className="w-5 h-5 mr-2" />
               Nova Corrida
@@ -708,7 +716,7 @@ export default function LojistaDashboard() {
                 <div className="flex items-center gap-4">
                   {corrida.entregador ? (
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
-                      {corrida.entregador?.user?.nome?.charAt(0) || 'E'}
+                      {corrida.entregador.user.nome.charAt(0) || 'E'}
                     </div>
                   ) : (
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
@@ -731,7 +739,7 @@ export default function LojistaDashboard() {
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''} âÂ€Â¢ {timeAgo(corrida.created_at)}
+                      {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''} • {timeAgo(corrida.created_at)}
                     </p>
                   </div>
                 </div>
@@ -741,7 +749,7 @@ export default function LojistaDashboard() {
                   </p>
                   {corrida.entregador && (
                     <div className="flex items-center gap-1 mt-1">
-                      <span className="text-yellow-400">âÂ˜Â…</span>
+                      <span className="text-yellow-400">★</span>
                       <span className="text-sm text-gray-600">{corrida.entregador.avaliacao_media.toFixed(1)}</span>
                     </div>
                   )}

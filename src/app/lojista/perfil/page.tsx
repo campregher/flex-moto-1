@@ -42,7 +42,7 @@ export default function LojistaPerfilPage() {
   const [profileSaving, setProfileSaving] = useState(false)
   const [whatsapp, setWhatsapp] = useState(user?.whatsapp || '')
   const [fotoFile, setFotoFile] = useState<File | null>(null)
-  const [fotoPreview, setFotoPreview] = useState((profile as any)?.foto_url || '')
+  const [fotoPreview, setFotoPreview] = useState((profile as any).foto_url || '')
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -123,27 +123,27 @@ export default function LojistaPerfilPage() {
   }
 
   useEffect(() => {
-    setFotoPreview(normalizeFotoUrl(lojistaProfile?.foto_url))
-  }, [lojistaProfile?.foto_url])
+    setFotoPreview(normalizeFotoUrl(lojistaProfile.foto_url))
+  }, [lojistaProfile.foto_url])
 
   useEffect(() => {
-    const fotoUrl = lojistaProfile?.foto_url
+    const fotoUrl = lojistaProfile.foto_url
     const fotoPath = extractFotoPath(fotoUrl)
     if (!fotoPath) return
 
     supabase.storage
       .from('fotos')
         .createSignedUrl(fotoPath, 3600)
-        .then(({ data, error }: { data: { signedUrl?: string } | null; error: unknown }) => {
+        .then(({ data, error }: { data: { signedUrl: string } | null; error: unknown }) => {
         if (!error && data?.signedUrl) {
           setFotoPreview(data.signedUrl)
         }
       })
-  }, [lojistaProfile?.foto_url, supabase])
+  }, [lojistaProfile.foto_url, supabase])
 
   useEffect(() => {
-    const fotoUrl = lojistaProfile?.foto_url
-    if (!fotoUrl || !lojistaProfile?.id) return
+    const fotoUrl = lojistaProfile.foto_url
+    if (!fotoUrl || !lojistaProfile.id) return
     if (!fotoUrl.includes('/storage/v1/object/fotos/')) return
 
     const normalized = normalizeFotoUrl(fotoUrl)
@@ -158,12 +158,12 @@ export default function LojistaPerfilPage() {
           setProfile({ ...lojistaProfile, foto_url: normalized })
         }
       })
-  }, [lojistaProfile?.foto_url, lojistaProfile?.id, setProfile, supabase])
+  }, [lojistaProfile.foto_url, lojistaProfile.id, setProfile, supabase])
 
   const handleFotoChange = (file: File | null) => {
     setFotoFile(file)
     if (!file) {
-      setFotoPreview(lojistaProfile?.foto_url || '')
+      setFotoPreview(lojistaProfile.foto_url || '')
       return
     }
     const reader = new FileReader()
@@ -279,9 +279,9 @@ export default function LojistaPerfilPage() {
           is_default: item.id === coletaId,
         }))
       )
-      toast.success('EndereÃƒÂ§o padrÃƒÂ£o atualizado')
+      toast.success('Endereço padrão atualizado')
     } catch (err) {
-      toast.error('Erro ao definir endereÃƒÂ§o padrÃƒÂ£o')
+      toast.error('Erro ao definir endereço padrão')
     } finally {
       setColetaSaving(false)
     }
@@ -290,11 +290,11 @@ export default function LojistaPerfilPage() {
   async function handleAddColeta() {
     if (!lojistaProfile.id) return
     if (!newColeta.endereco.trim()) {
-      toast.error('Informe o endereÃƒÂ§o de coleta')
+      toast.error('Informe o endereço de coleta')
       return
     }
     if (coletas.length >= 4) {
-      toast.error('MÃƒÂ¡ximo de 4 endereÃƒÂ§os de coleta')
+      toast.error('Máximo de 4 endereços de coleta')
       return
     }
 
@@ -342,9 +342,9 @@ export default function LojistaPerfilPage() {
         cep: '',
       })
       setNewColetaDefault(false)
-      toast.success('EndereÃƒÂ§o de coleta adicionado')
+      toast.success('Endereço de coleta adicionado')
     } catch (err) {
-      toast.error('Erro ao adicionar endereÃƒÂ§o')
+      toast.error('Erro ao adicionar endereço')
     } finally {
       setColetaSaving(false)
     }
@@ -361,9 +361,9 @@ export default function LojistaPerfilPage() {
       if (error) throw error
 
       setColetas((prev) => prev.filter((item) => item.id !== coletaId))
-      toast.success('EndereÃƒÂ§o removido')
+      toast.success('Endereço removido')
     } catch (err) {
-      toast.error('Erro ao remover endereÃƒÂ§o')
+      toast.error('Erro ao remover endereço')
     } finally {
       setColetaSaving(false)
     }
@@ -372,7 +372,7 @@ export default function LojistaPerfilPage() {
   async function handleSaveEditColeta() {
     if (!editColetaId || !editColeta) return
     if (!editColeta.endereco.trim()) {
-      toast.error('Informe o endereÃƒÂ§o de coleta')
+      toast.error('Informe o endereço de coleta')
       return
     }
     setColetaSaving(true)
@@ -406,7 +406,7 @@ export default function LojistaPerfilPage() {
       setEditColeta(null)
       toast.success('Endereço atualizado')
     } catch (err) {
-      toast.error('Erro ao atualizar endere?o')
+      toast.error('Erro ao atualizar endereo')
     } finally {
       setColetaSaving(false)
     }
@@ -420,14 +420,25 @@ export default function LojistaPerfilPage() {
       <div className="card p-6 mb-6">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <Avatar src={fotoPreview || lojistaProfile?.foto_url} name={user?.nome || ''} size="xl" />
+            <Avatar
+              src={fotoPreview || lojistaProfile.foto_url}
+              name={user?.nome || ''}
+              size="xl"
+              className=""
+            />
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{user?.nome}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{user?.nome || ''}</h2>
               <p className="text-gray-500">Lojista</p>
               <div className="flex items-center gap-2 mt-1">
-                <Rating value={lojistaProfile?.avaliacao_media || 5} size="sm" />
+                <Rating
+                  value={lojistaProfile.avaliacao_media || 5}
+                  size="sm"
+                  max={5}
+                  showValue={false}
+                  onChange={() => {}}
+                />
                 <span className="text-sm text-gray-500">
-                  ({lojistaProfile.total_avaliacoes || 0} avalia?es)
+                  ({lojistaProfile.total_avaliacoes || 0} avaliações)
                 </span>
               </div>
             </div>
@@ -467,7 +478,7 @@ export default function LojistaPerfilPage() {
                   setProfileEditing(false)
                   setWhatsapp(user?.whatsapp || '')
                   setFotoFile(null)
-                  setFotoPreview(lojistaProfile?.foto_url || '')
+                  setFotoPreview(lojistaProfile.foto_url || '')
                 }}
                 className="btn-outline flex-1"
               >
@@ -488,7 +499,7 @@ export default function LojistaPerfilPage() {
             <HiOutlineMail className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium text-gray-900">{user?.email}</p>
+              <p className="font-medium text-gray-900">{user?.email || ''}</p>
             </div>
           </div>
 
@@ -523,7 +534,7 @@ export default function LojistaPerfilPage() {
       {/* Address */}
       <div className="card p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">EndereÃƒÂ§o de Coleta</h3>
+          <h3 className="font-semibold text-gray-900">Endereço de Coleta</h3>
           <button
             onClick={() => setEditing(!editing)}
             className="btn-ghost text-primary-600"
@@ -553,8 +564,15 @@ export default function LojistaPerfilPage() {
                   endereco_cep: details.postalCode || prev.endereco_cep,
                 }))
               }
-              placeholder="EndereÃƒÂ§o completo para coletas"
+              placeholder="Endereço completo para coletas"
               className="input"
+              id="endereco_base"
+              name="endereco_base"
+              disabled={false}
+              country="br"
+              autoComplete="street-address"
+              preferLegacy={false}
+              enableLiveGeocode={false}
             />
             <div className="flex gap-3">
               <button onClick={() => setEditing(false)} className="btn-outline flex-1">
@@ -569,7 +587,7 @@ export default function LojistaPerfilPage() {
           <div className="flex items-start gap-3">
             <HiOutlineLocationMarker className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-gray-700">
-              {lojistaProfile?.endereco_base || 'Nenhum endereÃƒÂ§o cadastrado'}
+              {lojistaProfile.endereco_base || 'Nenhum endereço cadastrado'}
             </p>
           </div>
         )}
@@ -579,18 +597,18 @@ export default function LojistaPerfilPage() {
       <div className="card p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-gray-900">EndereÃƒÂ§os de Coleta (atÃƒÂ© 4)</h3>
+            <h3 className="font-semibold text-gray-900">Endereços de Coleta (até 4)</h3>
             <p className="text-sm text-gray-500">
-              Use estes endereÃƒÂ§os para criar corridas e importar pedidos do Mercado Livre.
+              Use estes endereços para criar corridas e importar pedidos do Mercado Livre.
             </p>
           </div>
           <span className="text-sm text-gray-600">{coletas.length}/4</span>
         </div>
 
         {coletasLoading ? (
-          <p className="text-sm text-gray-500">Carregando endereÃƒÂ§os...</p>
+          <p className="text-sm text-gray-500">Carregando endereços...</p>
         ) : coletas.length === 0 ? (
-          <p className="text-sm text-gray-500">Nenhum endereÃƒÂ§o cadastrado.</p>
+          <p className="text-sm text-gray-500">Nenhum endereço cadastrado.</p>
         ) : (
           <div className="space-y-3 mb-4">
             {coletas.map((coleta) => (
@@ -622,8 +640,15 @@ export default function LojistaPerfilPage() {
                           cep: details.postalCode || editColeta.cep,
                         })
                       }
-                      placeholder="EndereÃƒÂ§o completo"
+                      placeholder="Endereço completo"
                       className="input"
+                      id={`edit_coleta_${editColetaId || 'novo'}`}
+                      name={`edit_coleta_${editColetaId || 'novo'}`}
+                      disabled={coletaSaving}
+                      country="br"
+                      autoComplete="street-address"
+                      preferLegacy={false}
+                      enableLiveGeocode={false}
                     />
                     <div className="flex gap-3">
                       <button
@@ -650,9 +675,9 @@ export default function LojistaPerfilPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-gray-900">
-                        {coleta.label || 'EndereÃƒÂ§o de coleta'}
+                        {coleta.label || 'Endereço de coleta'}
                         {coleta.is_default && (
-                          <span className="ml-2 text-xs text-green-600">PadrÃƒÂ£o</span>
+                          <span className="ml-2 text-xs text-green-600">Padrão</span>
                         )}
                       </p>
                       <p className="text-sm text-gray-600">{coleta.endereco}</p>
@@ -665,7 +690,7 @@ export default function LojistaPerfilPage() {
                           onClick={() => setDefaultColeta(coleta.id)}
                           disabled={coletaSaving}
                         >
-                          Definir padrÃƒÂ£o
+                          Definir padrão
                         </button>
                       )}
                       <button
@@ -706,7 +731,7 @@ export default function LojistaPerfilPage() {
         )}
 
         <div className="border-t border-gray-200 pt-4">
-          <h4 className="font-medium text-gray-900 mb-3">Adicionar novo endereÃƒÂ§o</h4>
+          <h4 className="font-medium text-gray-900 mb-3">Adicionar novo endereço</h4>
           <div className="space-y-3">
             <input
               value={newColeta.label}
@@ -731,8 +756,15 @@ export default function LojistaPerfilPage() {
                   cep: details.postalCode || prev.cep,
                 }))
               }
-              placeholder="EndereÃƒÂ§o completo"
+              placeholder="Endereço completo"
               className="input"
+              id="novo_endereco_coleta"
+              name="novo_endereco_coleta"
+              disabled={coletaSaving}
+              country="br"
+              autoComplete="street-address"
+              preferLegacy={false}
+              enableLiveGeocode={false}
             />
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
@@ -740,7 +772,7 @@ export default function LojistaPerfilPage() {
                 checked={newColetaDefault}
                 onChange={(e) => setNewColetaDefault(e.target.checked)}
               />
-              Definir como endereÃƒÂ§o padrÃƒÂ£o
+              Definir como endereço padrão
             </label>
             <button
               type="button"
@@ -749,24 +781,24 @@ export default function LojistaPerfilPage() {
               className="btn-secondary w-full"
             >
               <HiOutlinePlus className="w-5 h-5 mr-2" />
-              Adicionar endereÃƒÂ§o de coleta
+              Adicionar endereço de coleta
             </button>
           </div>
         </div>
       </div>
       {/* Stats */}
       <div className="card p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">EstatÃƒÂ­sticas</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Estatísticas</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-gray-50 rounded-lg text-center">
-            <p className="text-2xl font-bold text-primary-600">{lojistaProfile?.total_corridas || 0}</p>
+            <p className="text-2xl font-bold text-primary-600">{lojistaProfile.total_corridas || 0}</p>
             <p className="text-sm text-gray-500">Corridas</p>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg text-center">
             <p className="text-2xl font-bold text-primary-600">
-              {lojistaProfile?.avaliacao_media?.toFixed(1) || '5.0'}
+              {lojistaProfile.avaliacao_media.toFixed(1) || '5.0'}
             </p>
-            <p className="text-sm text-gray-500">AvaliaÃƒÂ§ÃƒÂ£o</p>
+            <p className="text-sm text-gray-500">Avaliação</p>
           </div>
         </div>
       </div>

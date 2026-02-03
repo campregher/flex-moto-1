@@ -4,42 +4,42 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/lib/database.types'
 
 type MlOrderSearch = {
-  results?: MlOrder[]
+  results: MlOrder[]
 }
 
 type MlOrder = {
   id: number
-  status?: string
-  shipping?: { id?: number }
-  buyer?: {
-    first_name?: string
-    last_name?: string
-    nickname?: string
+  status: string
+  shipping: { id: number }
+  buyer: {
+    first_name: string
+    last_name: string
+    nickname: string
   }
-  order_items?: { quantity: number }[]
+  order_items: { quantity: number }[]
 }
 
 type MlShipment = {
   id: number
-  status?: string
-  receiver_address?: {
-    address_line?: string
-    street_name?: string
-    street_number?: string
-    zip_code?: string
-    city?: { name?: string }
-    state?: { id?: string; name?: string }
-    neighborhood?: { name?: string }
-    latitude?: number | string
-    longitude?: number | string
-    comment?: string
-    receiver_name?: string
-    receiver_phone?: string
+  status: string
+  receiver_address: {
+    address_line: string
+    street_name: string
+    street_number: string
+    zip_code: string
+    city: { name: string }
+    state: { id: string; name: string }
+    neighborhood: { name: string }
+    latitude: number | string
+    longitude: number | string
+    comment: string
+    receiver_name: string
+    receiver_phone: string
   }
-  shipping_items?: { quantity: number }[]
+  shipping_items: { quantity: number }[]
 }
 
-function parseNumber(value?: string | number | null) {
+function parseNumber(value: string | number | null) {
   if (value === undefined || value === null) return null
   if (typeof value === 'number') return value
   const normalized = value.replace(',', '.')
@@ -47,7 +47,7 @@ function parseNumber(value?: string | number | null) {
   return Number.isNaN(num) ? null : num
 }
 
-function normalizeUf(stateId?: string, stateName?: string) {
+function normalizeUf(stateId: string, stateName: string) {
   if (stateId) {
     const match = stateId.match(/^[A-Z]{2}-([A-Z]{2})$/)
     if (match) return match[1]
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     .single()
 
   const lojistaRow = lojista as Database['public']['Tables']['lojistas']['Row'] | null
-  const lojistaId = lojistaRow?.id
+  const lojistaId = lojistaRow?.id ?? null
 
   if (!lojistaId) {
     return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
@@ -85,13 +85,15 @@ export async function POST(request: Request) {
     .single()
 
   const integrationRow = integration as { access_token: string | null; ml_user_id: number | null } | null
+  const integrationToken = integrationRow?.access_token ?? null
+  const integrationUserId = integrationRow?.ml_user_id ?? null
 
-  if (!integrationRow?.access_token || !integrationRow?.ml_user_id) {
+  if (!integrationToken || !integrationUserId) {
     return NextResponse.json({ error: 'Mercado Livre not connected' }, { status: 400 })
   }
 
-  const token = integrationRow.access_token
-  const sellerId = integrationRow.ml_user_id
+  const token = integrationToken
+  const sellerId = integrationUserId
 
   const now = new Date()
   const fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -150,7 +152,7 @@ export async function POST(request: Request) {
 
   const rows = []
   for (const order of orders) {
-    const shipmentId = order.shipping?.id
+    const shipmentId = order.shipping.id
     if (!shipmentId) continue
 
     const shipmentRes = await fetch(`https://api.mercadolibre.com/shipments/${shipmentId}`, {
@@ -166,13 +168,13 @@ export async function POST(request: Request) {
 
     const receiver = shipment.receiver_address || {}
     const buyerName =
-      [order.buyer?.first_name, order.buyer?.last_name].filter(Boolean).join(' ') ||
-      order.buyer?.nickname ||
+      [order.buyer.first_name, order.buyer.last_name].filter(Boolean).join(' ') ||
+      order.buyer.nickname ||
       null
 
     const totalPacotes =
-      shipment.shipping_items?.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
-      order.order_items?.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
+      shipment.shipping_items.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
+      order.order_items.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
       1
 
     const enderecoEntrega =
@@ -188,26 +190,26 @@ export async function POST(request: Request) {
       order_status: order.status || null,
       shipping_status: shipment.status || null,
       buyer_name: buyerName,
-      receiver_name: existing?.receiver_name || receiver.receiver_name || buyerName,
-      receiver_phone: existing?.receiver_phone || receiver.receiver_phone || null,
-      endereco: existing?.endereco || enderecoEntrega,
-      logradouro: existing?.logradouro || receiver.street_name || null,
-      numero: existing?.numero || (receiver.street_number ? String(receiver.street_number) : null),
-      complemento: existing?.complemento || receiver.comment || null,
-      bairro: existing?.bairro || receiver.neighborhood?.name || null,
-      cidade: existing?.cidade || receiver.city?.name || null,
-      uf: existing?.uf || normalizeUf(receiver.state?.id, receiver.state?.name),
-      cep: existing?.cep || receiver.zip_code || null,
-      latitude: existing?.latitude ?? parseNumber(receiver.latitude),
-      longitude: existing?.longitude ?? parseNumber(receiver.longitude),
-      pacotes: existing?.pacotes || totalPacotes,
-      observacoes: existing?.observacoes || null,
-      coleta_id: existing?.coleta_id || (defaultColetaRow ? defaultColetaRow.id : null),
-      coleta_endereco: existing?.coleta_endereco || (defaultColetaRow ? defaultColetaRow.endereco : null),
-      coleta_latitude: existing?.coleta_latitude ?? (defaultColetaRow?.latitude ?? null),
-      coleta_longitude: existing?.coleta_longitude ?? (defaultColetaRow?.longitude ?? null),
-      selected: existing?.selected ?? false,
-      imported_at: existing?.imported_at ?? null,
+      receiver_name: existing.receiver_name || receiver.receiver_name || buyerName,
+      receiver_phone: existing.receiver_phone || receiver.receiver_phone || null,
+      endereco: existing.endereco || enderecoEntrega,
+      logradouro: existing.logradouro || receiver.street_name || null,
+      numero: existing.numero || (receiver.street_number ? String(receiver.street_number) : null),
+      complemento: existing.complemento || receiver.comment || null,
+      bairro: existing.bairro || receiver.neighborhood.name || null,
+      cidade: existing.cidade || receiver.city.name || null,
+      uf: existing.uf || normalizeUf(receiver.state.id, receiver.state.name),
+      cep: existing.cep || receiver.zip_code || null,
+      latitude: existing.latitude ?? parseNumber(receiver.latitude),
+      longitude: existing.longitude ?? parseNumber(receiver.longitude),
+      pacotes: existing.pacotes || totalPacotes,
+      observacoes: existing.observacoes || null,
+      coleta_id: existing.coleta_id || (defaultColetaRow ? defaultColetaRow.id : null),
+      coleta_endereco: existing.coleta_endereco || (defaultColetaRow ? defaultColetaRow.endereco : null),
+      coleta_latitude: existing.coleta_latitude ?? (defaultColetaRow ? defaultColetaRow.latitude : null),
+      coleta_longitude: existing.coleta_longitude ?? (defaultColetaRow ? defaultColetaRow.longitude : null),
+      selected: existing.selected ?? false,
+      imported_at: existing.imported_at ?? null,
     })
   }
 

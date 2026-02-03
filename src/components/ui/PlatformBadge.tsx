@@ -4,7 +4,7 @@ import type { Plataforma } from '@/lib/database.types'
 
 interface PlatformBadgeProps {
   platform: Plataforma
-  size?: 'sm' | 'md' | 'lg'
+  size: 'sm' | 'md' | 'lg'
 }
 
 export function PlatformBadge({ platform, size = 'md' }: PlatformBadgeProps) {

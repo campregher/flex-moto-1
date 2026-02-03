@@ -30,7 +30,7 @@ export const useLocationStore = create<LocationState>((set, get) => ({
     }
     
     const watchId = navigator.geolocation.watchPosition(
-      (position) => {
+     (position) => {
         set({
           currentLocation: {
             lat: position.coords.latitude,
@@ -39,7 +39,7 @@ export const useLocationStore = create<LocationState>((set, get) => ({
           error: null,
         })
       },
-      (error) => {
+     (error) => {
         let errorMessage = 'Erro ao obter localização'
         switch (error.code) {
           case error.PERMISSION_DENIED:

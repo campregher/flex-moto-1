@@ -25,9 +25,9 @@ interface Corrida {
   plataforma: 'ml_flex' | 'shopee_direta'
   status: string
   valor_total: number
-  frete_valor?: number | null
-  peso_kg?: number | null
-  volume_cm3?: number | null
+  frete_valor: number | null
+  peso_kg: number | null
+  volume_cm3: number | null
   total_pacotes: number
   codigo_entrega: string
   endereco_coleta: string
@@ -53,10 +53,10 @@ interface Corrida {
     longitude: number
     complemento: string | null
     observacoes: string | null
-    receiver_name?: string | null
-    receiver_phone?: string | null
-    peso_kg?: number | null
-    volume_cm3?: number | null
+    receiver_name: string | null
+    receiver_phone: string | null
+    peso_kg: number | null
+    volume_cm3: number | null
     pacotes: number
     ordem: number
     status: string
@@ -128,7 +128,7 @@ export default function EntregaDetalhePage() {
 
   async function confirmarColeta() {
     if (codeInput.toUpperCase() !== corrida!.codigo_entrega) {
-      toast.error('CÃ³digo incorreto')
+      toast.error('Código incorreto')
       return
     }
 
@@ -157,7 +157,7 @@ export default function EntregaDetalhePage() {
 
   async function confirmarEntrega(enderecoId: string, codigo: string) {
     if (codeInput.toUpperCase() !== codigo) {
-      toast.error('CÃ³digo incorreto')
+      toast.error('Código incorreto')
       return
     }
 
@@ -189,12 +189,12 @@ export default function EntregaDetalhePage() {
           .eq('id', corrida!.id)
 
         // Credit entregador
-        const novoSaldo = (entregadorProfile?.saldo || 0) + corrida!.valor_total
+        const novoSaldo = (entregadorProfile.saldo || 0) + corrida!.valor_total
         await supabase
           .from('entregadores')
           .update({
             saldo: novoSaldo,
-            total_entregas: (entregadorProfile?.total_entregas || 0) + 1,
+            total_entregas: (entregadorProfile.total_entregas || 0) + 1,
           })
           .eq('id', entregadorProfile.id)
 
@@ -202,7 +202,7 @@ export default function EntregaDetalhePage() {
           user_id: user!.id,
           tipo: 'corrida',
           valor: corrida!.valor_total,
-          saldo_anterior: entregadorProfile?.saldo || 0,
+          saldo_anterior: entregadorProfile.saldo || 0,
           saldo_posterior: novoSaldo,
           descricao: `Corrida #${corrida!.id.slice(0, 8)} finalizada`,
           corrida_id: corrida!.id,
@@ -262,23 +262,23 @@ export default function EntregaDetalhePage() {
         comentario: comentario || null,
       })
 
-      toast.success('AvaliaÃ§Ã£o enviada!')
+      toast.success('Avaliação enviada!')
       setShowRating(false)
       router.push('/entregador')
     } catch (err) {
-      toast.error('Erro ao enviar avaliaÃ§Ã£o')
+      toast.error('Erro ao enviar avaliação')
     }
   }
 
   function openNavigation(lat: number, lng: number) {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`
+    const url = `https://www.google.com/maps/dir/api=1&destination=${lat},${lng}&travelmode=driving`
     window.open(url, '_blank')
   }
 
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="lg" className="" />
       </div>
     )
   }
@@ -286,7 +286,7 @@ export default function EntregaDetalhePage() {
   if (!corrida) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Corrida nÃ£o encontrada</p>
+        <p className="text-gray-500">Corrida não encontrada</p>
         <Link href="/entregador" className="btn-secondary mt-4">
           Voltar
         </Link>
@@ -308,6 +308,7 @@ export default function EntregaDetalhePage() {
         icon: 'delivery' as const,
       })),
   ]
+  const mapCenter = mapMarkers[0]?.position ?? { lat: 0, lng: 0 }
 
   const nextDelivery = corrida.enderecos.find((e) => e.status === 'pendente')
   const rotaDestinos = corrida.enderecos
@@ -338,8 +339,8 @@ export default function EntregaDetalhePage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <PlatformBadge platform={corrida.plataforma} />
-                <StatusBadge status={corrida.status} />
+                <PlatformBadge platform={corrida.plataforma} size="md" />
+                <StatusBadge status={corrida.status} size="md" />
               </div>
               <p className="text-2xl font-bold text-secondary-600">
                 {formatCurrency(corrida.valor_total)}
@@ -353,7 +354,7 @@ export default function EntregaDetalhePage() {
                     <p>Peso: {corrida.peso_kg.toFixed(2)} kg</p>
                   )}
                   {corrida.volume_cm3 !== null && corrida.volume_cm3 !== undefined && (
-                    <p>Volume: {corrida.volume_cm3.toFixed(0)} cmÂ³</p>
+                    <p>Volume: {corrida.volume_cm3.toFixed(0)} cm³</p>
                   )}
                 </div>
               )}
@@ -370,7 +371,10 @@ export default function EntregaDetalhePage() {
         <div className="card overflow-hidden">
           <Map
             markers={mapMarkers}
+            center={mapCenter}
+            zoom={12}
             driverLocation={currentLocation}
+            onMapLoad={() => {}}
             showRoute
             className="h-[250px]"
           />
@@ -385,10 +389,17 @@ export default function EntregaDetalhePage() {
                 src={corrida.lojista.foto_url}
                 name={corrida.lojista.user?.nome || ''}
                 size="lg"
+                className=""
               />
               <div>
                 <p className="font-medium text-gray-900">{corrida.lojista.user?.nome || '-'}</p>
-                <Rating value={corrida.lojista.avaliacao_media} size="sm" />
+                <Rating
+                  value={corrida.lojista.avaliacao_media}
+                  size="sm"
+                  max={5}
+                  showValue={false}
+                  onChange={() => {}}
+                />
               </div>
             </div>
             <a
@@ -424,7 +435,7 @@ export default function EntregaDetalhePage() {
                       <p className="text-sm text-gray-500 mt-1">{corrida.coleta_observacoes}</p>
                     )}
                     <p className="text-xs text-gray-400 mt-2">
-                      CÃ³digo: <span className="font-mono font-bold">{corrida.codigo_entrega}</span>
+                      Código: <span className="font-mono font-bold">{corrida.codigo_entrega}</span>
                     </p>
                   </div>
                 </div>
@@ -444,7 +455,10 @@ export default function EntregaDetalhePage() {
               <div
                 key={endereco.id}
                 className={`p-4 rounded-xl ${
-                  endereco.status === 'pendente' && corrida.status === 'em_entrega' && endereco.id === nextDelivery?.id
+                  endereco.status === 'pendente' &&
+                  corrida.status === 'em_entrega' &&
+                  !!nextDelivery &&
+                  endereco.id === nextDelivery.id
                     ? 'bg-secondary-50 border-2 border-secondary-500'
                     : endereco.status === 'entregue'
                     ? 'bg-green-50'
@@ -464,7 +478,7 @@ export default function EntregaDetalhePage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">
-                        Entrega {index + 1} â€¢ {endereco.pacotes} pacote{endereco.pacotes > 1 ? 's' : ''}
+                        Entrega {index + 1} • {endereco.pacotes} pacote{endereco.pacotes > 1 ? 's' : ''}
                       </p>
                       <p className="font-medium text-gray-900">{endereco.endereco}</p>
                       {endereco.receiver_name && (
@@ -481,7 +495,7 @@ export default function EntregaDetalhePage() {
                         <p className="text-sm text-gray-600">
                           {endereco.peso_kg ? `Peso ${endereco.peso_kg.toFixed(2)} kg` : ''}
                           {endereco.peso_kg && endereco.volume_cm3 ? ' • ' : ''}
-                          {endereco.volume_cm3 ? `Volume ${endereco.volume_cm3.toFixed(0)} cmÂ³` : ''}
+                          {endereco.volume_cm3 ? `Volume ${endereco.volume_cm3.toFixed(0)} cm³` : ''}
                         </p>
                       )}
                       {endereco.complemento && (
@@ -492,7 +506,7 @@ export default function EntregaDetalhePage() {
                       )}
                       {endereco.status === 'pendente' && (
                         <p className="text-xs text-gray-400 mt-2">
-                          CÃ³digo: <span className="font-mono font-bold">{endereco.codigo_confirmacao}</span>
+                          Código: <span className="font-mono font-bold">{endereco.codigo_confirmacao}</span>
                         </p>
                       )}
                     </div>
@@ -516,9 +530,9 @@ export default function EntregaDetalhePage() {
           <div className="flex flex-col gap-3">
             <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
+                <span className="text-gray-600">Distância estimada da rota</span>
                 <span className="font-semibold text-gray-900">
-                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
+                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'Indisponível'}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -550,9 +564,9 @@ export default function EntregaDetalhePage() {
           <div className="flex flex-col gap-3">
             <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
+                <span className="text-gray-600">Distância estimada da rota</span>
                 <span className="font-semibold text-gray-900">
-                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
+                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'Indisponível'}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -605,7 +619,7 @@ export default function EntregaDetalhePage() {
             {showCodeInput === 'coleta' && (
               <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
+                  <span className="text-gray-600">Distância estimada da rota</span>
                   <span className="font-semibold text-gray-900">{distanciaRotaKm.toFixed(1)} km</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
@@ -666,6 +680,7 @@ export default function EntregaDetalhePage() {
                 src={corrida.lojista.foto_url}
                 name={corrida.lojista.user?.nome || ''}
                 size="xl"
+                className=""
               />
             </div>
             <p className="text-center font-medium text-gray-900 mb-4">
@@ -673,14 +688,14 @@ export default function EntregaDetalhePage() {
             </p>
 
             <div className="flex justify-center mb-4">
-              <Rating value={rating} size="lg" onChange={setRating} />
+              <Rating value={rating} size="lg" max={5} showValue={false} onChange={setRating} />
             </div>
 
             <textarea
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
               className="input mb-4"
-              placeholder="ComentÃ¡rio (opcional)"
+              placeholder="Comentário (opcional)"
               rows={3}
             />
 

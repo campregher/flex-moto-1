@@ -27,9 +27,9 @@ interface Corrida {
   plataforma: 'ml_flex' | 'shopee_direta'
   status: string
   valor_total: number
-  frete_valor?: number | null
-  peso_kg?: number | null
-  volume_cm3?: number | null
+  frete_valor: number | null
+  peso_kg: number | null
+  volume_cm3: number | null
   total_pacotes: number
   distancia_total_km: number
   codigo_entrega: string
@@ -42,7 +42,7 @@ interface Corrida {
   aceita_em: string | null
   coletada_em: string | null
   finalizada_em: string | null
-  entregador?: {
+  entregador: {
     id: string
     foto_url: string | null
     avaliacao_media: number
@@ -61,10 +61,10 @@ interface Corrida {
     longitude: number
     complemento: string | null
     observacoes: string | null
-    receiver_name?: string | null
-    receiver_phone?: string | null
-    peso_kg?: number | null
-    volume_cm3?: number | null
+    receiver_name: string | null
+    receiver_phone: string | null
+    peso_kg: number | null
+    volume_cm3: number | null
     pacotes: number
     ordem: number
     status: string
@@ -105,7 +105,7 @@ export default function CorridaDetalhePage() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
-        () => {
+       () => {
           if (!suppressReloadRef.current) {
             loadCorrida(corridaId)
           }
@@ -114,7 +114,7 @@ export default function CorridaDetalhePage() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'entregadores' },
-        () => {
+       () => {
           if (!suppressReloadRef.current) {
             loadCorrida(corridaId)
           }
@@ -145,12 +145,12 @@ export default function CorridaDetalhePage() {
       setCorrida(data as any)
       
       // Show rating modal if corrida just finished
-      if (data.status === 'finalizada' && data.entregador) {
+      if (data.status === 'finalizada' && data.entregador && user?.id) {
         const { data: existingRating } = await supabase
           .from('avaliacoes')
           .select('id')
           .eq('corrida_id', data.id)
-          .eq('avaliador_id', user?.id)
+          .eq('avaliador_id', user.id)
           .single()
 
         if (!existingRating) {
@@ -243,14 +243,14 @@ export default function CorridaDetalhePage() {
 
         const usarCoords =
           Boolean(editColeta.latitude && editColeta.longitude) && destinosCoords.length > 0
-        const usarEnderecos = !usarCoords && editEnderecos.some((e) => e.endereco?.trim())
+        const usarEnderecos = !usarCoords && editEnderecos.some((e) => e.endereco.trim())
 
         if (usarCoords || usarEnderecos) {
           const origin = usarCoords
             ? new google.maps.LatLng(editColeta.latitude, editColeta.longitude)
             : editColeta.endereco.trim()
           const enderecosValidos = editEnderecos
-            .map((e) => e.endereco?.trim())
+            .map((e) => e.endereco.trim())
             .filter(Boolean) as string[]
           const destination = usarCoords
             ? destinosCoords[destinosCoords.length - 1]
@@ -270,8 +270,8 @@ export default function CorridaDetalhePage() {
                 region: 'BR',
                 provideRouteAlternatives: false,
               },
-              (res, status) => {
-                if (status === 'OK' && res?.routes?.length) {
+             (res, status) => {
+                if (status === 'OK' && res && res.routes.length) {
                   resolve(res)
                 } else {
                   resolve(null)
@@ -280,11 +280,11 @@ export default function CorridaDetalhePage() {
             )
           })
 
-          if (result?.routes?.length) {
-            const totalMeters = result.routes[0].legs.reduce(
+          if (result && result.routes.length) {
+             const totalMeters = result.routes[0].legs.reduce(
               (sum, leg) => sum + (leg.distance?.value || 0),
-              0
-            )
+               0
+             )
             distanciaKm = Math.round((totalMeters / 1000) * 10) / 10
           }
         }
@@ -385,12 +385,14 @@ export default function CorridaDetalhePage() {
 
   async function submitRating() {
     if (!corrida?.entregador) return
+    const entregadorUserId = corrida.entregador.user?.id
+    if (!user?.id || !entregadorUserId) return
 
     try {
       await supabase.from('avaliacoes').insert({
         corrida_id: corrida.id,
-        avaliador_id: user!.id,
-        avaliado_id: corrida.entregador.user.id,
+        avaliador_id: user.id,
+        avaliado_id: entregadorUserId,
         nota: rating,
         comentario: comentario || null,
       })
@@ -399,7 +401,7 @@ export default function CorridaDetalhePage() {
       const { data: ratings } = await supabase
         .from('avaliacoes')
         .select('nota')
-        .eq('avaliado_id', corrida.entregador.user.id)
+        .eq('avaliado_id', entregadorUserId)
 
       if (ratings) {
         const avgRating =
@@ -411,7 +413,7 @@ export default function CorridaDetalhePage() {
             avaliacao_media: avgRating,
             total_avaliacoes: ratings.length,
           })
-          .eq('user_id', corrida.entregador.user.id)
+          .eq('user_id', entregadorUserId)
       }
 
       toast.success('Avaliação enviada!')
@@ -424,7 +426,7 @@ export default function CorridaDetalhePage() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="lg" className="" />
       </div>
     )
   }
@@ -454,6 +456,7 @@ export default function CorridaDetalhePage() {
         icon: 'delivery' as const,
       })),
   ]
+  const mapCenter = mapMarkers[0]?.position ?? { lat: 0, lng: 0 }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -471,8 +474,8 @@ export default function CorridaDetalhePage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <PlatformBadge platform={corrida.plataforma} />
-                <StatusBadge status={corrida.status} />
+                <PlatformBadge platform={corrida.plataforma} size="md" />
+                <StatusBadge status={corrida.status} size="md" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(corrida.valor_total)}
@@ -515,11 +518,14 @@ export default function CorridaDetalhePage() {
         <div className="card overflow-hidden">
           <Map
             markers={mapMarkers}
+            center={mapCenter}
+            zoom={12}
             driverLocation={
               corrida.entregador?.latitude && corrida.entregador?.longitude
                 ? { lat: corrida.entregador.latitude, lng: corrida.entregador.longitude }
                 : null
             }
+            onMapLoad={() => {}}
             showRoute
             className="h-[300px]"
           />
@@ -535,10 +541,17 @@ export default function CorridaDetalhePage() {
                   src={corrida.entregador.foto_url}
                   name={corrida.entregador.user?.nome || ''}
                   size="lg"
+                  className=""
                 />
                 <div>
                   <p className="font-medium text-gray-900">{corrida.entregador.user?.nome || '-'}</p>
-                  <Rating value={corrida.entregador.avaliacao_media} size="sm" />
+                  <Rating
+                    value={corrida.entregador.avaliacao_media}
+                    size="sm"
+                    max={5}
+                    showValue={false}
+                    onChange={() => {}}
+                  />
                 </div>
               </div>
               <a
@@ -602,7 +615,13 @@ export default function CorridaDetalhePage() {
                       }
                       placeholder="Rua, numero, bairro, cidade"
                       className="input"
+                      id="edit_coleta_endereco"
+                      name="edit_coleta_endereco"
+                      disabled={false}
+                      country="br"
+                      autoComplete="street-address"
                       preferLegacy
+                      enableLiveGeocode={false}
                     />
                     <input
                       type="text"
@@ -649,7 +668,7 @@ export default function CorridaDetalhePage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-gray-500">
-                      Entrega {index + 1} ? {endereco.pacotes} pacote{endereco.pacotes > 1 ? 's' : ''}
+                      Entrega {index + 1} • {endereco.pacotes} pacote{endereco.pacotes > 1 ? 's' : ''}
                     </p>
                     <StatusBadge status={endereco.status} size="sm" />
                   </div>
@@ -682,7 +701,13 @@ export default function CorridaDetalhePage() {
                         }
                         placeholder="Rua, numero, bairro, cidade"
                         className="input"
+                        id={`endereco_${endereco.id}`}
+                        name={`endereco_${endereco.id}`}
+                        disabled={false}
+                        country="br"
+                        autoComplete="street-address"
                         preferLegacy
+                        enableLiveGeocode={false}
                       />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input
@@ -723,14 +748,14 @@ export default function CorridaDetalhePage() {
                         onChange={(e) =>
                           setEditEnderecos((prev) =>
                             prev.map((item) =>
-                              item.id === endereco.id
-                                ? { ...item, observacoes: e.target.value }
-                                : item
+                                item.id === endereco.id
+                                  ? { ...item, observacoes: e.target.value }
+                                  : item
                             )
                           )
                         }
                         className="input"
-                        placeholder="Observa??es"
+                        placeholder="Observações"
                       />
                     </div>
                   ) : (
@@ -749,15 +774,15 @@ export default function CorridaDetalhePage() {
                       {(endereco.peso_kg || endereco.volume_cm3) && (
                         <p className="text-sm text-gray-600">
                           {endereco.peso_kg ? `Peso ${endereco.peso_kg.toFixed(2)} kg` : ''}
-                          {endereco.peso_kg && endereco.volume_cm3 ? ' ? ' : ''}
-                          {endereco.volume_cm3 ? `Volume ${endereco.volume_cm3.toFixed(0)} cm?` : ''}
+                          {endereco.peso_kg && endereco.volume_cm3 ? '  ' : ''}
+                          {endereco.volume_cm3 ? `Volume ${endereco.volume_cm3.toFixed(0)} cm` : ''}
                         </p>
                       )}
                       {endereco.complemento && (
                         <p className="text-sm text-gray-600">{endereco.complemento}</p>
                       )}
                       <p className="text-xs text-gray-400 mt-1">
-                        C?digo: {endereco.codigo_confirmacao}
+                        Cdigo: {endereco.codigo_confirmacao}
                       </p>
                     </>
                   )}
@@ -814,6 +839,7 @@ export default function CorridaDetalhePage() {
                 src={corrida.entregador.foto_url}
                 name={corrida.entregador.user?.nome || ''}
                 size="xl"
+                className=""
               />
             </div>
             <p className="text-center font-medium text-gray-900 mb-4">
@@ -821,7 +847,7 @@ export default function CorridaDetalhePage() {
             </p>
 
             <div className="flex justify-center mb-4">
-              <Rating value={rating} size="lg" onChange={setRating} />
+              <Rating value={rating} size="lg" max={5} showValue={false} onChange={setRating} />
             </div>
 
             <textarea

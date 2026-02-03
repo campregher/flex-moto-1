@@ -86,8 +86,8 @@ export default function CorridaDisponivelDetalhePage() {
 
   async function aceitarCorrida() {
     if (!corridaId) return
-    if (!entregadorProfile?.online) {
-      toast.error('VocÃª precisa estar online para aceitar corridas')
+    if (!entregadorProfile.online) {
+      toast.error('Você precisa estar online para aceitar corridas')
       return
     }
 
@@ -105,7 +105,7 @@ export default function CorridaDisponivelDetalhePage() {
 
       if (error) {
         if (error.message.includes('no rows')) {
-          toast.error('Corrida jÃ¡ foi aceita por outro entregador')
+          toast.error('Corrida j? foi aceita por outro entregador')
         } else {
           throw error
         }
@@ -124,7 +124,7 @@ export default function CorridaDisponivelDetalhePage() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="lg" className="" />
       </div>
     )
   }
@@ -132,7 +132,7 @@ export default function CorridaDisponivelDetalhePage() {
   if (!corrida) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Corrida nÃ£o encontrada</p>
+        <p className="text-gray-500">Corrida não encontrada</p>
         <Link href="/entregador/corridas" className="btn-secondary mt-4">
           Voltar
         </Link>
@@ -143,7 +143,7 @@ export default function CorridaDisponivelDetalhePage() {
   if (corrida.status !== 'aguardando') {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Essa corrida nÃ£o estÃ¡ mais disponÃ­vel.</p>
+        <p className="text-gray-500">Essa corrida não está mais disponível.</p>
         <Link href="/entregador/corridas" className="btn-secondary mt-4">
           Ver outras corridas
         </Link>
@@ -161,8 +161,9 @@ export default function CorridaDisponivelDetalhePage() {
       position: { lat: e.latitude, lng: e.longitude },
       title: `Entrega ${i + 1}`,
       icon: 'delivery' as const,
-    })),
+      })),
   ]
+  const mapCenter = mapMarkers[0]?.position ?? { lat: 0, lng: 0 }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -178,7 +179,7 @@ export default function CorridaDisponivelDetalhePage() {
         <div className="card p-6">
           <div className="flex items-start justify-between">
             <div>
-              <PlatformBadge platform={corrida.plataforma} />
+              <PlatformBadge platform={corrida.plataforma} size="md" />
               <p className="text-2xl font-bold text-secondary-600 mt-2">
                 {formatCurrency(corrida.valor_total)}
               </p>
@@ -200,7 +201,15 @@ export default function CorridaDisponivelDetalhePage() {
         </div>
 
         <div className="card overflow-hidden">
-          <Map markers={mapMarkers} showRoute className="h-[250px]" />
+          <Map
+            markers={mapMarkers}
+            center={mapCenter}
+            zoom={12}
+            driverLocation={null}
+            onMapLoad={() => {}}
+            showRoute
+            className="h-[250px]"
+          />
         </div>
 
         {corrida.lojista && (
@@ -211,17 +220,24 @@ export default function CorridaDisponivelDetalhePage() {
                 src={corrida.lojista.foto_url}
                 name={corrida.lojista.user?.nome || ''}
                 size="lg"
+                className=""
               />
               <div>
                 <p className="font-medium text-gray-900">{corrida.lojista.user?.nome || '-'}</p>
-                <Rating value={corrida.lojista.avaliacao_media} size="sm" />
+                <Rating
+                  value={corrida.lojista.avaliacao_media}
+                  size="sm"
+                  max={5}
+                  showValue={false}
+                  onChange={() => {}}
+                />
               </div>
             </div>
           </div>
         )}
 
         <div className="card p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">EndereÃ§os</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">Endereços</h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
@@ -240,7 +256,7 @@ export default function CorridaDisponivelDetalhePage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    Entrega {i + 1} â€¢ {e.pacotes} pacote{e.pacotes > 1 ? 's' : ''}
+                    Entrega {i + 1} • {e.pacotes} pacote{e.pacotes > 1 ? 's' : ''}
                   </p>
                   <p className="text-gray-900">{e.endereco}</p>
                 </div>
@@ -251,7 +267,7 @@ export default function CorridaDisponivelDetalhePage() {
 
         <button
           onClick={aceitarCorrida}
-          disabled={accepting || !entregadorProfile?.online}
+          disabled={accepting || !entregadorProfile.online}
           className="btn-secondary w-full py-3 flex items-center justify-center gap-2"
         >
           <HiOutlineCheck className="w-5 h-5" />

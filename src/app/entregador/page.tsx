@@ -25,7 +25,7 @@ interface CorridaAtiva {
   total_pacotes: number
   endereco_coleta: string
   created_at: string
-  lojista?: {
+  lojista: {
     foto_url: string | null
     avaliacao_media: number
     user: {
@@ -62,7 +62,7 @@ export default function EntregadorDashboard() {
         { event: 'INSERT', schema: 'public', table: 'corridas' },
         (payload: any) => {
           if (payload.new.status === 'aguardando') {
-            toast('Nova corrida disponÃ­vel!', { icon: 'ðŸš€' })
+            toast('Nova corrida disponível!', { icon: '🚀' })
             loadCorridasDisponiveis()
           }
         }
@@ -101,7 +101,7 @@ export default function EntregadorDashboard() {
   }
 
   async function loadData() {
-    if (!entregadorProfile?.id) return
+    if (!entregadorProfile.id) return
 
     await Promise.all([
       loadCorridasAtivas(),
@@ -119,7 +119,7 @@ export default function EntregadorDashboard() {
         id, plataforma, status, valor_total, total_pacotes, endereco_coleta, created_at,
         lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
       `)
-      .eq('entregador_id', entregadorProfile?.id)
+      .eq('entregador_id', entregadorProfile.id)
       .in('status', ['aceita', 'coletando', 'em_entrega'])
       .order('created_at', { ascending: false })
       .limit(5)
@@ -146,6 +146,7 @@ export default function EntregadorDashboard() {
   }
 
   async function loadStats() {
+    if (!user?.id) return
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
@@ -153,20 +154,20 @@ export default function EntregadorDashboard() {
     const { count: totalEntregas } = await supabase
       .from('corridas')
       .select('*', { count: 'exact', head: true })
-      .eq('entregador_id', entregadorProfile?.id)
+      .eq('entregador_id', entregadorProfile.id)
       .eq('status', 'finalizada')
 
     const { count: entregasHoje } = await supabase
       .from('corridas')
       .select('*', { count: 'exact', head: true })
-      .eq('entregador_id', entregadorProfile?.id)
+      .eq('entregador_id', entregadorProfile.id)
       .eq('status', 'finalizada')
       .gte('finalizada_em', hoje.toISOString())
 
     const { data: ganhoData } = await supabase
       .from('financeiro')
       .select('valor')
-      .eq('user_id', user?.id)
+      .eq('user_id', user.id)
       .eq('tipo', 'corrida')
       .gte('created_at', inicioMes.toISOString())
 
@@ -183,7 +184,7 @@ export default function EntregadorDashboard() {
   async function toggleOnline() {
     setTogglingOnline(true)
     try {
-      const newOnlineStatus = !entregadorProfile?.online
+      const newOnlineStatus = !entregadorProfile.online
 
       // Update location if going online
       let updateData: any = { online: newOnlineStatus }
@@ -202,10 +203,10 @@ export default function EntregadorDashboard() {
 
       if (newOnlineStatus) {
         startTracking()
-        toast.success('VocÃª estÃ¡ online!')
+        toast.success('Você está online!')
       } else {
         stopTracking()
-        toast.success('VocÃª estÃ¡ offline')
+        toast.success('Você está offline')
       }
 
       setProfile({ ...entregadorProfile, ...updateData })
@@ -218,7 +219,7 @@ export default function EntregadorDashboard() {
 
   // Update location in database when it changes
   useEffect(() => {
-    if (entregadorProfile?.online && currentLocation) {
+    if (entregadorProfile.online && currentLocation) {
       supabase
         .from('entregadores')
         .update({
@@ -227,7 +228,7 @@ export default function EntregadorDashboard() {
         })
         .eq('id', entregadorProfile.id)
     }
-  }, [currentLocation, entregadorProfile?.online, entregadorProfile?.id])
+  }, [currentLocation, entregadorProfile.online, entregadorProfile.id])
 
   return (
     <div className="space-y-6">
@@ -235,25 +236,27 @@ export default function EntregadorDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            OlÃ¡, {user?.nome?.split(' ')[0]}!
+            Olá, {(user?.nome || '').split(' ')[0]}!
           </h1>
           <p className="text-gray-600">
-            {entregadorProfile?.online ? 'VocÃª estÃ¡ disponÃ­vel para corridas' : 'Fique online para receber corridas'}
+            {entregadorProfile.online
+              ? 'Você está disponível para corridas'
+              : 'Fique online para receber corridas'}
           </p>
         </div>
         <button
           onClick={toggleOnline}
           disabled={togglingOnline || user?.status === 'pendente'}
           className={`relative px-6 py-3 rounded-full font-medium transition-all ${
-            entregadorProfile?.online ? 'bg-green-500 text-white hover:bg-green-600'
+            entregadorProfile.online ? 'bg-green-500 text-white hover:bg-green-600'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           } ${user?.status === 'pendente' ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          {entregadorProfile?.online && (
+          {entregadorProfile.online && (
             <span className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full animate-pulse"></span>
           )}
-          <span className={entregadorProfile?.online ? 'ml-2' : ''}>
-            {togglingOnline ? 'Aguarde...' : entregadorProfile?.online ? 'Online' : 'Offline'}
+          <span className={entregadorProfile.online ? 'ml-2' : ''}>
+            {togglingOnline ? 'Aguarde...' : entregadorProfile.online ? 'Online' : 'Offline'}
           </span>
         </button>
       </div>
@@ -261,7 +264,7 @@ export default function EntregadorDashboard() {
       {user?.status === 'pendente' && (
         <div className="card p-4 bg-yellow-50 border-yellow-200">
           <p className="text-yellow-800">
-            Seu cadastro estÃ¡ em anÃ¡lise. VocÃª poderÃ¡ aceitar corridas apÃ³s a aprovaÃ§Ã£o.
+            Seu cadastro está em análise. Você poderá aceitar corridas após a aprovação.
           </p>
         </div>
       )}
@@ -276,7 +279,7 @@ export default function EntregadorDashboard() {
             <div>
               <p className="text-sm text-gray-600">Saldo</p>
               <p className="text-lg font-bold text-gray-900">
-                {formatCurrency(entregadorProfile?.saldo || 0)}
+                {formatCurrency(entregadorProfile.saldo || 0)}
               </p>
             </div>
           </div>
@@ -312,9 +315,9 @@ export default function EntregadorDashboard() {
               <HiOutlineStar className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">AvaliaÃ§Ã£o</p>
+              <p className="text-sm text-gray-600">Avaliação</p>
               <p className="text-lg font-bold text-gray-900">
-                {entregadorProfile?.avaliacao_media?.toFixed(1) || '5.0'}
+                {entregadorProfile.avaliacao_media.toFixed(1) || '5.0'}
               </p>
             </div>
           </div>
@@ -336,9 +339,10 @@ export default function EntregadorDashboard() {
               >
                 <div className="flex items-center gap-4">
                   <Avatar
-                    src={corrida.lojista?.foto_url}
-                    name={corrida.lojista?.user?.nome || ''}
+                    src={corrida.lojista.foto_url}
+                    name={corrida.lojista.user?.nome || ''}
                     size="md"
+                    className=""
                   />
                   <div>
                     <div className="flex items-center gap-2">
@@ -367,7 +371,7 @@ export default function EntregadorDashboard() {
       {/* Available Corridas */}
       <div className="card">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">Corridas DisponÃ­veis</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Corridas Disponíveis</h2>
           <Link href="/entregador/corridas" className="text-secondary-600 hover:text-secondary-700 text-sm font-medium flex items-center gap-1">
             Ver todas
             <HiOutlineArrowRight className="w-4 h-4" />
@@ -376,19 +380,21 @@ export default function EntregadorDashboard() {
 
         {loading ? (
           <div className="p-8 flex justify-center">
-            <LoadingSpinner />
+            <LoadingSpinner size="md" className="" />
           </div>
-        ) : !entregadorProfile?.online ? (
+        ) : !entregadorProfile.online ? (
           <EmptyState
             icon={<HiOutlineLocationMarker className="w-8 h-8 text-gray-400" />}
-            title="VocÃª estÃ¡ offline"
-            description="Fique online para ver corridas disponÃ­veis"
+            title="Você está offline"
+            description="Fique online para ver corridas disponíveis"
+            action={null}
           />
         ) : corridasDisponiveis.length === 0 ? (
           <EmptyState
             icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
-            title="Nenhuma corrida disponÃ­vel"
-            description="Novas corridas aparecerÃ£o aqui"
+            title="Nenhuma corrida disponível"
+            description="Novas corridas aparecerão aqui"
+            action={null}
           />
         ) : (
           <div className="divide-y">
@@ -400,9 +406,10 @@ export default function EntregadorDashboard() {
               >
                 <div className="flex items-center gap-4">
                   <Avatar
-                    src={corrida.lojista?.foto_url}
-                    name={corrida.lojista?.user?.nome || ''}
+                    src={corrida.lojista.foto_url}
+                    name={corrida.lojista.user?.nome || ''}
                     size="md"
+                    className=""
                   />
                   <div>
                     <div className="flex items-center gap-2">

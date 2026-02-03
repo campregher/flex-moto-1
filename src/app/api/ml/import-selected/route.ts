@@ -5,7 +5,7 @@ import type { Database } from '@/lib/database.types'
 import { generateCode } from '@/lib/utils'
 import { calculateDeliveryPrice, calculateDistance } from '@/lib/utils/pricing'
 
-function normalizeCoords(lat?: number | null, lng?: number | null) {
+function normalizeCoords(lat: number | null, lng: number | null) {
   if (lat === null || lat === undefined || lng === null || lng === undefined) return null
   if (lat === 0 && lng === 0) return null
   return { lat, lng }
@@ -26,11 +26,12 @@ export async function POST() {
     .single()
 
   const lojistaRow = lojista as Database['public']['Tables']['lojistas']['Row'] | null
-  const lojistaId = lojistaRow?.id
+  const lojistaId = lojistaRow?.id ?? null
 
   if (!lojistaId) {
     return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
   }
+  const lojistaData = lojistaRow as Database['public']['Tables']['lojistas']['Row']
 
   const { data: pedidos } = await supabase
     .from('mercadolivre_pedidos')
@@ -58,7 +59,7 @@ export async function POST() {
     const totalPacotes = pedido.pacotes || 1
     const valorTotal = calculateDeliveryPrice(totalPacotes, distanciaTotalKm)
 
-    const corridaPayload: Database['public']['Tables']['corridas']['Insert'] = {
+    const corridaPayload = {
       lojista_id: lojistaId,
       plataforma: 'ml_flex',
       status: 'aguardando',
@@ -67,21 +68,21 @@ export async function POST() {
       codigo_entrega: generateCode(6),
       total_pacotes: totalPacotes,
       distancia_total_km: distanciaTotalKm,
-      endereco_coleta: pedido.coleta_endereco || lojistaRow?.endereco_base || '',
-      coleta_latitude: pickupCoords?.lat || lojistaRow?.endereco_latitude || 0,
-      coleta_longitude: pickupCoords?.lng || lojistaRow?.endereco_longitude || 0,
+      endereco_coleta: pedido.coleta_endereco || lojistaData.endereco_base || '',
+      coleta_latitude: pickupCoords?.lat ?? lojistaData.endereco_latitude ?? 0,
+      coleta_longitude: pickupCoords?.lng ?? lojistaData.endereco_longitude ?? 0,
       coleta_complemento: null,
       coleta_observacoes: null,
-      coleta_logradouro: lojistaRow?.endereco_logradouro || null,
-      coleta_numero: lojistaRow?.endereco_numero || null,
-      coleta_bairro: lojistaRow?.endereco_bairro || null,
-      coleta_cidade: lojistaRow?.endereco_cidade || null,
-      coleta_uf: lojistaRow?.endereco_uf || null,
-      coleta_cep: lojistaRow?.endereco_cep || null,
+      coleta_logradouro: lojistaData.endereco_logradouro || null,
+      coleta_numero: lojistaData.endereco_numero || null,
+      coleta_bairro: lojistaData.endereco_bairro || null,
+      coleta_cidade: lojistaData.endereco_cidade || null,
+      coleta_uf: lojistaData.endereco_uf || null,
+      coleta_cep: lojistaData.endereco_cep || null,
       frete_valor: valorTotal,
       peso_kg: null,
       volume_cm3: null,
-    }
+    } as Database['public']['Tables']['corridas']['Insert']
 
     const { data: corrida, error: corridaError } = await (supabase as any)
       .from('corridas')
@@ -95,27 +96,27 @@ export async function POST() {
       return NextResponse.json({ error: 'Failed to create corrida', details: corridaError }, { status: 500 })
     }
 
-    const enderecoPayload: Database['public']['Tables']['enderecos_entrega']['Insert'] = {
+    const enderecoPayload = {
       corrida_id: corridaRow.id,
       endereco: pedido.endereco || '',
       latitude: pedido.latitude || 0,
       longitude: pedido.longitude || 0,
       complemento: pedido.complemento || null,
       observacoes: pedido.observacoes || null,
-        pacotes: totalPacotes,
-        ordem: 0,
-        codigo_confirmacao: generateCode(6),
-        logradouro: null,
-        numero: null,
-        bairro: pedido.bairro || null,
-        cidade: pedido.cidade || null,
-        uf: pedido.uf || null,
-        cep: pedido.cep || null,
+      pacotes: totalPacotes,
+      ordem: 0,
+      codigo_confirmacao: generateCode(6),
+      logradouro: null,
+      numero: null,
+      bairro: pedido.bairro || null,
+      cidade: pedido.cidade || null,
+      uf: pedido.uf || null,
+      cep: pedido.cep || null,
       receiver_name: pedido.receiver_name || pedido.buyer_name || null,
       receiver_phone: pedido.receiver_phone || null,
       peso_kg: null,
       volume_cm3: null,
-    }
+    } as Database['public']['Tables']['enderecos_entrega']['Insert']
 
     const { error: enderecosError } = await (supabase as any)
       .from('enderecos_entrega')

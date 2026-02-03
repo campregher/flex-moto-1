@@ -39,7 +39,7 @@ export default function AdminEntregadoresClient() {
       const res = await fetch('/api/admin/entregadores', { cache: 'no-store' })
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}))
-        throw new Error(payload?.error || 'Erro ao carregar entregadores')
+        throw new Error(payload.error || 'Erro ao carregar entregadores')
       }
       const payload = await res.json()
       setPending(payload.data || [])
@@ -60,7 +60,7 @@ export default function AdminEntregadoresClient() {
       })
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}))
-        throw new Error(payload?.error || 'Falha ao atualizar status')
+        throw new Error(payload.error || 'Falha ao atualizar status')
       }
       setPending((prev) => prev.filter((item) => item.id !== userId))
     } catch (err) {

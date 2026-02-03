@@ -158,11 +158,11 @@ export default function LojistaLayoutClient({ children }: { children: React.Reac
           
           <div className="p-4 border-b">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Avatar src={lojistaProfile?.foto_url} name={user?.nome || ''} size="lg" />
+              <Avatar src={lojistaProfile.foto_url} name={user?.nome || ''} size="lg" className="" />
               <div className="min-w-0">
-                <p className="font-medium text-gray-900 truncate">{user?.nome}</p>
+                <p className="font-medium text-gray-900 truncate">{user?.nome || ''}</p>
                 <p className="text-sm text-primary-600 font-semibold">
-                  {formatCurrency(lojistaProfile?.saldo || 0)}
+                  {formatCurrency(lojistaProfile.saldo || 0)}
                 </p>
               </div>
             </div>
@@ -223,7 +223,7 @@ export default function LojistaLayoutClient({ children }: { children: React.Reac
               )}
             </Link>
             <div className="lg:hidden">
-              <Avatar src={lojistaProfile?.foto_url} name={user?.nome || ''} size="sm" />
+              <Avatar src={lojistaProfile.foto_url} name={user?.nome || ''} size="sm" className="" />
             </div>
           </div>
         </header>

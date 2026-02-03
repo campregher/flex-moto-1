@@ -22,7 +22,7 @@ export async function GET() {
     .eq('id', user.id)
     .single()
 
-  const userTipo = (profile as { tipo: Database['public']['Enums']['user_type'] } | null)?.tipo
+  const userTipo = (profile as { tipo: Database['public']['Enums']['user_type'] } | null)?.tipo ?? null
 
   if (userTipo !== 'lojista') {
     return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_APP_URL))
@@ -37,7 +37,7 @@ export async function GET() {
 
   const state = crypto.randomBytes(16).toString('hex')
   const res = NextResponse.redirect(
-    `${ML_AUTH_URL}?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
+    `${ML_AUTH_URL}response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
   )
 
   res.cookies.set('ml_oauth_state', state, {

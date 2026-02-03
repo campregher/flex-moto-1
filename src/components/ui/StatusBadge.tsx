@@ -4,7 +4,7 @@ import type { CorridaStatus, UserStatus } from '@/lib/database.types'
 
 interface StatusBadgeProps {
   status: CorridaStatus | UserStatus | string
-  size?: 'sm' | 'md'
+  size: 'sm' | 'md'
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {

@@ -4,10 +4,10 @@ import { HiStar } from 'react-icons/hi'
 
 interface RatingProps {
   value: number
-  max?: number
-  size?: 'sm' | 'md' | 'lg'
-  showValue?: boolean
-  onChange?: (value: number) => void
+  max: number
+  size: 'sm' | 'md' | 'lg'
+  showValue: boolean
+  onChange: (value: number) => void
 }
 
 const sizeClasses = {
@@ -18,7 +18,7 @@ const sizeClasses = {
 
 export function Rating({ value, max = 5, size = 'md', showValue = true, onChange }: RatingProps) {
   const sizeClass = sizeClasses[size]
-  const interactive = !!onChange
+  const interactive = typeof onChange === 'function'
 
   return (
     <div className="flex items-center gap-1">

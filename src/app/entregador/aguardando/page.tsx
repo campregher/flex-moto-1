@@ -32,7 +32,7 @@ export default function AguardandoAprovacaoPage() {
             </div>
 
             <div className="p-4 bg-gray-50 rounded-xl">
-              <h3 className="font-medium text-gray-900 mb-2">O que acontece agora?</h3>
+              <h3 className="font-medium text-gray-900 mb-2">O que acontece agora</h3>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-secondary-500 rounded-full"></span>
@@ -52,7 +52,7 @@ export default function AguardandoAprovacaoPage() {
 
           <div className="pt-4 border-t">
             <p className="text-sm text-gray-600 text-center mb-4">
-              Tem alguma dúvida?
+              Tem alguma dúvida
             </p>
             <a
               href="https://wa.me/5511999999999"

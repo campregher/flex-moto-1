@@ -18,7 +18,7 @@ async function requireAdmin() {
     .eq('id', user.id)
     .single()
 
-  const isAdmin = (profile as { is_admin: boolean | null } | null)?.is_admin
+  const isAdmin = (profile as { is_admin: boolean | null } | null)?.is_admin ?? false
 
   if (error || !isAdmin) {
     return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
@@ -50,8 +50,8 @@ export async function PATCH(request: Request) {
   if (error) return error
 
   const body = await request.json().catch(() => null)
-  const userId = body?.userId as string | undefined
-  const status = body?.status as Database['public']['Enums']['user_status'] | undefined
+  const userId = body.userId as string | undefined
+  const status = body.status as Database['public']['Enums']['user_status'] | undefined
 
   if (!userId || !status || !['ativo', 'bloqueado'].includes(status)) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })

@@ -115,7 +115,7 @@ export default function LoginClient() {
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   className="input pl-10 pr-10"
-                  placeholder="ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢"
+                  placeholder="********"
                 />
                 <button
                   type="button"
@@ -155,7 +155,7 @@ export default function LoginClient() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Não tem uma conta?{' '}
+              Não tem uma conta{' '}
               <Link href="/cadastro" className="text-primary-600 hover:text-primary-700 font-medium">
                 Cadastre-se
               </Link>

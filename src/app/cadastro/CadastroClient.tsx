@@ -32,7 +32,7 @@ const lojistaSchema = baseSchema.extend({
 const entregadorSchema = baseSchema.extend({
   tipo: z.literal('entregador'),
   placa: z.string().refine(validatePlaca, 'Placa inválida'),
-  cidade: z.string().min(2, 'Cidade obrigatÃƒ³ria'),
+  cidade: z.string().min(2, 'Cidade obrigatória'),
   uf: z.string().length(2, 'UF deve ter 2 caracteres'),
 })
 
@@ -123,12 +123,12 @@ export default function CadastroClient() {
 
       if (!authData.session) {
         toast.success('Conta criada! Confirme o e-mail para continuar.')
-        router.push('/login?pending=1')
+        router.push('/loginpending=1')
         return
       }
 
       // 2. Create user profile
-      const userPayload: Database['public']['Tables']['users']['Insert'] = {
+      const userPayload = {
         id: authData.user.id,
         nome: data.nome,
         email: data.email,
@@ -136,7 +136,7 @@ export default function CadastroClient() {
         cpf: data.cpf.replace(/\D/g, ''),
         tipo: data.tipo,
         status: data.tipo === 'entregador' ? 'pendente' : 'ativo',
-      }
+      } as Database['public']['Tables']['users']['Insert']
 
       const { error: userError } = await (supabase as any)
         .from('users')
@@ -149,9 +149,9 @@ export default function CadastroClient() {
 
       // 3. Create specific profile (lojista or entregador)
       if (data.tipo === 'lojista') {
-        const lojistaPayload: Database['public']['Tables']['lojistas']['Insert'] = {
+        const lojistaPayload = {
           user_id: authData.user.id,
-          cnpj: data.cnpj?.replace(/\D/g, '') || null,
+          cnpj: data.cnpj ? data.cnpj.replace(/\D/g, '') : null,
           endereco_base: data.endereco_base || null,
           endereco_latitude: enderecoBaseCoords.lat,
           endereco_longitude: enderecoBaseCoords.lng,
@@ -162,7 +162,7 @@ export default function CadastroClient() {
           endereco_uf: enderecoBaseDetails?.state || null,
           endereco_cep: enderecoBaseDetails?.postalCode || null,
           saldo: 0,
-        }
+        } as Database['public']['Tables']['lojistas']['Insert']
 
         const { error: lojistaError } = await (supabase as any)
           .from('lojistas')
@@ -203,7 +203,7 @@ export default function CadastroClient() {
           }
         }
 
-        const entregadorPayload: Database['public']['Tables']['entregadores']['Insert'] = {
+        const entregadorPayload = {
           user_id: authData.user.id,
           foto_url: fotoUrl,
           cnh_url: cnhUrl,
@@ -212,7 +212,7 @@ export default function CadastroClient() {
           cidade: data.cidade,
           uf: data.uf.toUpperCase(),
           saldo: 0,
-        }
+        } as Database['public']['Tables']['entregadores']['Insert']
 
         const { error: entregadorError } = await (supabase as any)
           .from('entregadores')
@@ -355,7 +355,7 @@ export default function CadastroClient() {
                       type="password"
                       {...register('password')}
                       className="input pl-10"
-                      placeholder="ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢"
+                      placeholder="********"
                     />
                   </div>
                   {errors.password && (
@@ -371,7 +371,7 @@ export default function CadastroClient() {
                       type="password"
                       {...register('confirmPassword')}
                       className="input pl-10"
-                      placeholder="ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢ââ‚¬Â¢"
+                      placeholder="********"
                     />
                   </div>
                   {errors.confirmPassword && (
@@ -431,6 +431,13 @@ export default function CadastroClient() {
                               }}
                               placeholder="Endereço principal para coletas"
                               className="input pl-10"
+                              id="endereco_base"
+                              name="endereco_base"
+                              disabled={false}
+                              country="br"
+                              autoComplete="street-address"
+                              preferLegacy={false}
+                              enableLiveGeocode={false}
                             />
                           )}
                         />
@@ -559,7 +566,7 @@ export default function CadastroClient() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              já tem uma conta?{' '}
+              já tem uma conta{' '}
               <Link href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
                 Entrar
               </Link>

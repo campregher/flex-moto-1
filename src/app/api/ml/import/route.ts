@@ -7,43 +7,43 @@ import { calculateDeliveryPrice, calculateDistance } from '@/lib/utils/pricing'
 
 type MlOrder = {
   id: number
-  paid_amount?: number
-  total_amount?: number
-  shipping?: { id?: number }
-  order_items?: { quantity: number }[]
-  buyer?: {
-    first_name?: string
-    last_name?: string
-    nickname?: string
+  paid_amount: number
+  total_amount: number
+  shipping: { id: number }
+  order_items: { quantity: number }[]
+  buyer: {
+    first_name: string
+    last_name: string
+    nickname: string
   }
 }
 
 type MlShipment = {
   id: number
-  mode?: string
-  logistic_type?: string
-  shipping_option?: { cost?: number }
-  shipping_items?: { quantity: number; dimensions?: string }[]
-  receiver_address?: {
-    address_line?: string
-    street_name?: string
-    street_number?: string
-    zip_code?: string
-    city?: { name?: string }
-    state?: { id?: string; name?: string }
-    neighborhood?: { name?: string }
-    latitude?: number | string
-    longitude?: number | string
-    comment?: string
-    receiver_name?: string
-    receiver_phone?: string
+  mode: string
+  logistic_type: string
+  shipping_option: { cost: number }
+  shipping_items: { quantity: number; dimensions: string }[]
+  receiver_address: {
+    address_line: string
+    street_name: string
+    street_number: string
+    zip_code: string
+    city: { name: string }
+    state: { id: string; name: string }
+    neighborhood: { name: string }
+    latitude: number | string
+    longitude: number | string
+    comment: string
+    receiver_name: string
+    receiver_phone: string
   }
 }
 
-function parseDimensions(dimensions?: string) {
+function parseDimensions(dimensions: string) {
   if (!dimensions) return { volumeCm3: null, weightKg: null }
   const [dimsPart, weightPart] = dimensions.split(',')
-  const dims = dimsPart?.split('x').map((v) => parseFloat(v.replace(',', '.')))
+  const dims = dimsPart.split('x').map((v) => parseFloat(v.replace(',', '.')))
   if (!dims || dims.length < 3 || dims.some((v) => Number.isNaN(v))) {
     return { volumeCm3: null, weightKg: null }
   }
@@ -53,7 +53,7 @@ function parseDimensions(dimensions?: string) {
   return { volumeCm3, weightKg }
 }
 
-function parseNumber(value?: string | number | null) {
+function parseNumber(value: string | number | null) {
   if (value === undefined || value === null) return null
   if (typeof value === 'number') return value
   const normalized = value.replace(',', '.')
@@ -61,7 +61,7 @@ function parseNumber(value?: string | number | null) {
   return Number.isNaN(num) ? null : num
 }
 
-function normalizeUf(stateId?: string, stateName?: string) {
+function normalizeUf(stateId: string, stateName: string) {
   if (stateId) {
     const match = stateId.match(/^[A-Z]{2}-([A-Z]{2})$/)
     if (match) return match[1]
@@ -71,7 +71,7 @@ function normalizeUf(stateId?: string, stateName?: string) {
   return null
 }
 
-function normalizeCoords(lat?: number | null, lng?: number | null) {
+function normalizeCoords(lat: number | null, lng: number | null) {
   if (lat === null || lat === undefined || lng === null || lng === undefined) return null
   if (lat === 0 && lng === 0) return null
   return { lat, lng }
@@ -86,8 +86,8 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null)
-  const orderId = body?.orderId as string | undefined
-  const coletaId = body?.coletaId as string | undefined
+  const orderId = body.orderId as string | undefined
+  const coletaId = body.coletaId as string | undefined
   if (!orderId) {
     return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
   }
@@ -99,11 +99,12 @@ export async function POST(request: Request) {
     .single()
 
   const lojistaRow = lojista as Database['public']['Tables']['lojistas']['Row'] | null
-  const lojistaId = lojistaRow?.id
+  const lojistaId = lojistaRow?.id ?? null
 
   if (!lojistaId) {
     return NextResponse.json({ error: 'Lojista not found' }, { status: 404 })
   }
+  const lojistaData = lojistaRow as Database['public']['Tables']['lojistas']['Row']
 
   let coleta = null as null | {
     id: string
@@ -151,12 +152,11 @@ export async function POST(request: Request) {
     .single()
 
   const integrationRow = integration as { access_token: string | null } | null
+  const token = integrationRow?.access_token ?? null
 
-  if (!integrationRow?.access_token) {
+  if (!token) {
     return NextResponse.json({ error: 'Mercado Livre not connected' }, { status: 400 })
   }
-
-  const token = integrationRow.access_token
 
   const orderRes = await fetch(`https://api.mercadolibre.com/orders/${orderId}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
   }
 
   const order = (await orderRes.json()) as MlOrder
-  const shipmentId = order.shipping?.id
+  const shipmentId = order.shipping.id
   if (!shipmentId) {
     return NextResponse.json({ error: 'Order has no shipment' }, { status: 400 })
   }
@@ -184,14 +184,14 @@ export async function POST(request: Request) {
 
   const shipment = (await shipmentRes.json()) as MlShipment
   const receiver = shipment.receiver_address || {}
-  const buyerName = [order.buyer?.first_name, order.buyer?.last_name].filter(Boolean).join(' ') || order.buyer?.nickname || null
+  const buyerName = [order.buyer.first_name, order.buyer.last_name].filter(Boolean).join(' ') || order.buyer.nickname || null
 
   const totalPacotes =
-    shipment.shipping_items?.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
-    order.order_items?.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
+    shipment.shipping_items.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
+    order.order_items.reduce((acc, item) => acc + (item.quantity || 0), 0) ||
     1
 
-  const { volumeCm3, weightKg } = parseDimensions(shipment.shipping_items?.[0]?.dimensions)
+  const { volumeCm3, weightKg } = parseDimensions(shipment.shipping_items?.[0]?.dimensions || '')
 
   const coletaRow = coleta as {
     id: string
@@ -207,8 +207,8 @@ export async function POST(request: Request) {
   } | null
 
   const pickupCoords = normalizeCoords(
-    parseNumber(coletaRow?.latitude ?? lojistaRow?.endereco_latitude),
-    parseNumber(coletaRow?.longitude ?? lojistaRow?.endereco_longitude)
+    parseNumber(coletaRow?.latitude ?? lojistaData.endereco_latitude),
+    parseNumber(coletaRow?.longitude ?? lojistaData.endereco_longitude)
   )
   const deliveryCoords = normalizeCoords(
     parseNumber(receiver.latitude),
@@ -230,15 +230,15 @@ export async function POST(request: Request) {
 
   const enderecoEntregaCompleto = [
     enderecoEntrega,
-    receiver.neighborhood?.name,
-    receiver.city?.name,
-    receiver.state?.id || receiver.state?.name,
+    receiver.neighborhood.name,
+    receiver.city.name,
+    receiver.state.id || receiver.state.name,
     receiver.zip_code,
   ]
     .filter(Boolean)
     .join(' - ')
 
-  const corridaPayload: Database['public']['Tables']['corridas']['Insert'] = {
+  const corridaPayload = {
     lojista_id: lojistaId,
     plataforma: 'ml_flex',
     status: 'aguardando',
@@ -247,21 +247,21 @@ export async function POST(request: Request) {
     codigo_entrega: generateCode(6),
     total_pacotes: totalPacotes,
     distancia_total_km: distanciaTotalKm,
-    endereco_coleta: coletaRow?.endereco || lojistaRow?.endereco_base || '',
-    coleta_latitude: pickupCoords?.lat || 0,
-    coleta_longitude: pickupCoords?.lng || 0,
+    endereco_coleta: coletaRow?.endereco || lojistaData.endereco_base || '',
+    coleta_latitude: pickupCoords?.lat ?? 0,
+    coleta_longitude: pickupCoords?.lng ?? 0,
     coleta_complemento: null,
     coleta_observacoes: null,
-    coleta_logradouro: coletaRow?.logradouro || lojistaRow?.endereco_logradouro || null,
-    coleta_numero: coletaRow?.numero || lojistaRow?.endereco_numero || null,
-    coleta_bairro: coletaRow?.bairro || lojistaRow?.endereco_bairro || null,
-    coleta_cidade: coletaRow?.cidade || lojistaRow?.endereco_cidade || null,
-    coleta_uf: coletaRow?.uf || lojistaRow?.endereco_uf || null,
-    coleta_cep: coletaRow?.cep || lojistaRow?.endereco_cep || null,
+    coleta_logradouro: coletaRow?.logradouro || lojistaData.endereco_logradouro || null,
+    coleta_numero: coletaRow?.numero || lojistaData.endereco_numero || null,
+    coleta_bairro: coletaRow?.bairro || lojistaData.endereco_bairro || null,
+    coleta_cidade: coletaRow?.cidade || lojistaData.endereco_cidade || null,
+    coleta_uf: coletaRow?.uf || lojistaData.endereco_uf || null,
+    coleta_cep: coletaRow?.cep || lojistaData.endereco_cep || null,
     frete_valor: freteValor,
     peso_kg: weightKg,
     volume_cm3: volumeCm3,
-  }
+  } as Database['public']['Tables']['corridas']['Insert']
 
   const { data: corrida, error: corridaError } = await (supabase as any)
     .from('corridas')
@@ -275,7 +275,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create corrida', details: corridaError }, { status: 500 })
   }
 
-  const enderecoPayload: Database['public']['Tables']['enderecos_entrega']['Insert'] = {
+  const enderecoPayload = {
     corrida_id: corridaRow.id,
     endereco: enderecoEntregaCompleto || enderecoEntrega || '',
     latitude: parseNumber(receiver.latitude) || 0,
@@ -287,15 +287,15 @@ export async function POST(request: Request) {
     codigo_confirmacao: generateCode(6),
     logradouro: receiver.street_name || null,
     numero: receiver.street_number || null,
-    bairro: receiver.neighborhood?.name || null,
-    cidade: receiver.city?.name || null,
-    uf: normalizeUf(receiver.state?.id, receiver.state?.name),
+    bairro: receiver.neighborhood.name || null,
+    cidade: receiver.city.name || null,
+    uf: normalizeUf(receiver.state.id, receiver.state.name),
     cep: receiver.zip_code || null,
     receiver_name: receiver.receiver_name || buyerName,
     receiver_phone: receiver.receiver_phone || null,
     peso_kg: weightKg,
     volume_cm3: volumeCm3,
-  }
+  } as Database['public']['Tables']['enderecos_entrega']['Insert']
 
   const { error: enderecosError } = await (supabase as any)
     .from('enderecos_entrega')

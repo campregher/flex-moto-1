@@ -10,14 +10,14 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const state = url.searchParams.get('state')
-  const storedState = cookies().get('ml_oauth_state')?.value
+  const storedState = cookies().get('ml_oauth_state')?.value ?? null
 
   if (!code || !state) {
-    return NextResponse.redirect(new URL('/lojista?ml=missing-code', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojistaml=missing-code', process.env.NEXT_PUBLIC_APP_URL))
   }
 
   if (!storedState || state !== storedState) {
-    return NextResponse.redirect(new URL('/lojista?ml=state-mismatch', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojistaml=state-mismatch', process.env.NEXT_PUBLIC_APP_URL))
   }
 
   cookies().delete('ml_oauth_state')
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const redirectUri = process.env.ML_REDIRECT_URI
 
   if (!clientId || !clientSecret || !redirectUri) {
-    return NextResponse.redirect(new URL('/lojista?ml=missing-env', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojistaml=missing-env', process.env.NEXT_PUBLIC_APP_URL))
   }
 
   const tokenRes = await fetch(ML_TOKEN_URL, {
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
   })
 
   if (!tokenRes.ok) {
-    return NextResponse.redirect(new URL('/lojista?ml=token-error', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojistaml=token-error', process.env.NEXT_PUBLIC_APP_URL))
   }
 
   const tokenJson = await tokenRes.json() as {
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
   })
 
   if (!meRes.ok) {
-    return NextResponse.redirect(new URL('/lojista?ml=me-error', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojistaml=me-error', process.env.NEXT_PUBLIC_APP_URL))
   }
 
   const meJson = await meRes.json() as { site_id: string }
@@ -77,25 +77,25 @@ export async function GET(request: Request) {
     .single()
 
   if (!lojista) {
-    return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojistaml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
   }
 
-  const lojistaId = (lojista as { id: string } | null)?.id
+  const lojistaId = (lojista as { id: string } | null)?.id ?? null
 
   if (!lojistaId) {
-    return NextResponse.redirect(new URL('/lojista?ml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
+    return NextResponse.redirect(new URL('/lojistaml=missing-lojista', process.env.NEXT_PUBLIC_APP_URL))
   }
 
   const expiresAt = new Date(Date.now() + tokenJson.expires_in * 1000).toISOString()
 
-  const upsertPayload: Database['public']['Tables']['mercadolivre_integrations']['Insert'] = {
+  const upsertPayload = {
     lojista_id: lojistaId,
     ml_user_id: tokenJson.user_id,
     site_id: meJson.site_id,
     access_token: tokenJson.access_token,
     refresh_token: tokenJson.refresh_token,
     expires_at: expiresAt,
-  }
+  } as Database['public']['Tables']['mercadolivre_integrations']['Insert']
 
   const { error: upsertError } = await (supabase as any)
     .from('mercadolivre_integrations')
@@ -107,9 +107,9 @@ export async function GET(request: Request) {
       upsertError.details || upsertError.message || upsertError.code || 'unknown'
     )
     return NextResponse.redirect(
-      new URL(`/lojista?ml=save-error&reason=${reason}`, process.env.NEXT_PUBLIC_APP_URL)
+      new URL(`/lojistaml=save-error&reason=${reason}`, process.env.NEXT_PUBLIC_APP_URL)
     )
   }
 
-  return NextResponse.redirect(new URL('/lojista?ml=connected', process.env.NEXT_PUBLIC_APP_URL))
+  return NextResponse.redirect(new URL('/lojistaml=connected', process.env.NEXT_PUBLIC_APP_URL))
 }

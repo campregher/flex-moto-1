@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Plataforma de entregas urbanas com motos para Mercado Livre Flex e Shopee Entrega Direta',
   manifest: '/manifest.json',
   other: {
-    'mobile-web-app-capable': 'yes',
+   'mobile-web-app-capable': 'yes',
   },
   appleWebApp: {
     capable: true,

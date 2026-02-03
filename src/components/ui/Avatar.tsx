@@ -4,10 +4,10 @@ import Image from 'next/image'
 import { getInitials } from '@/lib/utils'
 
 interface AvatarProps {
-  src?: string | null
+  src: string | null
   name: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  className?: string
+  size: 'sm' | 'md' | 'lg' | 'xl'
+  className: string
 }
 
 const sizeClasses = {

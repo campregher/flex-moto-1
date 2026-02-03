@@ -5,29 +5,29 @@ import { loadGoogleMaps } from '@/lib/google-maps'
 
 export type AddressDetails = {
   formattedAddress: string
-  street?: string | null
-  number?: string | null
-  neighborhood?: string | null
-  city?: string | null
-  state?: string | null
-  postalCode?: string | null
-  lat?: number | null
-  lng?: number | null
+  street: string | null
+  number: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  postalCode: string | null
+  lat: number | null
+  lng: number | null
 }
 
 type AddressAutocompleteProps = {
   value: string
   onChange: (value: string) => void
-  onSelect?: (details: AddressDetails) => void
-  placeholder?: string
-  className?: string
-  id?: string
-  name?: string
-  disabled?: boolean
-  country?: string | string[]
-  autoComplete?: string
-  preferLegacy?: boolean
-  enableLiveGeocode?: boolean
+  onSelect: (details: AddressDetails) => void
+  placeholder: string
+  className: string
+  id: string
+  name: string
+  disabled: boolean
+  country: string | string[]
+  autoComplete: string
+  preferLegacy: boolean
+  enableLiveGeocode: boolean
 }
 
 function getComponent(components: google.maps.GeocoderAddressComponent[], type: string) {
@@ -43,60 +43,30 @@ function getPlaceComponent(
 
 function parsePlace(place: google.maps.places.PlaceResult): AddressDetails {
   const components = place.address_components || []
-  const street = getComponent(components, 'route')?.long_name
-  const number = getComponent(components, 'street_number')?.long_name
+  const street = getComponent(components, 'route')?.long_name ?? null
+  const number = getComponent(components, 'street_number')?.long_name ?? null
   const neighborhood =
     getComponent(components, 'sublocality_level_1')?.long_name ||
     getComponent(components, 'sublocality')?.long_name ||
-    getComponent(components, 'neighborhood')?.long_name
+    getComponent(components, 'neighborhood')?.long_name ||
+    null
   const city =
     getComponent(components, 'locality')?.long_name ||
     getComponent(components, 'administrative_area_level_2')?.long_name ||
-    getComponent(components, 'administrative_area_level_3')?.long_name
+    getComponent(components, 'administrative_area_level_3')?.long_name ||
+    null
   const state =
     getComponent(components, 'administrative_area_level_1')?.short_name ||
-    getComponent(components, 'administrative_area_level_1')?.long_name
-  const postalCode = getComponent(components, 'postal_code')?.long_name
+    getComponent(components, 'administrative_area_level_1')?.long_name ||
+    null
+  const postalCode = getComponent(components, 'postal_code')?.long_name ?? null
   const formattedAddress =
     place.formatted_address ||
     [street, number, neighborhood, city, state, postalCode].filter(Boolean).join(', ')
 
-  return {
-    formattedAddress,
-    street,
-    number,
-    neighborhood,
-    city,
-    state,
-    postalCode,
-    lat: place.geometry?.location?.lat(),
-    lng: place.geometry?.location?.lng(),
-  }
-}
-
-function parsePlaceFromPlace(place: google.maps.places.Place): AddressDetails {
-  const components = place.addressComponents || []
-  const street = getPlaceComponent(components, 'route')?.longText
-  const number = getPlaceComponent(components, 'street_number')?.longText
-  const neighborhood =
-    getPlaceComponent(components, 'sublocality_level_1')?.longText ||
-    getPlaceComponent(components, 'sublocality')?.longText ||
-    getPlaceComponent(components, 'neighborhood')?.longText
-  const city =
-    getPlaceComponent(components, 'locality')?.longText ||
-    getPlaceComponent(components, 'administrative_area_level_2')?.longText ||
-    getPlaceComponent(components, 'administrative_area_level_3')?.longText
-  const state =
-    getPlaceComponent(components, 'administrative_area_level_1')?.shortText ||
-    getPlaceComponent(components, 'administrative_area_level_1')?.longText
-  const postalCode = getPlaceComponent(components, 'postal_code')?.longText
-  const formattedAddress =
-    place.formattedAddress ||
-    [street, number, neighborhood, city, state, postalCode].filter(Boolean).join(', ')
-
-  const location = place.location as google.maps.LatLng | google.maps.LatLngLiteral | undefined
-  const lat = typeof location?.lat === 'function' ? location.lat() : location?.lat
-  const lng = typeof location?.lng === 'function' ? location.lng() : location?.lng
+  const location = place.geometry?.location
+  const lat = location ? location.lat() : null
+  const lng = location ? location.lng() : null
 
   return {
     formattedAddress,
@@ -111,7 +81,55 @@ function parsePlaceFromPlace(place: google.maps.places.Place): AddressDetails {
   }
 }
 
-function normalizeCountries(country?: string | string[]) {
+function parsePlaceFromPlace(place: google.maps.places.Place): AddressDetails {
+  const components = place.addressComponents || []
+  const street = getPlaceComponent(components, 'route')?.longText ?? null
+  const number = getPlaceComponent(components, 'street_number')?.longText ?? null
+  const neighborhood =
+    getPlaceComponent(components, 'sublocality_level_1')?.longText ||
+    getPlaceComponent(components, 'sublocality')?.longText ||
+    getPlaceComponent(components, 'neighborhood')?.longText ||
+    null
+  const city =
+    getPlaceComponent(components, 'locality')?.longText ||
+    getPlaceComponent(components, 'administrative_area_level_2')?.longText ||
+    getPlaceComponent(components, 'administrative_area_level_3')?.longText ||
+    null
+  const state =
+    getPlaceComponent(components, 'administrative_area_level_1')?.shortText ||
+    getPlaceComponent(components, 'administrative_area_level_1')?.longText ||
+    null
+  const postalCode = getPlaceComponent(components, 'postal_code')?.longText ?? null
+  const formattedAddress =
+    place.formattedAddress ||
+    [street, number, neighborhood, city, state, postalCode].filter(Boolean).join(', ')
+
+  const location = place.location as google.maps.LatLng | google.maps.LatLngLiteral | undefined
+  const lat = location
+    ? typeof location.lat === 'function'
+      ? location.lat()
+      : location.lat
+    : null
+  const lng = location
+    ? typeof location.lng === 'function'
+      ? location.lng()
+      : location.lng
+    : null
+
+  return {
+    formattedAddress,
+    street,
+    number,
+    neighborhood,
+    city,
+    state,
+    postalCode,
+    lat,
+    lng,
+  }
+}
+
+function normalizeCountries(country: string | string[]) {
   if (!country) return undefined
   return Array.isArray(country)
     ? country.map((code) => code.toUpperCase())
@@ -166,7 +184,7 @@ export function AddressAutocomplete({
 
     if (
       lastSelectedRef.current?.formattedAddress &&
-      lastSelectedRef.current.formattedAddress === value
+      lastSelectedRef.current?.formattedAddress === value
     ) {
       return
     }
@@ -180,14 +198,12 @@ export function AddressAutocomplete({
       if (lastGeocodeValueRef.current === value) return
       lastGeocodeValueRef.current = value
 
-      geocoderRef.current.geocode(
-        {
-          address: value,
-          componentRestrictions: normalizedCountries
-            ? { country: normalizedCountries[0] }
-            : undefined,
-        },
-        (results, status) => {
+        geocoderRef.current.geocode(
+          {
+            address: value,
+            componentRestrictions: normalizedCountries ? { country: normalizedCountries[0] } : undefined,
+          },
+          (results, status) => {
           if (status !== 'OK' || !results || results.length === 0) return
           const details = parsePlace(results[0])
           if (details.formattedAddress) {
@@ -197,7 +213,7 @@ export function AddressAutocomplete({
             lastValueRef.current = value
           }
           lastSelectedRef.current = details
-          onSelectRef.current?.(details)
+          onSelectRef.current(details)
         }
       )
     }, 700)
@@ -232,7 +248,7 @@ export function AddressAutocomplete({
           !preferLegacy &&
           !placeElementRef.current &&
           containerRef.current &&
-          google.maps?.places?.PlaceAutocompleteElement
+          google.maps.places.PlaceAutocompleteElement
         ) {
           const placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({})
 
@@ -270,7 +286,7 @@ export function AddressAutocomplete({
 
             if (
               lastSelectedRef.current?.formattedAddress &&
-              lastSelectedRef.current.formattedAddress === currentValue
+              lastSelectedRef.current?.formattedAddress === currentValue
             ) {
               return
             }
@@ -279,9 +295,7 @@ export function AddressAutocomplete({
             geocoderRef.current.geocode(
               {
                 address: currentValue,
-                componentRestrictions: normalizedCountries
-                  ? { country: normalizedCountries[0] }
-                  : undefined,
+                componentRestrictions: normalizedCountries ? { country: normalizedCountries[0] } : undefined,
               },
               (results, status) => {
                 if (status !== 'OK' || !results || results.length === 0) return
@@ -293,13 +307,13 @@ export function AddressAutocomplete({
                   lastValueRef.current = currentValue
                 }
                 lastSelectedRef.current = details
-                onSelectRef.current?.(details)
+                onSelectRef.current(details)
               }
             )
           }
 
           placeSelectHandler = async (event: any) => {
-            const placePrediction = event?.placePrediction
+            const placePrediction = event.placePrediction
             if (!placePrediction) return
             const place = placePrediction.toPlace()
             await place.fetchFields({
@@ -312,7 +326,7 @@ export function AddressAutocomplete({
             if (details.formattedAddress) {
               onChangeRef.current(details.formattedAddress)
             }
-            onSelectRef.current?.(details)
+            onSelectRef.current(details)
           }
 
           placeAutocomplete.addEventListener('gmp-select', placeSelectHandler as EventListener)
@@ -360,7 +374,7 @@ export function AddressAutocomplete({
           if (details.formattedAddress) {
             onChangeRef.current(details.formattedAddress)
           }
-          onSelectRef.current?.(details)
+          onSelectRef.current(details)
         })
       })
       .catch(() => {
@@ -389,7 +403,9 @@ export function AddressAutocomplete({
 
   const handleBlur = async () => {
     if (usePlaceElement && !preferLegacy) return
-    const value = inputRef.current?.value?.trim() || ''
+    const inputEl = inputRef.current
+    if (!inputEl) return
+    const value = inputEl.value.trim() || ''
     if (!value || !onSelectRef.current) return
 
     // If user already selected the same address from suggestions, skip.
@@ -401,9 +417,7 @@ export function AddressAutocomplete({
     geocoderRef.current.geocode(
       {
         address: value,
-        componentRestrictions: normalizeCountries(country)
-          ? { country: normalizeCountries(country)![0] }
-          : undefined,
+        componentRestrictions: normalizedCountries ? { country: normalizedCountries[0] } : undefined,
       },
       (results, status) => {
         if (status !== 'OK' || !results || results.length === 0) return
@@ -415,7 +429,7 @@ export function AddressAutocomplete({
           lastValueRef.current = value
         }
         lastSelectedRef.current = details
-        onSelectRef.current?.(details)
+        onSelectRef.current(details)
       }
     )
   }

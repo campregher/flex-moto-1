@@ -24,13 +24,13 @@ interface EnderecoForm {
   pacotes: number
   latitude: number
   longitude: number
-  ordem?: number
-  logradouro?: string
-  numero?: string
-  bairro?: string
-  cidade?: string
-  uf?: string
-  cep?: string
+  ordem: number
+  logradouro: string
+  numero: string
+  bairro: string
+  cidade: string
+  uf: string
+  cep: string
 }
 
 interface ColetaOption {
@@ -55,12 +55,12 @@ interface CorridaForm {
   coleta_observacoes: string
   coleta_latitude: number
   coleta_longitude: number
-  coleta_logradouro?: string
-  coleta_numero?: string
-  coleta_bairro?: string
-  coleta_cidade?: string
-  coleta_uf?: string
-  coleta_cep?: string
+  coleta_logradouro: string
+  coleta_numero: string
+  coleta_bairro: string
+  coleta_cidade: string
+  coleta_uf: string
+  coleta_cep: string
 }
 
 export default function NovaCorridaPage() {
@@ -81,6 +81,7 @@ export default function NovaCorridaPage() {
       pacotes: 1,
       latitude: 0,
       longitude: 0,
+      ordem: 1,
       logradouro: '',
       numero: '',
       bairro: '',
@@ -98,9 +99,9 @@ export default function NovaCorridaPage() {
   const { register, handleSubmit, watch, setValue, control, formState: { errors } } = useForm<CorridaForm>({
     defaultValues: {
       plataforma: 'ml_flex',
-      endereco_coleta: lojistaProfile?.endereco_base || '',
-      coleta_latitude: lojistaProfile?.endereco_latitude || 0,
-      coleta_longitude: lojistaProfile?.endereco_longitude || 0,
+      endereco_coleta: lojistaProfile.endereco_base || '',
+      coleta_latitude: lojistaProfile.endereco_latitude || 0,
+      coleta_longitude: lojistaProfile.endereco_longitude || 0,
     }
   })
 
@@ -117,7 +118,7 @@ export default function NovaCorridaPage() {
   }
 
   const applyProfileColeta = () => {
-    if (!lojistaProfile?.endereco_base) return
+    if (!lojistaProfile.endereco_base) return
     setValue('endereco_coleta', lojistaProfile.endereco_base || '')
     setValue('coleta_latitude', lojistaProfile.endereco_latitude || 0)
     setValue('coleta_longitude', lojistaProfile.endereco_longitude || 0)
@@ -131,7 +132,7 @@ export default function NovaCorridaPage() {
 
   useEffect(() => {
     async function loadColetas() {
-      if (!lojistaProfile?.id) return
+      if (!lojistaProfile.id) return
       const { data } = await supabase
         .from('lojista_coletas')
         .select('*')
@@ -141,7 +142,7 @@ export default function NovaCorridaPage() {
       const list = (data || []) as ColetaOption[]
       setColetas(list)
 
-      if (lojistaProfile?.endereco_base) {
+      if (lojistaProfile.endereco_base) {
         setSelectedColetaId('perfil')
         applyProfileColeta()
         return
@@ -155,7 +156,7 @@ export default function NovaCorridaPage() {
     }
 
     loadColetas()
-  }, [lojistaProfile?.id, supabase])
+  }, [lojistaProfile.id, supabase])
 
   const enderecoColeta = watch('endereco_coleta')
   const coletaLat = watch('coleta_latitude')
@@ -166,24 +167,24 @@ export default function NovaCorridaPage() {
     if (selectedColetaId !== 'manual') return
     if (enderecoColeta && enderecoColeta.trim().length > 0) return
 
-    const enderecoBase = lojistaProfile?.endereco_base || ''
+    const enderecoBase = lojistaProfile.endereco_base || ''
     if (!enderecoBase) return
 
     setValue('endereco_coleta', enderecoBase)
-    setValue('coleta_latitude', lojistaProfile?.endereco_latitude || 0)
-    setValue('coleta_longitude', lojistaProfile?.endereco_longitude || 0)
-    setValue('coleta_logradouro', lojistaProfile?.endereco_logradouro || '')
-    setValue('coleta_numero', lojistaProfile?.endereco_numero || '')
-    setValue('coleta_bairro', lojistaProfile?.endereco_bairro || '')
-    setValue('coleta_cidade', lojistaProfile?.endereco_cidade || '')
-    setValue('coleta_uf', lojistaProfile?.endereco_uf || '')
-    setValue('coleta_cep', lojistaProfile?.endereco_cep || '')
+    setValue('coleta_latitude', lojistaProfile.endereco_latitude || 0)
+    setValue('coleta_longitude', lojistaProfile.endereco_longitude || 0)
+    setValue('coleta_logradouro', lojistaProfile.endereco_logradouro || '')
+    setValue('coleta_numero', lojistaProfile.endereco_numero || '')
+    setValue('coleta_bairro', lojistaProfile.endereco_bairro || '')
+    setValue('coleta_cidade', lojistaProfile.endereco_cidade || '')
+    setValue('coleta_uf', lojistaProfile.endereco_uf || '')
+    setValue('coleta_cep', lojistaProfile.endereco_cep || '')
   }, [enderecoColeta, lojistaProfile, selectedColetaId, setValue])
 
   const totalPacotes = enderecos.reduce((acc, e) => acc + e.pacotes, 0)
 
-  const origemLat = coletaLat || lojistaProfile?.endereco_latitude || 0
-  const origemLng = coletaLng || lojistaProfile?.endereco_longitude || 0
+  const origemLat = coletaLat || lojistaProfile.endereco_latitude || 0
+  const origemLng = coletaLng || lojistaProfile.endereco_longitude || 0
   const destinosComCoords = enderecos
     .filter((e) => e.latitude && e.longitude)
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
@@ -207,9 +208,9 @@ export default function NovaCorridaPage() {
                   address: enderecoColeta,
                   componentRestrictions: { country: 'BR' },
                 },
-                (results, status) => {
+               (results, status) => {
                   if (status !== 'OK' || !results || results.length === 0) return
-                  const location = results[0].geometry?.location
+                  const location = results[0].geometry.location
                   if (!location) return
                   setValue('coleta_latitude', location.lat())
                   setValue('coleta_longitude', location.lng())
@@ -237,9 +238,9 @@ export default function NovaCorridaPage() {
                 address: endereco.endereco,
                 componentRestrictions: { country: 'BR' },
               },
-              (results, status) => {
+             (results, status) => {
                 if (status !== 'OK' || !results || results.length === 0) return
-                const location = results[0].geometry?.location
+                const location = results[0].geometry.location
                 if (!location) return
                 updateEnderecoFields(index, {
                   latitude: location.lat(),
@@ -265,7 +266,7 @@ export default function NovaCorridaPage() {
     // Cleanup de requests anteriores
     const currentRequestId = ++rotaRequestRef.current
 
-    // Fun?o de cleanup
+    // Funo de cleanup
     const cleanup = () => {
       if (rotaRequestRef.current == currentRequestId) {
         setCalculandoRota(false)
@@ -275,13 +276,13 @@ export default function NovaCorridaPage() {
     // Verifica se temos dados suficientes para calcular rota
     const temCoordsOrigem = Boolean(origemLat && origemLng)
     const temCoordsDestinos = destinosComCoords.length > 0
-    const enderecosTexto = enderecos.filter((e) => e.endereco?.trim())
+    const enderecosTexto = enderecos.filter((e) => e.endereco.trim())
     const enderecosValidos = enderecosTexto.filter((e) => e.endereco!.trim().length >= 5)
     const temEnderecos = enderecosTexto.length > 0
     const temEnderecosValidos = enderecosValidos.length > 0
-    const enderecoColetaValido = Boolean(enderecoColeta?.trim() && enderecoColeta.trim().length >= 5)
+    const enderecoColetaValido = Boolean(enderecoColeta.trim() && enderecoColeta.trim().length >= 5)
 
-    // Condi?o para n?o calcular
+    // Condio para no calcular
     if (!temCoordsOrigem && !enderecoColetaValido) {
       setDistanciaRota(0)
       setCalculandoRota(false)
@@ -315,9 +316,9 @@ export default function NovaCorridaPage() {
         stopover: true,
       }))
     } else {
-      // Usar endere?os como string
+      // Usar endereos como string
       const enderecosValidos = enderecos
-        .map((e) => e.endereco?.trim())
+        .map((e) => e.endereco.trim())
         .filter((endereco) => endereco && endereco.length >= 5) as string[]
 
       if (enderecosValidos.length === 0) {
@@ -357,14 +358,14 @@ export default function NovaCorridaPage() {
               // Verifica se ainda  a request atual
               if (rotaRequestRef.current !== currentRequestId) return
 
-              if (status === 'OK' && result?.routes?.[0]) {
+              if (status === 'OK' && result?.routes[0]) {
                 const totalMeters = result.routes[0].legs.reduce(
                   (sum, leg) => sum + (leg.distance?.value || 0),
                   0
                 )
                 setDistanciaRota(Math.round((totalMeters / 1000) * 10) / 10)
               } else {
-                // Fallback para c?lculo aproximado
+                // Fallback para clculo aproximado
                 if (temCoordsOrigem && temCoordsDestinos) {
                   const fallback = calculateRouteDistance(
                     { lat: origemLat!, lng: origemLng! },
@@ -383,7 +384,7 @@ export default function NovaCorridaPage() {
           if (rotaRequestRef.current !== currentRequestId) return
 
           console.error('Erro ao carregar Google Maps:', error)
-          // Fallback para c?lculo aproximado
+          // Fallback para clculo aproximado
           if (temCoordsOrigem && temCoordsDestinos) {
             const fallback = calculateRouteDistance(
               { lat: origemLat!, lng: origemLng! },
@@ -408,7 +409,7 @@ export default function NovaCorridaPage() {
 
 
   const valorTotal = calculateDeliveryPrice(totalPacotes, distanciaRota)
-  const saldoSuficiente = (lojistaProfile?.saldo || 0) >= valorTotal
+  const saldoSuficiente = (lojistaProfile.saldo || 0) >= valorTotal
   const distanciaCalculada = distanciaRota > 0
   const distanciaParaExibir = distanciaCalculada ? distanciaRota : 0
   const valorParaExibir = distanciaCalculada ? valorTotal : 0
@@ -437,6 +438,7 @@ export default function NovaCorridaPage() {
         pacotes: 1,
         latitude: 0,
         longitude: 0,
+        ordem: enderecos.length + 1,
         logradouro: '',
         numero: '',
         bairro: '',
@@ -603,7 +605,7 @@ export default function NovaCorridaPage() {
               </div>
 
               <div className="space-y-4">
-                {(coletas.length > 0 || lojistaProfile?.endereco_base) && (
+                {(coletas.length > 0 || lojistaProfile.endereco_base) && (
                   <div>
                     <label className="label">Usar endereco cadastrado</label>
                     <select
@@ -621,7 +623,7 @@ export default function NovaCorridaPage() {
                       }}
                       className="input"
                     >
-                      {lojistaProfile?.endereco_base && (
+                      {lojistaProfile.endereco_base && (
                         <option value="perfil">Endereco do perfil</option>
                       )}
                       <option value="manual">Digitar manualmente</option>
@@ -656,6 +658,12 @@ export default function NovaCorridaPage() {
                     placeholder="Rua, numero, bairro, cidade"
                     className="input"
                     disabled={selectedColetaId !== 'manual'}
+                    id="endereco_coleta"
+                    name="endereco_coleta"
+                    country="br"
+                    autoComplete="street-address"
+                    enableLiveGeocode={false}
+                    preferLegacy={false}
                   />
                   <p className="text-xs text-gray-500">
                     Digite o endereco completo. Voce pode ajustar manualmente.
@@ -760,6 +768,11 @@ export default function NovaCorridaPage() {
                         }}
                         placeholder="Rua, numero, bairro, cidade"
                         className="input"
+                        id={`endereco_${index}`}
+                        name={`endereco_${index}`}
+                        disabled={false}
+                        country="br"
+                        autoComplete="street-address"
                         enableLiveGeocode
                         preferLegacy
                       />
@@ -848,7 +861,7 @@ export default function NovaCorridaPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Seu saldo</span>
                   <span className={`font-medium ${saldoSuficiente ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(lojistaProfile?.saldo || 0)}
+                    {formatCurrency(lojistaProfile.saldo || 0)}
                   </span>
                 </div>
               </div>
