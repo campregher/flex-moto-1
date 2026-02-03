@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -57,7 +57,7 @@ export default function EntregadorSaldoPage() {
   async function handleSaque() {
     const valorNum = parseFloat(valor.replace(',', '.'))
     if (isNaN(valorNum) || valorNum <= 0) {
-      toast.error('Valor inválido')
+      toast.error('Valor invÃ¡lido')
       return
     }
 
@@ -139,7 +139,7 @@ export default function EntregadorSaldoPage() {
 
       {/* Balance Card */}
       <div className="card p-6 mb-6 bg-gradient-to-br from-secondary-600 to-secondary-700 text-white">
-        <p className="text-secondary-100 mb-1">Saldo disponível</p>
+        <p className="text-secondary-100 mb-1">Saldo disponÃ­vel</p>
         <p className="text-4xl font-bold mb-4">
           {formatCurrency(entregadorProfile?.saldo || 0)}
         </p>
@@ -167,7 +167,7 @@ export default function EntregadorSaldoPage() {
       {/* Transaction History */}
       <div className="card">
         <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">Histórico</h2>
+          <h2 className="text-lg font-semibold text-gray-900">HistÃ³rico</h2>
         </div>
 
         {loading ? (
@@ -177,8 +177,8 @@ export default function EntregadorSaldoPage() {
         ) : transacoes.length === 0 ? (
           <EmptyState
             icon={<HiOutlineCash className="w-8 h-8 text-gray-400" />}
-            title="Nenhuma transação"
-            description="Seus ganhos aparecerão aqui"
+            title="Nenhuma transaÃ§Ã£o"
+            description="Seus ganhos aparecerÃ£o aqui"
           />
         ) : (
           <div className="divide-y">
@@ -223,7 +223,7 @@ export default function EntregadorSaldoPage() {
                 />
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Disponível: {formatCurrency(entregadorProfile?.saldo || 0)}
+                DisponÃ­vel: {formatCurrency(entregadorProfile?.saldo || 0)}
               </p>
             </div>
             <div className="flex gap-3">
@@ -247,3 +247,4 @@ export default function EntregadorSaldoPage() {
     </div>
   )
 }
+

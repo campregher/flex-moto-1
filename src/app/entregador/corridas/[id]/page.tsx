@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -47,7 +47,7 @@ interface CorridaDetalhe {
 }
 
 export default function CorridaDisponivelDetalhePage() {
-  const params = useParams()
+  const params = useParams<{ id: string }>()
   const router = useRouter()
   const { profile } = useAuthStore()
   const [corrida, setCorrida] = useState<CorridaDetalhe | null>(null)
@@ -56,12 +56,14 @@ export default function CorridaDisponivelDetalhePage() {
   const supabase = createClient()
 
   const entregadorProfile = profile as any
+  const corridaId = params?.id
 
   useEffect(() => {
-    loadCorrida()
-  }, [params.id])
+    if (!corridaId) return
+    loadCorrida(corridaId)
+  }, [corridaId])
 
-  async function loadCorrida() {
+  async function loadCorrida(id: string) {
     const { data } = await supabase
       .from('corridas')
       .select(`
@@ -73,7 +75,7 @@ export default function CorridaDisponivelDetalhePage() {
         ),
         enderecos:enderecos_entrega(id, endereco, latitude, longitude, pacotes, status)
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (data) {
@@ -83,8 +85,9 @@ export default function CorridaDisponivelDetalhePage() {
   }
 
   async function aceitarCorrida() {
+    if (!corridaId) return
     if (!entregadorProfile?.online) {
-      toast.error('Você precisa estar online para aceitar corridas')
+      toast.error('VocÃª precisa estar online para aceitar corridas')
       return
     }
 
@@ -97,12 +100,12 @@ export default function CorridaDisponivelDetalhePage() {
           status: 'aceita',
           aceita_em: new Date().toISOString(),
         })
-        .eq('id', params.id)
+        .eq('id', corridaId)
         .eq('status', 'aguardando')
 
       if (error) {
         if (error.message.includes('no rows')) {
-          toast.error('Corrida já foi aceita por outro entregador')
+          toast.error('Corrida jÃ¡ foi aceita por outro entregador')
         } else {
           throw error
         }
@@ -110,7 +113,7 @@ export default function CorridaDisponivelDetalhePage() {
       }
 
       toast.success('Corrida aceita!')
-      router.push(`/entregador/entregas/${params.id}`)
+      router.push(`/entregador/entregas/${corridaId}`)
     } catch (err) {
       toast.error('Erro ao aceitar corrida')
     } finally {
@@ -129,7 +132,7 @@ export default function CorridaDisponivelDetalhePage() {
   if (!corrida) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Corrida não encontrada</p>
+        <p className="text-gray-500">Corrida nÃ£o encontrada</p>
         <Link href="/entregador/corridas" className="btn-secondary mt-4">
           Voltar
         </Link>
@@ -140,7 +143,7 @@ export default function CorridaDisponivelDetalhePage() {
   if (corrida.status !== 'aguardando') {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Essa corrida não está mais disponível.</p>
+        <p className="text-gray-500">Essa corrida nÃ£o estÃ¡ mais disponÃ­vel.</p>
         <Link href="/entregador/corridas" className="btn-secondary mt-4">
           Ver outras corridas
         </Link>
@@ -218,7 +221,7 @@ export default function CorridaDisponivelDetalhePage() {
         )}
 
         <div className="card p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Endereços</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">EndereÃ§os</h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
@@ -237,7 +240,7 @@ export default function CorridaDisponivelDetalhePage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    Entrega {i + 1} • {e.pacotes} pacote{e.pacotes > 1 ? 's' : ''}
+                    Entrega {i + 1} â€¢ {e.pacotes} pacote{e.pacotes > 1 ? 's' : ''}
                   </p>
                   <p className="text-gray-900">{e.endereco}</p>
                 </div>
@@ -258,3 +261,4 @@ export default function CorridaDisponivelDetalhePage() {
     </div>
   )
 }
+

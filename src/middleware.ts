@@ -42,13 +42,19 @@ export async function middleware(request: NextRequest) {
     .eq('id', session.user.id)
     .single()
 
-  if (!user) {
+  const userRow = user as {
+    tipo: Database['public']['Enums']['user_type']
+    status: Database['public']['Enums']['user_status'] | null
+    is_admin: boolean | null
+  } | null
+
+  if (!userRow) {
     // User not found in database, redirect to complete registration
     return NextResponse.redirect(new URL('/cadastro', request.url))
   }
 
   // Check if user is blocked
-  if (user.status === 'bloqueado') {
+  if (userRow.status === 'bloqueado') {
     await supabase.auth.signOut()
     return NextResponse.redirect(new URL('/login?error=blocked', request.url))
   }
@@ -58,22 +64,22 @@ export async function middleware(request: NextRequest) {
   const isEntregadorRoute = entregadorRoutes.some(route => pathname.startsWith(route))
   const isAdminRoute = pathname.startsWith('/admin')
 
-  if (isAdminRoute && !user?.is_admin) {
+  if (isAdminRoute && !userRow?.is_admin) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  if (isLojistaRoute && user.tipo !== 'lojista') {
+  if (isLojistaRoute && userRow.tipo !== 'lojista') {
     // Entregador trying to access lojista routes
     return NextResponse.redirect(new URL('/entregador', request.url))
   }
 
-  if (isEntregadorRoute && user.tipo !== 'entregador') {
+  if (isEntregadorRoute && userRow.tipo !== 'entregador') {
     // Lojista trying to access entregador routes
     return NextResponse.redirect(new URL('/lojista', request.url))
   }
 
   // Check if entregador is pending validation
-  if (user.tipo === 'entregador' && user.status === 'pendente') {
+  if (userRow.tipo === 'entregador' && userRow.status === 'pendente') {
     // Allow access to profile page to check status
     if (!pathname.startsWith('/entregador/perfil') && !pathname.startsWith('/entregador/aguardando')) {
       return NextResponse.redirect(new URL('/entregador/aguardando', request.url))

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -47,8 +47,8 @@ export default function LojistaPerfilPage() {
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     endereco_base: (profile as any).endereco_base || '',
-    endereco_latitude: (profile as any).endereco_latitude ?? null,
-    endereco_longitude: (profile as any).endereco_longitude ?? null,
+    endereco_latitude: (profile as any).endereco_latitude  null,
+    endereco_longitude: (profile as any).endereco_longitude  null,
     endereco_logradouro: (profile as any).endereco_logradouro || '',
     endereco_numero: (profile as any).endereco_numero || '',
     endereco_bairro: (profile as any).endereco_bairro || '',
@@ -133,8 +133,8 @@ export default function LojistaPerfilPage() {
 
     supabase.storage
       .from('fotos')
-      .createSignedUrl(fotoPath, 3600)
-      .then(({ data, error }) => {
+        .createSignedUrl(fotoPath, 3600)
+        .then(({ data, error }: { data: { signedUrl?: string } | null; error: unknown }) => {
         if (!error && data?.signedUrl) {
           setFotoPreview(data.signedUrl)
         }
@@ -153,7 +153,7 @@ export default function LojistaPerfilPage() {
       .from('lojistas')
       .update({ foto_url: normalized })
       .eq('id', lojistaProfile.id)
-      .then(({ error }) => {
+      .then(({ error }: { error: unknown }) => {
         if (!error) {
           setProfile({ ...lojistaProfile, foto_url: normalized })
         }
@@ -279,9 +279,9 @@ export default function LojistaPerfilPage() {
           is_default: item.id === coletaId,
         }))
       )
-      toast.success('Endereço padrão atualizado')
+      toast.success('EndereÃƒÂ§o padrÃƒÂ£o atualizado')
     } catch (err) {
-      toast.error('Erro ao definir endereço padrão')
+      toast.error('Erro ao definir endereÃƒÂ§o padrÃƒÂ£o')
     } finally {
       setColetaSaving(false)
     }
@@ -290,11 +290,11 @@ export default function LojistaPerfilPage() {
   async function handleAddColeta() {
     if (!lojistaProfile.id) return
     if (!newColeta.endereco.trim()) {
-      toast.error('Informe o endereço de coleta')
+      toast.error('Informe o endereÃƒÂ§o de coleta')
       return
     }
     if (coletas.length >= 4) {
-      toast.error('Máximo de 4 endereços de coleta')
+      toast.error('MÃƒÂ¡ximo de 4 endereÃƒÂ§os de coleta')
       return
     }
 
@@ -342,9 +342,9 @@ export default function LojistaPerfilPage() {
         cep: '',
       })
       setNewColetaDefault(false)
-      toast.success('Endereço de coleta adicionado')
+      toast.success('EndereÃƒÂ§o de coleta adicionado')
     } catch (err) {
-      toast.error('Erro ao adicionar endereço')
+      toast.error('Erro ao adicionar endereÃƒÂ§o')
     } finally {
       setColetaSaving(false)
     }
@@ -361,9 +361,9 @@ export default function LojistaPerfilPage() {
       if (error) throw error
 
       setColetas((prev) => prev.filter((item) => item.id !== coletaId))
-      toast.success('Endereço removido')
+      toast.success('EndereÃƒÂ§o removido')
     } catch (err) {
-      toast.error('Erro ao remover endereço')
+      toast.error('Erro ao remover endereÃƒÂ§o')
     } finally {
       setColetaSaving(false)
     }
@@ -372,7 +372,7 @@ export default function LojistaPerfilPage() {
   async function handleSaveEditColeta() {
     if (!editColetaId || !editColeta) return
     if (!editColeta.endereco.trim()) {
-      toast.error('Informe o endereço de coleta')
+      toast.error('Informe o endereÃƒÂ§o de coleta')
       return
     }
     setColetaSaving(true)
@@ -398,13 +398,13 @@ export default function LojistaPerfilPage() {
       setColetas((prev) =>
         prev.map((item) =>
           item.id === editColetaId
-            ? { ...item, ...editColeta }
+             { ...item, ...editColeta }
             : item
         )
       )
       setEditColetaId(null)
       setEditColeta(null)
-      toast.success('Endere?o atualizado')
+      toast.success('Endereço atualizado')
     } catch (err) {
       toast.error('Erro ao atualizar endere?o')
     } finally {
@@ -427,7 +427,7 @@ export default function LojistaPerfilPage() {
               <div className="flex items-center gap-2 mt-1">
                 <Rating value={lojistaProfile?.avaliacao_media || 5} size="sm" />
                 <span className="text-sm text-gray-500">
-                  ({lojistaProfile.total_avaliacoes || 0} avalia????es)
+                  ({lojistaProfile.total_avaliacoes || 0} avalia?es)
                 </span>
               </div>
             </div>
@@ -478,7 +478,7 @@ export default function LojistaPerfilPage() {
                 disabled={profileSaving}
                 className="btn-primary flex-1"
               >
-                {profileSaving ? 'Salvando...' : 'Salvar'}
+                {profileSaving  'Salvando...' : 'Salvar'}
               </button>
             </div>
           </div>
@@ -523,7 +523,7 @@ export default function LojistaPerfilPage() {
       {/* Address */}
       <div className="card p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Endereço de Coleta</h3>
+          <h3 className="font-semibold text-gray-900">EndereÃƒÂ§o de Coleta</h3>
           <button
             onClick={() => setEditing(!editing)}
             className="btn-ghost text-primary-600"
@@ -532,7 +532,7 @@ export default function LojistaPerfilPage() {
           </button>
         </div>
 
-        {editing ? (
+        {editing  (
           <div className="space-y-4">
             <AddressAutocomplete
               value={formData.endereco_base}
@@ -543,8 +543,8 @@ export default function LojistaPerfilPage() {
                 setFormData((prev) => ({
                   ...prev,
                   endereco_base: details.formattedAddress || prev.endereco_base,
-                  endereco_latitude: details.lat ?? prev.endereco_latitude,
-                  endereco_longitude: details.lng ?? prev.endereco_longitude,
+                  endereco_latitude: details.lat  prev.endereco_latitude,
+                  endereco_longitude: details.lng  prev.endereco_longitude,
                   endereco_logradouro: details.street || prev.endereco_logradouro,
                   endereco_numero: details.number || prev.endereco_numero,
                   endereco_bairro: details.neighborhood || prev.endereco_bairro,
@@ -553,7 +553,7 @@ export default function LojistaPerfilPage() {
                   endereco_cep: details.postalCode || prev.endereco_cep,
                 }))
               }
-              placeholder="Endereço completo para coletas"
+              placeholder="EndereÃƒÂ§o completo para coletas"
               className="input"
             />
             <div className="flex gap-3">
@@ -561,7 +561,7 @@ export default function LojistaPerfilPage() {
                 Cancelar
               </button>
               <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
-                {saving ? 'Salvando...' : 'Salvar'}
+                {saving  'Salvando...' : 'Salvar'}
               </button>
             </div>
           </div>
@@ -569,7 +569,7 @@ export default function LojistaPerfilPage() {
           <div className="flex items-start gap-3">
             <HiOutlineLocationMarker className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-gray-700">
-              {lojistaProfile?.endereco_base || 'Nenhum endereço cadastrado'}
+              {lojistaProfile?.endereco_base || 'Nenhum endereÃƒÂ§o cadastrado'}
             </p>
           </div>
         )}
@@ -579,23 +579,23 @@ export default function LojistaPerfilPage() {
       <div className="card p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-gray-900">Endereços de Coleta (até 4)</h3>
+            <h3 className="font-semibold text-gray-900">EndereÃƒÂ§os de Coleta (atÃƒÂ© 4)</h3>
             <p className="text-sm text-gray-500">
-              Use estes endereços para criar corridas e importar pedidos do Mercado Livre.
+              Use estes endereÃƒÂ§os para criar corridas e importar pedidos do Mercado Livre.
             </p>
           </div>
           <span className="text-sm text-gray-600">{coletas.length}/4</span>
         </div>
 
-        {coletasLoading ? (
-          <p className="text-sm text-gray-500">Carregando endereços...</p>
-        ) : coletas.length === 0 ? (
-          <p className="text-sm text-gray-500">Nenhum endereço cadastrado.</p>
+        {coletasLoading  (
+          <p className="text-sm text-gray-500">Carregando endereÃƒÂ§os...</p>
+        ) : coletas.length === 0  (
+          <p className="text-sm text-gray-500">Nenhum endereÃƒÂ§o cadastrado.</p>
         ) : (
           <div className="space-y-3 mb-4">
             {coletas.map((coleta) => (
               <div key={coleta.id} className="border border-gray-200 rounded-lg p-3">
-                {editColetaId === coleta.id && editColeta ? (
+                {editColetaId === coleta.id && editColeta  (
                   <div className="space-y-3">
                     <input
                       value={editColeta.label}
@@ -612,8 +612,8 @@ export default function LojistaPerfilPage() {
                         setEditColeta({
                           ...editColeta,
                           endereco: details.formattedAddress || editColeta.endereco,
-                          latitude: details.lat ?? editColeta.latitude,
-                          longitude: details.lng ?? editColeta.longitude,
+                          latitude: details.lat  editColeta.latitude,
+                          longitude: details.lng  editColeta.longitude,
                           logradouro: details.street || editColeta.logradouro,
                           numero: details.number || editColeta.numero,
                           bairro: details.neighborhood || editColeta.bairro,
@@ -622,7 +622,7 @@ export default function LojistaPerfilPage() {
                           cep: details.postalCode || editColeta.cep,
                         })
                       }
-                      placeholder="Endereço completo"
+                      placeholder="EndereÃƒÂ§o completo"
                       className="input"
                     />
                     <div className="flex gap-3">
@@ -642,7 +642,7 @@ export default function LojistaPerfilPage() {
                         disabled={coletaSaving}
                         onClick={handleSaveEditColeta}
                       >
-                        {coletaSaving ? 'Salvando...' : 'Salvar'}
+                        {coletaSaving  'Salvando...' : 'Salvar'}
                       </button>
                     </div>
                   </div>
@@ -650,9 +650,9 @@ export default function LojistaPerfilPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-gray-900">
-                        {coleta.label || 'Endereço de coleta'}
+                        {coleta.label || 'EndereÃƒÂ§o de coleta'}
                         {coleta.is_default && (
-                          <span className="ml-2 text-xs text-green-600">Padrão</span>
+                          <span className="ml-2 text-xs text-green-600">PadrÃƒÂ£o</span>
                         )}
                       </p>
                       <p className="text-sm text-gray-600">{coleta.endereco}</p>
@@ -665,7 +665,7 @@ export default function LojistaPerfilPage() {
                           onClick={() => setDefaultColeta(coleta.id)}
                           disabled={coletaSaving}
                         >
-                          Definir padrão
+                          Definir padrÃƒÂ£o
                         </button>
                       )}
                       <button
@@ -706,7 +706,7 @@ export default function LojistaPerfilPage() {
         )}
 
         <div className="border-t border-gray-200 pt-4">
-          <h4 className="font-medium text-gray-900 mb-3">Adicionar novo endereço</h4>
+          <h4 className="font-medium text-gray-900 mb-3">Adicionar novo endereÃƒÂ§o</h4>
           <div className="space-y-3">
             <input
               value={newColeta.label}
@@ -721,8 +721,8 @@ export default function LojistaPerfilPage() {
                 setNewColeta((prev) => ({
                   ...prev,
                   endereco: details.formattedAddress || prev.endereco,
-                  latitude: details.lat ?? prev.latitude,
-                  longitude: details.lng ?? prev.longitude,
+                  latitude: details.lat  prev.latitude,
+                  longitude: details.lng  prev.longitude,
                   logradouro: details.street || prev.logradouro,
                   numero: details.number || prev.numero,
                   bairro: details.neighborhood || prev.bairro,
@@ -731,7 +731,7 @@ export default function LojistaPerfilPage() {
                   cep: details.postalCode || prev.cep,
                 }))
               }
-              placeholder="Endereço completo"
+              placeholder="EndereÃƒÂ§o completo"
               className="input"
             />
             <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -740,7 +740,7 @@ export default function LojistaPerfilPage() {
                 checked={newColetaDefault}
                 onChange={(e) => setNewColetaDefault(e.target.checked)}
               />
-              Definir como endereço padrão
+              Definir como endereÃƒÂ§o padrÃƒÂ£o
             </label>
             <button
               type="button"
@@ -749,14 +749,14 @@ export default function LojistaPerfilPage() {
               className="btn-secondary w-full"
             >
               <HiOutlinePlus className="w-5 h-5 mr-2" />
-              Adicionar endereço de coleta
+              Adicionar endereÃƒÂ§o de coleta
             </button>
           </div>
         </div>
       </div>
       {/* Stats */}
       <div className="card p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Estatísticas</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">EstatÃƒÂ­sticas</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-gray-50 rounded-lg text-center">
             <p className="text-2xl font-bold text-primary-600">{lojistaProfile?.total_corridas || 0}</p>
@@ -766,10 +766,12 @@ export default function LojistaPerfilPage() {
             <p className="text-2xl font-bold text-primary-600">
               {lojistaProfile?.avaliacao_media?.toFixed(1) || '5.0'}
             </p>
-            <p className="text-sm text-gray-500">Avaliação</p>
+            <p className="text-sm text-gray-500">AvaliaÃƒÂ§ÃƒÂ£o</p>
           </div>
         </div>
       </div>
     </div>
   )
 }
+
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -73,7 +73,7 @@ interface Corrida {
 }
 
 export default function CorridaDetalhePage() {
-  const params = useParams()
+  const params = useParams<{ id: string }>()
   const router = useRouter()
   const { user } = useAuthStore()
   const [corrida, setCorrida] = useState<Corrida | null>(null)
@@ -93,19 +93,21 @@ export default function CorridaDetalhePage() {
   const [comentario, setComentario] = useState('')
   const suppressReloadRef = useRef(false)
   const supabase = createClient()
+  const corridaId = params?.id
 
   useEffect(() => {
-    loadCorrida()
+    if (!corridaId) return
+    loadCorrida(corridaId)
 
     // Real-time subscription
     const channel = supabase
-      .channel(`corrida-${params.id}`)
+      .channel(`corrida-${corridaId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${params.id}` },
+        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
         () => {
           if (!suppressReloadRef.current) {
-            loadCorrida()
+            loadCorrida(corridaId)
           }
         }
       )
@@ -114,7 +116,7 @@ export default function CorridaDetalhePage() {
         { event: 'UPDATE', schema: 'public', table: 'entregadores' },
         () => {
           if (!suppressReloadRef.current) {
-            loadCorrida()
+            loadCorrida(corridaId)
           }
         }
       )
@@ -123,9 +125,9 @@ export default function CorridaDetalhePage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [params.id])
+  }, [corridaId, supabase])
 
-  async function loadCorrida() {
+  async function loadCorrida(id: string) {
     const { data } = await supabase
       .from('corridas')
       .select(`
@@ -136,7 +138,7 @@ export default function CorridaDetalhePage() {
         ),
         enderecos:enderecos_entrega(*)
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (data) {
@@ -370,7 +372,9 @@ export default function CorridaDetalhePage() {
       )
       toast.success('Corrida atualizada')
       setEditing(false)
-      await loadCorrida()
+      if (corridaId) {
+        await loadCorrida(corridaId)
+      }
     } catch (err) {
       toast.error('Erro ao atualizar corrida')
     } finally {

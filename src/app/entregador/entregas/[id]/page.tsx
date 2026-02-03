@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -65,7 +65,7 @@ interface Corrida {
 }
 
 export default function EntregaDetalhePage() {
-  const params = useParams()
+  const params = useParams<{ id: string }>()
   const router = useRouter()
   const { user, profile, setProfile } = useAuthStore()
   const { currentLocation } = useLocationStore()
@@ -80,12 +80,14 @@ export default function EntregaDetalhePage() {
   const supabase = createClient()
 
   const entregadorProfile = profile as any
+  const corridaId = params?.id
 
   useEffect(() => {
-    loadCorrida()
-  }, [params.id])
+    if (!corridaId) return
+    loadCorrida(corridaId)
+  }, [corridaId])
 
-  async function loadCorrida() {
+  async function loadCorrida(id: string) {
     const { data } = await supabase
       .from('corridas')
       .select(`
@@ -96,7 +98,7 @@ export default function EntregaDetalhePage() {
         ),
         enderecos:enderecos_entrega(*)
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (data) {
@@ -114,7 +116,9 @@ export default function EntregaDetalhePage() {
         .eq('id', corrida!.id)
 
       toast.success('Indo para coleta!')
-      loadCorrida()
+      if (corridaId) {
+        loadCorrida(corridaId)
+      }
     } catch (err) {
       toast.error('Erro ao atualizar status')
     } finally {
@@ -124,7 +128,7 @@ export default function EntregaDetalhePage() {
 
   async function confirmarColeta() {
     if (codeInput.toUpperCase() !== corrida!.codigo_entrega) {
-      toast.error('Código incorreto')
+      toast.error('CÃ³digo incorreto')
       return
     }
 
@@ -141,7 +145,9 @@ export default function EntregaDetalhePage() {
       toast.success('Coleta confirmada!')
       setShowCodeInput(null)
       setCodeInput('')
-      loadCorrida()
+      if (corridaId) {
+        loadCorrida(corridaId)
+      }
     } catch (err) {
       toast.error('Erro ao confirmar coleta')
     } finally {
@@ -151,7 +157,7 @@ export default function EntregaDetalhePage() {
 
   async function confirmarEntrega(enderecoId: string, codigo: string) {
     if (codeInput.toUpperCase() !== codigo) {
-      toast.error('Código incorreto')
+      toast.error('CÃ³digo incorreto')
       return
     }
 
@@ -211,7 +217,9 @@ export default function EntregaDetalhePage() {
 
       setShowCodeInput(null)
       setCodeInput('')
-      loadCorrida()
+      if (corridaId) {
+        loadCorrida(corridaId)
+      }
     } catch (err) {
       toast.error('Erro ao confirmar entrega')
     } finally {
@@ -254,11 +262,11 @@ export default function EntregaDetalhePage() {
         comentario: comentario || null,
       })
 
-      toast.success('Avaliação enviada!')
+      toast.success('AvaliaÃ§Ã£o enviada!')
       setShowRating(false)
       router.push('/entregador')
     } catch (err) {
-      toast.error('Erro ao enviar avaliação')
+      toast.error('Erro ao enviar avaliaÃ§Ã£o')
     }
   }
 
@@ -278,7 +286,7 @@ export default function EntregaDetalhePage() {
   if (!corrida) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Corrida não encontrada</p>
+        <p className="text-gray-500">Corrida nÃ£o encontrada</p>
         <Link href="/entregador" className="btn-secondary mt-4">
           Voltar
         </Link>
@@ -345,7 +353,7 @@ export default function EntregaDetalhePage() {
                     <p>Peso: {corrida.peso_kg.toFixed(2)} kg</p>
                   )}
                   {corrida.volume_cm3 !== null && corrida.volume_cm3 !== undefined && (
-                    <p>Volume: {corrida.volume_cm3.toFixed(0)} cm³</p>
+                    <p>Volume: {corrida.volume_cm3.toFixed(0)} cmÂ³</p>
                   )}
                 </div>
               )}
@@ -416,7 +424,7 @@ export default function EntregaDetalhePage() {
                       <p className="text-sm text-gray-500 mt-1">{corrida.coleta_observacoes}</p>
                     )}
                     <p className="text-xs text-gray-400 mt-2">
-                      Código: <span className="font-mono font-bold">{corrida.codigo_entrega}</span>
+                      CÃ³digo: <span className="font-mono font-bold">{corrida.codigo_entrega}</span>
                     </p>
                   </div>
                 </div>
@@ -456,7 +464,7 @@ export default function EntregaDetalhePage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">
-                        Entrega {index + 1} • {endereco.pacotes} pacote{endereco.pacotes > 1 ? 's' : ''}
+                        Entrega {index + 1} â€¢ {endereco.pacotes} pacote{endereco.pacotes > 1 ? 's' : ''}
                       </p>
                       <p className="font-medium text-gray-900">{endereco.endereco}</p>
                       {endereco.receiver_name && (
@@ -471,9 +479,9 @@ export default function EntregaDetalhePage() {
                       )}
                       {(endereco.peso_kg || endereco.volume_cm3) && (
                         <p className="text-sm text-gray-600">
-                          {endereco.peso_kg ? `Peso ${endereco.peso_kg.toFixed(2)} kg` : ''}
+                          {endereco.peso_kg  `Peso ${endereco.peso_kg.toFixed(2)} kg` : ''}
                           {endereco.peso_kg && endereco.volume_cm3 ? ' • ' : ''}
-                          {endereco.volume_cm3 ? `Volume ${endereco.volume_cm3.toFixed(0)} cm³` : ''}
+                          {endereco.volume_cm3  `Volume ${endereco.volume_cm3.toFixed(0)} cmÂ³` : ''}
                         </p>
                       )}
                       {endereco.complemento && (
@@ -484,7 +492,7 @@ export default function EntregaDetalhePage() {
                       )}
                       {endereco.status === 'pendente' && (
                         <p className="text-xs text-gray-400 mt-2">
-                          Código: <span className="font-mono font-bold">{endereco.codigo_confirmacao}</span>
+                          CÃ³digo: <span className="font-mono font-bold">{endereco.codigo_confirmacao}</span>
                         </p>
                       )}
                     </div>
@@ -508,9 +516,9 @@ export default function EntregaDetalhePage() {
           <div className="flex flex-col gap-3">
             <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Distância estimada da rota</span>
+                <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
                 <span className="font-semibold text-gray-900">
-                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'Indisponível'}
+                  {rotaTemCoords  `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -542,9 +550,9 @@ export default function EntregaDetalhePage() {
           <div className="flex flex-col gap-3">
             <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Distância estimada da rota</span>
+                <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
                 <span className="font-semibold text-gray-900">
-                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'Indisponível'}
+                  {rotaTemCoords  `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -597,7 +605,7 @@ export default function EntregaDetalhePage() {
             {showCodeInput === 'coleta' && (
               <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Distância estimada da rota</span>
+                  <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
                   <span className="font-semibold text-gray-900">{distanciaRotaKm.toFixed(1)} km</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
@@ -672,7 +680,7 @@ export default function EntregaDetalhePage() {
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
               className="input mb-4"
-              placeholder="Comentário (opcional)"
+              placeholder="ComentÃ¡rio (opcional)"
               rows={3}
             />
 
@@ -693,3 +701,5 @@ export default function EntregaDetalhePage() {
     </div>
   )
 }
+
+

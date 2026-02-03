@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { HiStar } from 'react-icons/hi'
 
@@ -50,3 +50,4 @@ export function Rating({ value, max = 5, size = 'md', showValue = true, onChange
     </div>
   )
 }
+

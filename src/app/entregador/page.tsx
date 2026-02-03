@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -60,9 +60,9 @@ export default function EntregadorDashboard() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'corridas' },
-        (payload) => {
+        (payload: any) => {
           if (payload.new.status === 'aguardando') {
-            toast('Nova corrida disponível!', { icon: '🚀' })
+            toast('Nova corrida disponÃ­vel!', { icon: 'ðŸš€' })
             loadCorridasDisponiveis()
           }
         }
@@ -170,7 +170,8 @@ export default function EntregadorDashboard() {
       .eq('tipo', 'corrida')
       .gte('created_at', inicioMes.toISOString())
 
-    const ganhoMes = ganhoData?.reduce((acc, item) => acc + item.valor, 0) || 0
+    const ganhoRows = (ganhoData as { valor: number }[] | null) || []
+    const ganhoMes = ganhoRows.reduce((acc, item) => acc + item.valor, 0)
 
     setStats({
       totalEntregas: totalEntregas || 0,
@@ -201,10 +202,10 @@ export default function EntregadorDashboard() {
 
       if (newOnlineStatus) {
         startTracking()
-        toast.success('Você está online!')
+        toast.success('VocÃª estÃ¡ online!')
       } else {
         stopTracking()
-        toast.success('Você está offline')
+        toast.success('VocÃª estÃ¡ offline')
       }
 
       setProfile({ ...entregadorProfile, ...updateData })
@@ -234,18 +235,17 @@ export default function EntregadorDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Olá, {user?.nome?.split(' ')[0]}!
+            OlÃ¡, {user?.nome?.split(' ')[0]}!
           </h1>
           <p className="text-gray-600">
-            {entregadorProfile?.online ? 'Você está disponível para corridas' : 'Fique online para receber corridas'}
+            {entregadorProfile?.online ? 'VocÃª estÃ¡ disponÃ­vel para corridas' : 'Fique online para receber corridas'}
           </p>
         </div>
         <button
           onClick={toggleOnline}
           disabled={togglingOnline || user?.status === 'pendente'}
           className={`relative px-6 py-3 rounded-full font-medium transition-all ${
-            entregadorProfile?.online
-              ? 'bg-green-500 text-white hover:bg-green-600'
+            entregadorProfile?.online ? 'bg-green-500 text-white hover:bg-green-600'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           } ${user?.status === 'pendente' ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
@@ -261,7 +261,7 @@ export default function EntregadorDashboard() {
       {user?.status === 'pendente' && (
         <div className="card p-4 bg-yellow-50 border-yellow-200">
           <p className="text-yellow-800">
-            Seu cadastro está em análise. Você poderá aceitar corridas após a aprovação.
+            Seu cadastro estÃ¡ em anÃ¡lise. VocÃª poderÃ¡ aceitar corridas apÃ³s a aprovaÃ§Ã£o.
           </p>
         </div>
       )}
@@ -312,7 +312,7 @@ export default function EntregadorDashboard() {
               <HiOutlineStar className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Avaliação</p>
+              <p className="text-sm text-gray-600">AvaliaÃ§Ã£o</p>
               <p className="text-lg font-bold text-gray-900">
                 {entregadorProfile?.avaliacao_media?.toFixed(1) || '5.0'}
               </p>
@@ -367,7 +367,7 @@ export default function EntregadorDashboard() {
       {/* Available Corridas */}
       <div className="card">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">Corridas Disponíveis</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Corridas DisponÃ­veis</h2>
           <Link href="/entregador/corridas" className="text-secondary-600 hover:text-secondary-700 text-sm font-medium flex items-center gap-1">
             Ver todas
             <HiOutlineArrowRight className="w-4 h-4" />
@@ -381,14 +381,14 @@ export default function EntregadorDashboard() {
         ) : !entregadorProfile?.online ? (
           <EmptyState
             icon={<HiOutlineLocationMarker className="w-8 h-8 text-gray-400" />}
-            title="Você está offline"
-            description="Fique online para ver corridas disponíveis"
+            title="VocÃª estÃ¡ offline"
+            description="Fique online para ver corridas disponÃ­veis"
           />
         ) : corridasDisponiveis.length === 0 ? (
           <EmptyState
             icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
-            title="Nenhuma corrida disponível"
-            description="Novas corridas aparecerão aqui"
+            title="Nenhuma corrida disponÃ­vel"
+            description="Novas corridas aparecerÃ£o aqui"
           />
         ) : (
           <div className="divide-y">
@@ -430,3 +430,4 @@ export default function EntregadorDashboard() {
     </div>
   )
 }
+

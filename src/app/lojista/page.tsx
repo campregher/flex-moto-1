@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -38,6 +38,8 @@ interface ColetaOption {
   label: string | null
   endereco: string
   is_default: boolean | null
+  latitude?: number | null
+  longitude?: number | null
 }
 
 interface MlPedido {
@@ -95,7 +97,7 @@ export default function LojistaDashboard() {
     if (pedido.endereco?.trim()) return pedido.endereco
     const linha1 = [pedido.logradouro, pedido.numero].filter(Boolean).join(', ')
     const linha2 = [pedido.bairro, pedido.cidade, pedido.uf, pedido.cep].filter(Boolean).join(' - ')
-    return [linha1, linha2].filter(Boolean).join(' | ') || 'Endere?o n?o informado'
+    return [linha1, linha2].filter(Boolean).join(' | ') || 'Endereço não informado'
   }
 
   useEffect(() => {
@@ -148,7 +150,8 @@ export default function LojistaDashboard() {
         .eq('tipo', 'corrida')
         .gte('created_at', inicioMes.toISOString())
 
-      const gastoMes = gastoData?.reduce((acc, item) => acc + Math.abs(item.valor), 0) || 0
+      const gastoRows = (gastoData as { valor: number }[] | null) || []
+      const gastoMes = gastoRows.reduce((acc, item) => acc + Math.abs(item.valor), 0)
 
       setStats({
         totalCorridas: totalCorridas || 0,
@@ -162,7 +165,7 @@ export default function LojistaDashboard() {
         .eq('lojista_id', lojistaProfile.id)
         .maybeSingle()
 
-      setMlIntegration(mlData ? { site_id: mlData.site_id, ml_user_id: mlData.ml_user_id } : null)
+      setMlIntegration(mlData  { site_id: mlData.site_id, ml_user_id: mlData.ml_user_id } : null)
 
       const { data: coletaData } = await supabase
         .from('lojista_coletas')
@@ -173,7 +176,7 @@ export default function LojistaDashboard() {
       const list = (coletaData || []) as ColetaOption[]
       setColetas(list)
       const defaultColeta = list.find((item) => item.is_default) || list[0]
-      setSelectedColetaId(defaultColeta ? defaultColeta.id : 'manual')
+      setSelectedColetaId(defaultColeta  defaultColeta.id : 'manual')
 
       const { data: pedidosData } = await supabase
         .from('mercadolivre_pedidos')
@@ -190,7 +193,7 @@ export default function LojistaDashboard() {
     loadData()
   }, [lojistaProfile?.id, user?.id, supabase])
 
-  const mlStatus = searchParams.get('ml')
+  const mlStatus = searchParams?.get('ml')  null
 
   const handleSync = async () => {
     setSyncLoading(true)
@@ -213,7 +216,7 @@ export default function LojistaDashboard() {
       setMlPedidos((pedidosData || []) as MlPedido[])
       setImportMessage('Pedidos sincronizados com sucesso!')
     } catch (err) {
-      setImportMessage(err instanceof Error ? err.message : 'Erro ao sincronizar pedidos')
+      setImportMessage(err instanceof Error  err.message : 'Erro ao sincronizar pedidos')
     } finally {
       setSyncLoading(false)
     }
@@ -222,7 +225,7 @@ export default function LojistaDashboard() {
   const toggleSelect = async (pedidoId: string, selected: boolean) => {
     setMlPedidos((prev) =>
       prev.map((pedido) =>
-        pedido.id === pedidoId ? { ...pedido, selected } : pedido
+        pedido.id === pedidoId  { ...pedido, selected } : pedido
       )
     )
     await supabase
@@ -244,7 +247,7 @@ export default function LojistaDashboard() {
   const saveEdit = async () => {
     if (!editPedido) return
     const coletaSelecionada = editPedido.coleta_id
-      ? coletas.find((item) => item.id === editPedido.coleta_id)
+       coletas.find((item) => item.id === editPedido.coleta_id)
       : null
     const enderecoNormalizado =
       editPedido.endereco ||
@@ -270,8 +273,8 @@ export default function LojistaDashboard() {
       observacoes: editPedido.observacoes || null,
       coleta_id: editPedido.coleta_id || null,
       coleta_endereco: coletaSelecionada?.endereco || null,
-      coleta_latitude: coletaSelecionada?.latitude ?? null,
-      coleta_longitude: coletaSelecionada?.longitude ?? null,
+      coleta_latitude: coletaSelecionada?.latitude  null,
+      coleta_longitude: coletaSelecionada?.longitude  null,
     }
 
     const { error } = await supabase
@@ -282,7 +285,7 @@ export default function LojistaDashboard() {
     if (!error) {
       setMlPedidos((prev) =>
         prev.map((pedido) =>
-          pedido.id === editPedido.id ? { ...pedido, ...updates } as MlPedido : pedido
+          pedido.id === editPedido.id  { ...pedido, ...updates } as MlPedido : pedido
         )
       )
       setImportMessage('Pedido atualizado.')
@@ -313,7 +316,7 @@ export default function LojistaDashboard() {
       setMlPedidos((pedidosData || []) as MlPedido[])
       setImportMessage('Pedidos importados com sucesso!')
     } catch (err) {
-      setImportMessage(err instanceof Error ? err.message : 'Erro ao importar pedidos')
+      setImportMessage(err instanceof Error  err.message : 'Erro ao importar pedidos')
     } finally {
       setImportLoading(false)
     }
@@ -325,7 +328,7 @@ export default function LojistaDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Olá, {user?.nome?.split(' ')[0] || ''}!
+            OlÃƒÂ¡, {user?.nome?.split(' ')[0] || ''}!
           </h1>
           <p className="text-gray-600">Gerencie suas entregas</p>
         </div>
@@ -381,7 +384,7 @@ export default function LojistaDashboard() {
               <HiOutlineStar className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Avaliação</p>
+              <p className="text-sm text-gray-600">AvaliaÃƒÂ§ÃƒÂ£o</p>
               <p className="text-lg font-bold text-gray-900">
                 {(lojistaProfile?.avaliacao_media || 5.0).toFixed(1)}
               </p>
@@ -392,12 +395,12 @@ export default function LojistaDashboard() {
 
       {mlStatus === 'connected' && (
         <div className="bg-green-50 rounded-lg p-4 border border-green-200 text-green-800">
-          Integração com Mercado Livre conectada com sucesso.
+          IntegraÃƒÂ§ÃƒÂ£o com Mercado Livre conectada com sucesso.
         </div>
       )}
       {mlStatus && mlStatus !== 'connected' && (
         <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 text-yellow-800">
-          Não foi possível conectar ao Mercado Livre. Tente novamente.
+          NÃƒÂ£o foi possÃƒÂ­vel conectar ao Mercado Livre. Tente novamente.
         </div>
       )}
 
@@ -412,7 +415,7 @@ export default function LojistaDashboard() {
           </div>
           <div>
             <p className="font-medium text-gray-900">Depositar Saldo</p>
-            <p className="text-sm text-gray-600">Adicionar créditos</p>
+            <p className="text-sm text-gray-600">Adicionar crÃƒÂ©ditos</p>
           </div>
         </Link>
 
@@ -424,7 +427,7 @@ export default function LojistaDashboard() {
             <HiOutlineClipboardCheck className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <p className="font-medium text-gray-900">Histórico</p>
+            <p className="font-medium text-gray-900">HistÃƒ³rico</p>
             <p className="text-sm text-gray-600">Ver todas as corridas</p>
           </div>
         </Link>
@@ -438,12 +441,12 @@ export default function LojistaDashboard() {
               <h2 className="text-lg font-semibold text-gray-900">Mercado Livre (Flex)</h2>
               <p className="text-sm text-gray-600">
                 {mlIntegration
-                  ? `Conectado ? ${mlIntegration.site_id} ? Usu?rio ${mlIntegration.ml_user_id}`
-                  : 'N?o conectado'}
+                   `Conectado Â• ${mlIntegration.site_id} Â• Usuário ${mlIntegration.ml_user_id}`
+                  : 'Não conectado'}
               </p>
             </div>
             <a href="/api/ml/authorize" className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm">
-              {mlIntegration ? 'Reconectar' : 'Conectar'}
+              {mlIntegration  'Reconectar' : 'Conectar'}
             </a>
           </div>
 
@@ -455,7 +458,7 @@ export default function LojistaDashboard() {
                 disabled={!mlIntegration || syncLoading}
                 className="inline-flex items-center justify-center bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {syncLoading ? 'Sincronizando...' : 'Sincronizar pedidos ML'}
+                {syncLoading  'Sincronizando...' : 'Sincronizar pedidos ML'}
               </button>
               <button
                 type="button"
@@ -463,7 +466,7 @@ export default function LojistaDashboard() {
                 disabled={!mlPedidos.some((pedido) => pedido.selected) || importLoading}
                 className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {importLoading ? 'Importando...' : 'Importar selecionados'}
+                {importLoading  'Importando...' : 'Importar selecionados'}
               </button>
             </div>
             {importMessage && (
@@ -471,7 +474,7 @@ export default function LojistaDashboard() {
             )}
           </div>
 
-          {mlPedidos.length === 0 ? (
+          {mlPedidos.length === 0  (
             <p className="text-sm text-gray-600">Nenhum pedido sincronizado ainda.</p>
           ) : (
             <div className="space-y-3">
@@ -518,18 +521,18 @@ export default function LojistaDashboard() {
                     {editingPedidoId === pedido.id && editPedido && (
                       <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
                         <div>
-                          <label className="text-xs text-gray-600">Endere?o de coleta</label>
+                          <label className="text-xs text-gray-600">Endereço de coleta</label>
                           <select
                             value={editPedido.coleta_id || 'perfil'}
                             onChange={(e) =>
                               setEditPedido({
                                 ...editPedido,
-                                coleta_id: e.target.value === 'perfil' ? null : e.target.value,
+                                coleta_id: e.target.value === 'perfil'  null : e.target.value,
                               })
                             }
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
                           >
-                            <option value="perfil">Endere?o do perfil</option>
+                            <option value="perfil">Endereço do perfil</option>
                             {coletas.map((coleta) => (
                               <option key={coleta.id} value={coleta.id}>
                                 {coleta.label || coleta.endereco}
@@ -539,7 +542,7 @@ export default function LojistaDashboard() {
                         </div>
 
                         <div>
-                          <label className="text-xs text-gray-600">Endere?o de entrega</label>
+                          <label className="text-xs text-gray-600">Endereço de entrega</label>
                           <AddressAutocomplete
                             value={editPedido.endereco || ''}
                             onChange={(value) => setEditPedido({ ...editPedido, endereco: value })}
@@ -553,11 +556,11 @@ export default function LojistaDashboard() {
                                 cidade: details.city || editPedido.cidade,
                                 uf: details.state || editPedido.uf,
                                 cep: details.postalCode || editPedido.cep,
-                                latitude: details.lat ?? editPedido.latitude,
-                                longitude: details.lng ?? editPedido.longitude,
+                                latitude: details.lat  editPedido.latitude,
+                                longitude: details.lng  editPedido.longitude,
                               })
                             }
-                            placeholder="Rua, n?mero, bairro, cidade"
+                            placeholder="Rua, Número, bairro, cidade"
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
                           />
                         </div>
@@ -573,7 +576,7 @@ export default function LojistaDashboard() {
                             value={editPedido.numero || ''}
                             onChange={(e) => setEditPedido({ ...editPedido, numero: e.target.value })}
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="N?mero"
+                            placeholder="Número"
                           />
                         </div>
 
@@ -641,7 +644,7 @@ export default function LojistaDashboard() {
                             value={editPedido.observacoes || ''}
                             onChange={(e) => setEditPedido({ ...editPedido, observacoes: e.target.value })}
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="Observa??es"
+                            placeholder="Observações"
                           />
                         </div>
 
@@ -680,15 +683,15 @@ export default function LojistaDashboard() {
           </Link>
         </div>
 
-        {loading ? (
+        {loading  (
           <div className="p-8 flex justify-center">
             <LoadingSpinner />
           </div>
-        ) : corridasAtivas.length === 0 ? (
+        ) : corridasAtivas.length === 0  (
           <div className="p-8 text-center">
             <HiOutlineTruck className="w-8 h-8 text-gray-400 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhuma corrida ativa</h3>
-            <p className="text-gray-600 mb-4">Solicite uma nova corrida para começar</p>
+            <p className="text-gray-600 mb-4">Solicite uma nova corrida para comeÃƒÂ§ar</p>
             <Link href="/lojista/nova-corrida" className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm">
               <HiOutlinePlusCircle className="w-5 h-5 mr-2" />
               Nova Corrida
@@ -703,7 +706,7 @@ export default function LojistaDashboard() {
                 className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  {corrida.entregador ? (
+                  {corrida.entregador  (
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
                       {corrida.entregador?.user?.nome?.charAt(0) || 'E'}
                     </div>
@@ -714,21 +717,21 @@ export default function LojistaDashboard() {
                   )}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${corrida.plataforma === 'ml_flex' ? 'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'}`}>
-                        {corrida.plataforma === 'ml_flex' ? 'ML Flex' : 'Shopee'}
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${corrida.plataforma === 'ml_flex'  'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'}`}>
+                        {corrida.plataforma === 'ml_flex'  'ML Flex' : 'Shopee'}
                       </span>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        corrida.status === 'aguardando' ? 'bg-gray-100 text-gray-800' :
-                        corrida.status === 'aceita' ? 'bg-blue-100 text-blue-800' :
-                        corrida.status === 'coletando' ? 'bg-yellow-100 text-yellow-800' :
-                        corrida.status === 'em_entrega' ? 'bg-purple-100 text-purple-800' :
+                        corrida.status === 'aguardando'  'bg-gray-100 text-gray-800' :
+                        corrida.status === 'aceita'  'bg-blue-100 text-blue-800' :
+                        corrida.status === 'coletando'  'bg-yellow-100 text-yellow-800' :
+                        corrida.status === 'em_entrega'  'bg-purple-100 text-purple-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {corrida.status}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''} • {timeAgo(corrida.created_at)}
+                      {corrida.total_pacotes} pacote{corrida.total_pacotes > 1  's' : ''} âÂ€Â¢ {timeAgo(corrida.created_at)}
                     </p>
                   </div>
                 </div>
@@ -738,7 +741,7 @@ export default function LojistaDashboard() {
                   </p>
                   {corrida.entregador && (
                     <div className="flex items-center gap-1 mt-1">
-                      <span className="text-yellow-400">★</span>
+                      <span className="text-yellow-400">âÂ˜Â…</span>
                       <span className="text-sm text-gray-600">{corrida.entregador.avaliacao_media.toFixed(1)}</span>
                     </div>
                   )}
@@ -751,3 +754,5 @@ export default function LojistaDashboard() {
     </div>
   )
 }
+
+

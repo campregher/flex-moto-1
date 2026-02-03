@@ -5,14 +5,14 @@ import { loadGoogleMaps } from '@/lib/google-maps'
 
 export type AddressDetails = {
   formattedAddress: string
-  street?: string
-  number?: string
-  neighborhood?: string
-  city?: string
-  state?: string
-  postalCode?: string
-  lat?: number
-  lng?: number
+  street?: string | null
+  number?: string | null
+  neighborhood?: string | null
+  city?: string | null
+  state?: string | null
+  postalCode?: string | null
+  lat?: number | null
+  lng?: number | null
 }
 
 type AddressAutocompleteProps = {
@@ -237,7 +237,7 @@ export function AddressAutocomplete({
           const placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({})
 
           if (normalizedCountries) {
-            placeAutocomplete.includedRegionCodes = normalizedCountries
+            ;(placeAutocomplete as any).includedRegionCodes = normalizedCountries
           }
 
           if (id) placeAutocomplete.id = id
@@ -280,7 +280,7 @@ export function AddressAutocomplete({
               {
                 address: currentValue,
                 componentRestrictions: normalizedCountries
-                  ? { country: normalizedCountries[0] }
+                   { country: normalizedCountries[0] }
                   : undefined,
               },
               (results, status) => {
@@ -346,7 +346,7 @@ export function AddressAutocomplete({
 
         const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
           types: ['address'],
-          componentRestrictions: normalizedCountries ? { country: normalizedCountries[0] } : undefined,
+          componentRestrictions: normalizedCountries  { country: normalizedCountries[0] } : undefined,
           fields: ['address_components', 'formatted_address', 'geometry'],
         })
 
@@ -402,7 +402,7 @@ export function AddressAutocomplete({
       {
         address: value,
         componentRestrictions: normalizeCountries(country)
-          ? { country: normalizeCountries(country)![0] }
+           { country: normalizeCountries(country)![0] }
           : undefined,
       },
       (results, status) => {

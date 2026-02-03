@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import type { CorridaStatus, UserStatus } from '@/lib/database.types'
 
@@ -39,3 +39,5 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
     </span>
   )
 }
+
+

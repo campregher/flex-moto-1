@@ -6,6 +6,8 @@ import crypto from 'crypto'
 
 const ML_AUTH_URL = 'https://auth.mercadolivre.com.br/authorization'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const supabase = createRouteHandlerClient<Database>({ cookies })
   const { data: { user } } = await supabase.auth.getUser()

@@ -189,11 +189,11 @@ export default function SaldoPage() {
           <h2 className="text-lg font-semibold text-gray-900">Histórico</h2>
         </div>
 
-        {loading ? (
+        {loading  (
           <div className="p-8 flex justify-center">
             <LoadingSpinner />
           </div>
-        ) : transacoes.length === 0 ? (
+        ) : transacoes.length === 0  (
           <EmptyState
             icon={<HiOutlineCash className="w-8 h-8 text-gray-400" />}
             title="Nenhuma transação"
@@ -213,8 +213,8 @@ export default function SaldoPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`font-semibold ${transacao.valor >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {transacao.valor >= 0 ? '+' : ''}{formatCurrency(transacao.valor)}
+                  <p className={`font-semibold ${transacao.valor >= 0  'text-green-600' : 'text-red-600'}`}>
+                    {transacao.valor >= 0  '+' : ''}{formatCurrency(transacao.valor)}
                   </p>
                   <p className="text-sm text-gray-500">
                     Saldo: {formatCurrency(transacao.saldo_posterior)}
@@ -257,7 +257,7 @@ export default function SaldoPage() {
                 disabled={processing || !valor}
                 className="btn-primary flex-1"
               >
-                {processing ? 'Processando...' : 'Confirmar'}
+                {processing  'Processando...' : 'Confirmar'}
               </button>
             </div>
           </div>
@@ -298,7 +298,7 @@ export default function SaldoPage() {
                 disabled={processing || !valor}
                 className="btn-primary flex-1"
               >
-                {processing ? 'Processando...' : 'Confirmar'}
+                {processing  'Processando...' : 'Confirmar'}
               </button>
             </div>
           </div>

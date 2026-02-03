@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -80,7 +80,7 @@ export default function CorridasDisponiveisPage() {
 
   async function aceitarCorrida(corridaId: string) {
     if (!entregadorProfile?.online) {
-      toast.error('Você precisa estar online para aceitar corridas')
+      toast.error('VocÃª precisa estar online para aceitar corridas')
       return
     }
 
@@ -92,7 +92,7 @@ export default function CorridasDisponiveisPage() {
       .in('status', ['aceita', 'coletando', 'em_entrega'])
 
     if ((count || 0) >= PRICING.MAX_SIMULTANEOUS_ROUTES) {
-      toast.error(`Você já tem ${PRICING.MAX_SIMULTANEOUS_ROUTES} rotas ativas`)
+      toast.error(`VocÃª jÃ¡ tem ${PRICING.MAX_SIMULTANEOUS_ROUTES} rotas ativas`)
       return
     }
 
@@ -110,7 +110,7 @@ export default function CorridasDisponiveisPage() {
 
       if (error) {
         if (error.message.includes('no rows')) {
-          toast.error('Corrida já foi aceita por outro entregador')
+          toast.error('Corrida jÃ¡ foi aceita por outro entregador')
         } else {
           throw error
         }
@@ -129,12 +129,12 @@ export default function CorridasDisponiveisPage() {
   if (!entregadorProfile?.online) {
     return (
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Corridas Disponíveis</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Corridas DisponÃ­veis</h1>
         <div className="card p-8">
           <EmptyState
             icon={<HiOutlineLocationMarker className="w-8 h-8 text-gray-400" />}
-            title="Você está offline"
-            description="Fique online para ver e aceitar corridas disponíveis"
+            title="VocÃª estÃ¡ offline"
+            description="Fique online para ver e aceitar corridas disponÃ­veis"
             action={
               <Link href="/entregador" className="btn-secondary">
                 Ir para o Dashboard
@@ -149,9 +149,9 @@ export default function CorridasDisponiveisPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Corridas Disponíveis</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Corridas DisponÃ­veis</h1>
         <span className="badge-success">
-          {corridas.length} disponível{corridas.length !== 1 ? 's' : ''}
+          {corridas.length} disponÃ­vel{corridas.length !== 1 ? 's' : ''}
         </span>
       </div>
 
@@ -163,8 +163,8 @@ export default function CorridasDisponiveisPage() {
         <div className="card p-8">
           <EmptyState
             icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
-            title="Nenhuma corrida disponível"
-            description="Novas corridas aparecerão aqui automaticamente"
+            title="Nenhuma corrida disponÃ­vel"
+            description="Novas corridas aparecerÃ£o aqui automaticamente"
           />
         </div>
       ) : (
@@ -233,3 +233,5 @@ export default function CorridasDisponiveisPage() {
     </div>
   )
 }
+
+

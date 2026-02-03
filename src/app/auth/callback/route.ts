@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import type { Database } from '@/lib/database.types'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
@@ -18,8 +19,10 @@ export async function GET(request: Request) {
         .eq('id', session.user.id)
         .single()
 
-      if (userData) {
-        const redirectPath = userData.tipo === 'lojista' ? '/lojista' : '/entregador'
+      const userRow = userData as { tipo: Database['public']['Enums']['user_type'] } | null
+
+      if (userRow) {
+        const redirectPath = userRow.tipo === 'lojista' ? '/lojista' : '/entregador'
         return NextResponse.redirect(new URL(redirectPath, requestUrl.origin))
       }
     }

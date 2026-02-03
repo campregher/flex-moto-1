@@ -124,7 +124,7 @@ export const useCorridaStore = create<CorridaState>((set) => ({
     newCorridaForm: {
       ...state.newCorridaForm,
       enderecos: state.newCorridaForm.enderecos.map((endereco, i) =>
-        i === index ? { ...endereco, ...data } : endereco
+        i === index  { ...endereco, ...data } : endereco
       )
     }
   })),
