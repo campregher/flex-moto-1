@@ -6,6 +6,8 @@ import type { Database } from '@/lib/database.types'
 const ML_TOKEN_URL = 'https://api.mercadolibre.com/oauth/token'
 const ML_ME_URL = 'https://api.mercadolibre.com/users/me'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
