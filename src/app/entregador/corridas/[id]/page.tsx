@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -54,6 +54,7 @@ export default function CorridaDisponivelDetalhePage() {
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState(false)
   const supabase = createClient()
+  const statusRef = useRef<string | null>(null)
 
   const entregadorProfile = profile as any
   const corridaId = params?.id
@@ -61,6 +62,31 @@ export default function CorridaDisponivelDetalhePage() {
   useEffect(() => {
     if (!corridaId) return
     loadCorrida(corridaId)
+  }, [corridaId])
+
+  useEffect(() => {
+    if (!corridaId) return
+    const channel = supabase
+      .channel(`corrida-disponivel-${corridaId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
+        () => {
+          loadCorrida(corridaId)
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enderecos_entrega', filter: `corrida_id=eq.${corridaId}` },
+        () => {
+          loadCorrida(corridaId)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [corridaId])
 
   async function loadCorrida(id: string) {
@@ -79,6 +105,12 @@ export default function CorridaDisponivelDetalhePage() {
       .single()
 
     if (data) {
+      if (statusRef.current && statusRef.current !== data.status) {
+        if (data.status !== 'aguardando') {
+          toast('Essa corrida não está mais disponível.', { icon: '⚠️' })
+        }
+      }
+      statusRef.current = data.status
       setCorrida(data as any)
     }
     setLoading(false)

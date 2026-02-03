@@ -49,6 +49,28 @@ export default function CorridasPage() {
     loadCorridas()
   }, [filter])
 
+  useEffect(() => {
+    if (!lojistaProfile?.id) return
+    const channel = supabase
+      .channel(`corridas-lojista-list-${lojistaProfile.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'corridas' },
+        (payload: any) => {
+          const newRow = payload.new
+          const oldRow = payload.old
+          const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
+          if (lojistaId !== lojistaProfile.id) return
+          loadCorridas()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [lojistaProfile?.id, filter])
+
   async function loadCorridas() {
     let query = supabase
       .from('corridas')

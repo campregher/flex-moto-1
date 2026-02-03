@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -78,6 +78,7 @@ export default function EntregaDetalhePage() {
   const [rating, setRating] = useState(5)
   const [comentario, setComentario] = useState('')
   const supabase = createClient()
+  const statusRef = useRef<string | null>(null)
 
   const entregadorProfile = profile as any
   const corridaId = params?.id
@@ -85,6 +86,31 @@ export default function EntregaDetalhePage() {
   useEffect(() => {
     if (!corridaId) return
     loadCorrida(corridaId)
+  }, [corridaId])
+
+  useEffect(() => {
+    if (!corridaId) return
+    const channel = supabase
+      .channel(`corrida-entregador-${corridaId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
+        () => {
+          loadCorrida(corridaId)
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enderecos_entrega', filter: `corrida_id=eq.${corridaId}` },
+        () => {
+          loadCorrida(corridaId)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [corridaId])
 
   async function loadCorrida(id: string) {
@@ -102,6 +128,22 @@ export default function EntregaDetalhePage() {
       .single()
 
     if (data) {
+      if (statusRef.current && statusRef.current !== data.status) {
+        if (data.status === 'coletando') {
+          toast('Status atualizado: coletando', { icon: '📦' })
+        }
+        if (data.status === 'em_entrega') {
+          toast('Status atualizado: em entrega', { icon: '🚚' })
+        }
+        if (data.status === 'cancelada') {
+          toast('Corrida cancelada pelo lojista', { icon: '⚠️' })
+          router.push('/entregador')
+        }
+        if (data.status === 'finalizada') {
+          toast('Corrida finalizada', { icon: '✅' })
+        }
+      }
+      statusRef.current = data.status
       setCorrida(data as any)
     }
     setLoading(false)
