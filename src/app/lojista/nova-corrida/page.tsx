@@ -186,7 +186,7 @@ export default function NovaCorridaPage() {
   const origemLng = coletaLng || lojistaProfile?.endereco_longitude || 0
   const destinosComCoords = enderecos
     .filter((e) => e.latitude && e.longitude)
-    .sort((a, b) => (a.ordem  0) - (b.ordem  0))
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
     .map((e) => ({ lat: e.latitude, lng: e.longitude }))
 
   useEffect(() => {
@@ -410,8 +410,8 @@ export default function NovaCorridaPage() {
   const valorTotal = calculateDeliveryPrice(totalPacotes, distanciaRota)
   const saldoSuficiente = (lojistaProfile?.saldo || 0) >= valorTotal
   const distanciaCalculada = distanciaRota > 0
-  const distanciaParaExibir = distanciaCalculada  distanciaRota : 0
-  const valorParaExibir = distanciaCalculada  valorTotal : 0
+  const distanciaParaExibir = distanciaCalculada ? distanciaRota : 0
+  const valorParaExibir = distanciaCalculada ? valorTotal : 0
   const debugRotaInfo = {
     origemLat,
     origemLng,
@@ -822,7 +822,7 @@ export default function NovaCorridaPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    Distancia estimada {calculandoRota  '(calculando...)' : ''}
+                    Distancia estimada {calculandoRota ? '(calculando...)' : ''}
                   </span>
                   <span className="font-medium">{distanciaParaExibir.toFixed(1)} km</span>
                 </div>
@@ -847,7 +847,7 @@ export default function NovaCorridaPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Seu saldo</span>
-                  <span className={`font-medium ${saldoSuficiente  'text-green-600' : 'text-red-600'}`}>
+                  <span className={`font-medium ${saldoSuficiente ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(lojistaProfile?.saldo || 0)}
                   </span>
                 </div>
@@ -877,7 +877,7 @@ export default function NovaCorridaPage() {
                 disabled={isLoading || !saldoSuficiente || !distanciaCalculada}
                 className="btn-primary flex-1 py-3"
               >
-                {isLoading  'Criando...' : 'Confirmar corrida'}
+                {isLoading ? 'Criando...' : 'Confirmar corrida'}
               </button>
             </div>
 

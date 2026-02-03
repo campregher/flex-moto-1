@@ -402,7 +402,9 @@ export default function CorridaDetalhePage() {
         .eq('avaliado_id', corrida.entregador.user.id)
 
       if (ratings) {
-        const avgRating = ratings.reduce((acc, r) => acc + r.nota, 0) / ratings.length
+        const avgRating =
+          ratings.reduce((acc: number, r: { nota: number }) => acc + r.nota, 0) /
+          ratings.length
         await supabase
           .from('entregadores')
           .update({

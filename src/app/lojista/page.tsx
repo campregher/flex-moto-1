@@ -165,7 +165,7 @@ export default function LojistaDashboard() {
         .eq('lojista_id', lojistaProfile.id)
         .maybeSingle()
 
-      setMlIntegration(mlData  { site_id: mlData.site_id, ml_user_id: mlData.ml_user_id } : null)
+      setMlIntegration(mlData ? { site_id: mlData.site_id, ml_user_id: mlData.ml_user_id } : null)
 
       const { data: coletaData } = await supabase
         .from('lojista_coletas')
@@ -176,7 +176,7 @@ export default function LojistaDashboard() {
       const list = (coletaData || []) as ColetaOption[]
       setColetas(list)
       const defaultColeta = list.find((item) => item.is_default) || list[0]
-      setSelectedColetaId(defaultColeta  defaultColeta.id : 'manual')
+      setSelectedColetaId(defaultColeta ? defaultColeta.id : 'manual')
 
       const { data: pedidosData } = await supabase
         .from('mercadolivre_pedidos')
@@ -193,7 +193,7 @@ export default function LojistaDashboard() {
     loadData()
   }, [lojistaProfile?.id, user?.id, supabase])
 
-  const mlStatus = searchParams?.get('ml')  null
+  const mlStatus = searchParams?.get('ml') ?? null
 
   const handleSync = async () => {
     setSyncLoading(true)
@@ -216,7 +216,7 @@ export default function LojistaDashboard() {
       setMlPedidos((pedidosData || []) as MlPedido[])
       setImportMessage('Pedidos sincronizados com sucesso!')
     } catch (err) {
-      setImportMessage(err instanceof Error  err.message : 'Erro ao sincronizar pedidos')
+      setImportMessage(err instanceof Error ? err.message : 'Erro ao sincronizar pedidos')
     } finally {
       setSyncLoading(false)
     }
@@ -225,7 +225,7 @@ export default function LojistaDashboard() {
   const toggleSelect = async (pedidoId: string, selected: boolean) => {
     setMlPedidos((prev) =>
       prev.map((pedido) =>
-        pedido.id === pedidoId  { ...pedido, selected } : pedido
+        pedido.id === pedidoId ? { ...pedido, selected } : pedido
       )
     )
     await supabase
@@ -247,7 +247,7 @@ export default function LojistaDashboard() {
   const saveEdit = async () => {
     if (!editPedido) return
     const coletaSelecionada = editPedido.coleta_id
-       coletas.find((item) => item.id === editPedido.coleta_id)
+      ? coletas.find((item) => item.id === editPedido.coleta_id)
       : null
     const enderecoNormalizado =
       editPedido.endereco ||
@@ -273,8 +273,8 @@ export default function LojistaDashboard() {
       observacoes: editPedido.observacoes || null,
       coleta_id: editPedido.coleta_id || null,
       coleta_endereco: coletaSelecionada?.endereco || null,
-      coleta_latitude: coletaSelecionada?.latitude  null,
-      coleta_longitude: coletaSelecionada?.longitude  null,
+      coleta_latitude: coletaSelecionada?.latitude ?? null,
+      coleta_longitude: coletaSelecionada?.longitude ?? null,
     }
 
     const { error } = await supabase
@@ -285,7 +285,7 @@ export default function LojistaDashboard() {
     if (!error) {
       setMlPedidos((prev) =>
         prev.map((pedido) =>
-          pedido.id === editPedido.id  { ...pedido, ...updates } as MlPedido : pedido
+          pedido.id === editPedido.id ? ({ ...pedido, ...updates } as MlPedido) : pedido
         )
       )
       setImportMessage('Pedido atualizado.')
@@ -316,7 +316,7 @@ export default function LojistaDashboard() {
       setMlPedidos((pedidosData || []) as MlPedido[])
       setImportMessage('Pedidos importados com sucesso!')
     } catch (err) {
-      setImportMessage(err instanceof Error  err.message : 'Erro ao importar pedidos')
+      setImportMessage(err instanceof Error ? err.message : 'Erro ao importar pedidos')
     } finally {
       setImportLoading(false)
     }
@@ -441,12 +441,12 @@ export default function LojistaDashboard() {
               <h2 className="text-lg font-semibold text-gray-900">Mercado Livre (Flex)</h2>
               <p className="text-sm text-gray-600">
                 {mlIntegration
-                   `Conectado Â• ${mlIntegration.site_id} Â• Usuário ${mlIntegration.ml_user_id}`
+                  ? `Conectado Â• ${mlIntegration.site_id} Â• Usuário ${mlIntegration.ml_user_id}`
                   : 'Não conectado'}
               </p>
             </div>
             <a href="/api/ml/authorize" className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm">
-              {mlIntegration  'Reconectar' : 'Conectar'}
+              {mlIntegration ? 'Reconectar' : 'Conectar'}
             </a>
           </div>
 
@@ -458,7 +458,7 @@ export default function LojistaDashboard() {
                 disabled={!mlIntegration || syncLoading}
                 className="inline-flex items-center justify-center bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {syncLoading  'Sincronizando...' : 'Sincronizar pedidos ML'}
+                {syncLoading ? 'Sincronizando...' : 'Sincronizar pedidos ML'}
               </button>
               <button
                 type="button"
@@ -466,7 +466,7 @@ export default function LojistaDashboard() {
                 disabled={!mlPedidos.some((pedido) => pedido.selected) || importLoading}
                 className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {importLoading  'Importando...' : 'Importar selecionados'}
+                {importLoading ? 'Importando...' : 'Importar selecionados'}
               </button>
             </div>
             {importMessage && (
@@ -474,7 +474,7 @@ export default function LojistaDashboard() {
             )}
           </div>
 
-          {mlPedidos.length === 0  (
+          {mlPedidos.length === 0 ? (
             <p className="text-sm text-gray-600">Nenhum pedido sincronizado ainda.</p>
           ) : (
             <div className="space-y-3">
@@ -527,7 +527,7 @@ export default function LojistaDashboard() {
                             onChange={(e) =>
                               setEditPedido({
                                 ...editPedido,
-                                coleta_id: e.target.value === 'perfil'  null : e.target.value,
+                                coleta_id: e.target.value === 'perfil' ? null : e.target.value,
                               })
                             }
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
@@ -556,8 +556,8 @@ export default function LojistaDashboard() {
                                 cidade: details.city || editPedido.cidade,
                                 uf: details.state || editPedido.uf,
                                 cep: details.postalCode || editPedido.cep,
-                                latitude: details.lat  editPedido.latitude,
-                                longitude: details.lng  editPedido.longitude,
+                                latitude: details.lat ?? editPedido.latitude,
+                                longitude: details.lng ?? editPedido.longitude,
                               })
                             }
                             placeholder="Rua, Número, bairro, cidade"
@@ -683,11 +683,11 @@ export default function LojistaDashboard() {
           </Link>
         </div>
 
-        {loading  (
+        {loading ? (
           <div className="p-8 flex justify-center">
             <LoadingSpinner />
           </div>
-        ) : corridasAtivas.length === 0  (
+        ) : corridasAtivas.length === 0 ? (
           <div className="p-8 text-center">
             <HiOutlineTruck className="w-8 h-8 text-gray-400 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhuma corrida ativa</h3>
@@ -706,7 +706,7 @@ export default function LojistaDashboard() {
                 className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  {corrida.entregador  (
+                  {corrida.entregador ? (
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
                       {corrida.entregador?.user?.nome?.charAt(0) || 'E'}
                     </div>
@@ -717,21 +717,21 @@ export default function LojistaDashboard() {
                   )}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${corrida.plataforma === 'ml_flex'  'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'}`}>
-                        {corrida.plataforma === 'ml_flex'  'ML Flex' : 'Shopee'}
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${corrida.plataforma === 'ml_flex' ? 'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'}`}>
+                        {corrida.plataforma === 'ml_flex' ? 'ML Flex' : 'Shopee'}
                       </span>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        corrida.status === 'aguardando'  'bg-gray-100 text-gray-800' :
-                        corrida.status === 'aceita'  'bg-blue-100 text-blue-800' :
-                        corrida.status === 'coletando'  'bg-yellow-100 text-yellow-800' :
-                        corrida.status === 'em_entrega'  'bg-purple-100 text-purple-800' :
+                        corrida.status === 'aguardando' ? 'bg-gray-100 text-gray-800' :
+                        corrida.status === 'aceita' ? 'bg-blue-100 text-blue-800' :
+                        corrida.status === 'coletando' ? 'bg-yellow-100 text-yellow-800' :
+                        corrida.status === 'em_entrega' ? 'bg-purple-100 text-purple-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {corrida.status}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      {corrida.total_pacotes} pacote{corrida.total_pacotes > 1  's' : ''} âÂ€Â¢ {timeAgo(corrida.created_at)}
+                      {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''} âÂ€Â¢ {timeAgo(corrida.created_at)}
                     </p>
                   </div>
                 </div>
@@ -754,5 +754,6 @@ export default function LojistaDashboard() {
     </div>
   )
 }
+
 
 

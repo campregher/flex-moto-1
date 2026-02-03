@@ -47,8 +47,8 @@ export default function LojistaPerfilPage() {
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     endereco_base: (profile as any).endereco_base || '',
-    endereco_latitude: (profile as any).endereco_latitude  null,
-    endereco_longitude: (profile as any).endereco_longitude  null,
+    endereco_latitude: (profile as any).endereco_latitude ?? null,
+    endereco_longitude: (profile as any).endereco_longitude ?? null,
     endereco_logradouro: (profile as any).endereco_logradouro || '',
     endereco_numero: (profile as any).endereco_numero || '',
     endereco_bairro: (profile as any).endereco_bairro || '',
@@ -398,7 +398,7 @@ export default function LojistaPerfilPage() {
       setColetas((prev) =>
         prev.map((item) =>
           item.id === editColetaId
-             { ...item, ...editColeta }
+            ? { ...item, ...editColeta }
             : item
         )
       )
@@ -478,7 +478,7 @@ export default function LojistaPerfilPage() {
                 disabled={profileSaving}
                 className="btn-primary flex-1"
               >
-                {profileSaving  'Salvando...' : 'Salvar'}
+                {profileSaving ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
           </div>
@@ -532,7 +532,7 @@ export default function LojistaPerfilPage() {
           </button>
         </div>
 
-        {editing  (
+        {editing ? (
           <div className="space-y-4">
             <AddressAutocomplete
               value={formData.endereco_base}
@@ -543,8 +543,8 @@ export default function LojistaPerfilPage() {
                 setFormData((prev) => ({
                   ...prev,
                   endereco_base: details.formattedAddress || prev.endereco_base,
-                  endereco_latitude: details.lat  prev.endereco_latitude,
-                  endereco_longitude: details.lng  prev.endereco_longitude,
+                  endereco_latitude: details.lat ?? prev.endereco_latitude,
+                  endereco_longitude: details.lng ?? prev.endereco_longitude,
                   endereco_logradouro: details.street || prev.endereco_logradouro,
                   endereco_numero: details.number || prev.endereco_numero,
                   endereco_bairro: details.neighborhood || prev.endereco_bairro,
@@ -561,7 +561,7 @@ export default function LojistaPerfilPage() {
                 Cancelar
               </button>
               <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
-                {saving  'Salvando...' : 'Salvar'}
+                {saving ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
           </div>
@@ -587,15 +587,15 @@ export default function LojistaPerfilPage() {
           <span className="text-sm text-gray-600">{coletas.length}/4</span>
         </div>
 
-        {coletasLoading  (
+        {coletasLoading ? (
           <p className="text-sm text-gray-500">Carregando endereÃƒÂ§os...</p>
-        ) : coletas.length === 0  (
+        ) : coletas.length === 0 ? (
           <p className="text-sm text-gray-500">Nenhum endereÃƒÂ§o cadastrado.</p>
         ) : (
           <div className="space-y-3 mb-4">
             {coletas.map((coleta) => (
               <div key={coleta.id} className="border border-gray-200 rounded-lg p-3">
-                {editColetaId === coleta.id && editColeta  (
+                {editColetaId === coleta.id && editColeta ? (
                   <div className="space-y-3">
                     <input
                       value={editColeta.label}
@@ -612,8 +612,8 @@ export default function LojistaPerfilPage() {
                         setEditColeta({
                           ...editColeta,
                           endereco: details.formattedAddress || editColeta.endereco,
-                          latitude: details.lat  editColeta.latitude,
-                          longitude: details.lng  editColeta.longitude,
+                          latitude: details.lat ?? editColeta.latitude,
+                          longitude: details.lng ?? editColeta.longitude,
                           logradouro: details.street || editColeta.logradouro,
                           numero: details.number || editColeta.numero,
                           bairro: details.neighborhood || editColeta.bairro,
@@ -642,7 +642,7 @@ export default function LojistaPerfilPage() {
                         disabled={coletaSaving}
                         onClick={handleSaveEditColeta}
                       >
-                        {coletaSaving  'Salvando...' : 'Salvar'}
+                        {coletaSaving ? 'Salvando...' : 'Salvar'}
                       </button>
                     </div>
                   </div>
@@ -721,8 +721,8 @@ export default function LojistaPerfilPage() {
                 setNewColeta((prev) => ({
                   ...prev,
                   endereco: details.formattedAddress || prev.endereco,
-                  latitude: details.lat  prev.latitude,
-                  longitude: details.lng  prev.longitude,
+                  latitude: details.lat ?? prev.latitude,
+                  longitude: details.lng ?? prev.longitude,
                   logradouro: details.street || prev.logradouro,
                   numero: details.number || prev.numero,
                   bairro: details.neighborhood || prev.bairro,

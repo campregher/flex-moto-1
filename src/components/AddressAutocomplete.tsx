@@ -280,7 +280,7 @@ export function AddressAutocomplete({
               {
                 address: currentValue,
                 componentRestrictions: normalizedCountries
-                   { country: normalizedCountries[0] }
+                  ? { country: normalizedCountries[0] }
                   : undefined,
               },
               (results, status) => {
@@ -346,7 +346,7 @@ export function AddressAutocomplete({
 
         const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
           types: ['address'],
-          componentRestrictions: normalizedCountries  { country: normalizedCountries[0] } : undefined,
+          componentRestrictions: normalizedCountries ? { country: normalizedCountries[0] } : undefined,
           fields: ['address_components', 'formatted_address', 'geometry'],
         })
 
@@ -402,7 +402,7 @@ export function AddressAutocomplete({
       {
         address: value,
         componentRestrictions: normalizeCountries(country)
-           { country: normalizeCountries(country)![0] }
+          ? { country: normalizeCountries(country)![0] }
           : undefined,
       },
       (results, status) => {

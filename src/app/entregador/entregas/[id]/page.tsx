@@ -479,9 +479,9 @@ export default function EntregaDetalhePage() {
                       )}
                       {(endereco.peso_kg || endereco.volume_cm3) && (
                         <p className="text-sm text-gray-600">
-                          {endereco.peso_kg  `Peso ${endereco.peso_kg.toFixed(2)} kg` : ''}
+                          {endereco.peso_kg ? `Peso ${endereco.peso_kg.toFixed(2)} kg` : ''}
                           {endereco.peso_kg && endereco.volume_cm3 ? ' • ' : ''}
-                          {endereco.volume_cm3  `Volume ${endereco.volume_cm3.toFixed(0)} cmÂ³` : ''}
+                          {endereco.volume_cm3 ? `Volume ${endereco.volume_cm3.toFixed(0)} cmÂ³` : ''}
                         </p>
                       )}
                       {endereco.complemento && (
@@ -518,7 +518,7 @@ export default function EntregaDetalhePage() {
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
                 <span className="font-semibold text-gray-900">
-                  {rotaTemCoords  `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
+                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -552,7 +552,7 @@ export default function EntregaDetalhePage() {
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">DistÃ¢ncia estimada da rota</span>
                 <span className="font-semibold text-gray-900">
-                  {rotaTemCoords  `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
+                  {rotaTemCoords ? `${distanciaRotaKm.toFixed(1)} km` : 'IndisponÃ­vel'}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between">

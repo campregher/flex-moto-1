@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -50,7 +50,7 @@ export default function LojistaNotificacoesPage() {
   const markAsRead = async (id: string) => {
     await supabase.from('notificacoes').update({ lida: true }).eq('id', id)
     setNotificacoes((prev) =>
-      prev.map((item) => (item.id === id  { ...item, lida: true } : item))
+      prev.map((item) => (item.id === id ? { ...item, lida: true } : item))
     )
   }
 
@@ -84,11 +84,11 @@ export default function LojistaNotificacoesPage() {
         </button>
       </div>
 
-      {loading  (
+      {loading ? (
         <div className="p-8 flex justify-center">
           <LoadingSpinner />
         </div>
-      ) : notificacoes.length === 0  (
+      ) : notificacoes.length === 0 ? (
         <EmptyState
           icon={<HiOutlineBell className="w-8 h-8 text-gray-400" />}
           title="Nenhuma notificacao"
@@ -103,7 +103,7 @@ export default function LojistaNotificacoesPage() {
               <div
                 key={item.id}
                 className={`rounded-lg border p-4 ${
-                  item.lida  'border-gray-200 bg-white' : 'border-blue-200 bg-blue-50'
+                  item.lida ? 'border-gray-200 bg-white' : 'border-blue-200 bg-blue-50'
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -140,3 +140,4 @@ export default function LojistaNotificacoesPage() {
     </div>
   )
 }
+
