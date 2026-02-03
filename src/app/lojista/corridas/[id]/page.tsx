@@ -329,7 +329,7 @@ export default function CorridaDetalhePage() {
       console.debug('[editar-corrida] corrida atualizada', coletaData)
 
       for (const endereco of editEnderecos) {
-        const { error: enderecoError, data: enderecoData } = await supabase
+        const { error: enderecoError } = await supabase
           .from('enderecos_entrega')
           .update({
             endereco: endereco.endereco,
@@ -340,11 +340,9 @@ export default function CorridaDetalhePage() {
             pacotes: endereco.pacotes || 1,
           })
           .eq('id', endereco.id)
-          .select()
-          .single()
 
         if (enderecoError) throw enderecoError
-        console.debug('[editar-corrida] endereco atualizado', enderecoData)
+        console.debug('[editar-corrida] endereco atualizado', endereco.id)
       }
 
       setCorrida((prev) =>

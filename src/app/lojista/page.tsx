@@ -768,9 +768,9 @@ export default function LojistaDashboard() {
                 className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  {corrida.entregador ? (
+                  {corrida.entregador && corrida.entregador.user ? (
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
-                      {corrida.entregador.user.nome.charAt(0) || 'E'}
+                      {corrida.entregador.user.nome?.charAt(0) || 'E'}
                     </div>
                   ) : (
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
@@ -801,7 +801,7 @@ export default function LojistaDashboard() {
                   <p className="font-semibold text-gray-900">
                     {formatCurrency(corrida.valor_total)}
                   </p>
-                  {corrida.entregador && (
+                  {corrida.entregador?.avaliacao_media !== undefined && corrida.entregador?.avaliacao_media !== null && (
                     <div className="flex items-center gap-1 mt-1">
                       <span className="text-yellow-400">★</span>
                       <span className="text-sm text-gray-600">{corrida.entregador.avaliacao_media.toFixed(1)}</span>
