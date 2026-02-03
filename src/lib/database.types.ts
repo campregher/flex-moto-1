@@ -547,6 +547,7 @@ export type Database = {
         Row: {
           id: string
           lojista_id: string
+          corrida_id: string | null
           ml_order_id: number
           ml_shipment_id: number | null
           order_status: string | null
@@ -578,6 +579,7 @@ export type Database = {
         Insert: {
           id: string
           lojista_id: string
+          corrida_id: string | null
           ml_order_id: number
           ml_shipment_id: number | null
           order_status: string | null
@@ -609,6 +611,7 @@ export type Database = {
         Update: {
           id: string
           lojista_id: string
+          corrida_id: string | null
           ml_order_id: number
           ml_shipment_id: number | null
           order_status: string | null

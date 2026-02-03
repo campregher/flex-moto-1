@@ -40,6 +40,7 @@ export async function POST() {
       .eq('lojista_id', lojistaId)
       .eq('selected', true)
       .is('imported_at', null)
+      .is('corrida_id', null)
 
     const pedidosRows = (pedidos as Database['public']['Tables']['mercadolivre_pedidos']['Row'][] | null) || []
 
@@ -50,6 +51,9 @@ export async function POST() {
     const importedIds: string[] = []
 
     for (const pedido of pedidosRows) {
+      if ((pedido as any).corrida_id || pedido.imported_at) {
+        continue
+      }
       const pickupCoords = normalizeCoords(pedido.coleta_latitude, pedido.coleta_longitude)
       const deliveryCoords = normalizeCoords(pedido.latitude, pedido.longitude)
       const distanciaTotalKm =
@@ -129,10 +133,14 @@ export async function POST() {
         return NextResponse.json({ error: 'Failed to create endereco', details: enderecosError }, { status: 500 })
       }
 
-      await (supabase as any)
+      const { error: updatePedidoError } = await (supabase as any)
         .from('mercadolivre_pedidos')
-        .update({ selected: false, imported_at: new Date().toISOString() })
+        .update({ selected: false, imported_at: new Date().toISOString(), corrida_id: corridaRow.id })
         .eq('id', pedido.id)
+
+      if (updatePedidoError) {
+        console.error('ML import-selected update pedido error:', updatePedidoError)
+      }
 
       importedIds.push(corridaRow.id)
     }
