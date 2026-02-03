@@ -141,6 +141,13 @@ export async function POST(request: Request) {
     .limit(1)
     .maybeSingle()
 
+  const defaultColetaRow = defaultColeta as {
+    id: string
+    endereco: string
+    latitude: number | null
+    longitude: number | null
+  } | null
+
   const rows = []
   for (const order of orders) {
     const shipmentId = order.shipping?.id
@@ -174,8 +181,6 @@ export async function POST(request: Request) {
       ''
 
     const existing = existingMap.get(order.id)
-    const useColeta = existing?.coleta_id ? existing : defaultColeta
-
     rows.push({
       lojista_id: lojistaId,
       ml_order_id: order.id,
@@ -197,10 +202,10 @@ export async function POST(request: Request) {
       longitude: existing?.longitude ?? parseNumber(receiver.longitude),
       pacotes: existing?.pacotes || totalPacotes,
       observacoes: existing?.observacoes || null,
-      coleta_id: existing?.coleta_id || (defaultColeta ? defaultColeta.id : null),
-      coleta_endereco: existing?.coleta_endereco || (defaultColeta ? defaultColeta.endereco : null),
-      coleta_latitude: existing?.coleta_latitude ?? (defaultColeta?.latitude ?? null),
-      coleta_longitude: existing?.coleta_longitude ?? (defaultColeta?.longitude ?? null),
+      coleta_id: existing?.coleta_id || (defaultColetaRow ? defaultColetaRow.id : null),
+      coleta_endereco: existing?.coleta_endereco || (defaultColetaRow ? defaultColetaRow.endereco : null),
+      coleta_latitude: existing?.coleta_latitude ?? (defaultColetaRow?.latitude ?? null),
+      coleta_longitude: existing?.coleta_longitude ?? (defaultColetaRow?.longitude ?? null),
       selected: existing?.selected ?? false,
       imported_at: existing?.imported_at ?? null,
     })
