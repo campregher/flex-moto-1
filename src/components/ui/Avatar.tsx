@@ -17,14 +17,24 @@ const sizeClasses = {
   xl: 'w-20 h-20 text-2xl',
 }
 
+function normalizeStorageUrl(url: string) {
+  if (!url) return url
+  if (url.includes('/storage/v1/object/public/')) return url
+  if (url.includes('/storage/v1/object/fotos/')) {
+    return url.replace('/storage/v1/object/fotos/', '/storage/v1/object/public/fotos/')
+  }
+  return url
+}
+
 export function Avatar({ src, name, size = 'md', className = '' }: AvatarProps) {
   const sizeClass = sizeClasses[size]
-  
-  if (src) {
+  const normalizedSrc = src ? normalizeStorageUrl(src) : null
+
+  if (normalizedSrc) {
     return (
       <div className={`relative rounded-full overflow-hidden ${sizeClass} ${className}`}>
         <Image
-          src={src}
+          src={normalizedSrc}
           alt={name}
           fill
           className="object-cover"
