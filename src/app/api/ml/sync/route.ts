@@ -182,7 +182,7 @@ export async function POST(request: Request) {
       [receiver.street_name, receiver.street_number].filter(Boolean).join(' ') ||
       ''
 
-    const existing = existingMap.get(order.id)
+    const existing = existingMap.get(order.id) as any | undefined
     rows.push({
       lojista_id: lojistaId,
       ml_order_id: order.id,
@@ -190,26 +190,26 @@ export async function POST(request: Request) {
       order_status: order.status || null,
       shipping_status: shipment.status || null,
       buyer_name: buyerName,
-      receiver_name: existing.receiver_name || receiver.receiver_name || buyerName,
-      receiver_phone: existing.receiver_phone || receiver.receiver_phone || null,
-      endereco: existing.endereco || enderecoEntrega,
-      logradouro: existing.logradouro || receiver.street_name || null,
-      numero: existing.numero || (receiver.street_number ? String(receiver.street_number) : null),
-      complemento: existing.complemento || receiver.comment || null,
-      bairro: existing.bairro || receiver.neighborhood.name || null,
-      cidade: existing.cidade || receiver.city.name || null,
-      uf: existing.uf || normalizeUf(receiver.state.id, receiver.state.name),
-      cep: existing.cep || receiver.zip_code || null,
-      latitude: existing.latitude ?? parseNumber(receiver.latitude),
-      longitude: existing.longitude ?? parseNumber(receiver.longitude),
-      pacotes: existing.pacotes || totalPacotes,
-      observacoes: existing.observacoes || null,
-      coleta_id: existing.coleta_id || (defaultColetaRow ? defaultColetaRow.id : null),
-      coleta_endereco: existing.coleta_endereco || (defaultColetaRow ? defaultColetaRow.endereco : null),
-      coleta_latitude: existing.coleta_latitude ?? (defaultColetaRow ? defaultColetaRow.latitude : null),
-      coleta_longitude: existing.coleta_longitude ?? (defaultColetaRow ? defaultColetaRow.longitude : null),
-      selected: existing.selected ?? false,
-      imported_at: existing.imported_at ?? null,
+      receiver_name: existing?.receiver_name || receiver.receiver_name || buyerName,
+      receiver_phone: existing?.receiver_phone || receiver.receiver_phone || null,
+      endereco: existing?.endereco || enderecoEntrega,
+      logradouro: existing?.logradouro || receiver.street_name || null,
+      numero: existing?.numero || (receiver.street_number ? String(receiver.street_number) : null),
+      complemento: existing?.complemento || receiver.comment || null,
+      bairro: existing?.bairro || receiver.neighborhood?.name || null,
+      cidade: existing?.cidade || receiver.city?.name || null,
+      uf: existing?.uf || normalizeUf(receiver.state?.id, receiver.state?.name),
+      cep: existing?.cep || receiver.zip_code || null,
+      latitude: existing?.latitude ?? parseNumber(receiver.latitude),
+      longitude: existing?.longitude ?? parseNumber(receiver.longitude),
+      pacotes: existing?.pacotes || totalPacotes,
+      observacoes: existing?.observacoes || null,
+      coleta_id: existing?.coleta_id || (defaultColetaRow ? defaultColetaRow.id : null),
+      coleta_endereco: existing?.coleta_endereco || (defaultColetaRow ? defaultColetaRow.endereco : null),
+      coleta_latitude: existing?.coleta_latitude ?? (defaultColetaRow ? defaultColetaRow.latitude : null),
+      coleta_longitude: existing?.coleta_longitude ?? (defaultColetaRow ? defaultColetaRow.longitude : null),
+      selected: existing?.selected ?? false,
+      imported_at: existing?.imported_at ?? null,
     })
   }
 
