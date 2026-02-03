@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/lib/database.types'
+import { calculateDeliveryPrice, calculateDistance } from '@/lib/utils/pricing'
 
 type MlOrderSearch = {
   results: MlOrder[]
@@ -183,6 +184,28 @@ export async function POST(request: Request) {
       ''
 
     const existing = existingMap.get(order.id) as any | undefined
+    const origemLat =
+      existing?.coleta_latitude ??
+      defaultColetaRow?.latitude ??
+      lojistaRow?.endereco_latitude ??
+      null
+    const origemLng =
+      existing?.coleta_longitude ??
+      defaultColetaRow?.longitude ??
+      lojistaRow?.endereco_longitude ??
+      null
+    const destinoLat = existing?.latitude ?? parseNumber(receiver.latitude)
+    const destinoLng = existing?.longitude ?? parseNumber(receiver.longitude)
+    const distanciaKm =
+      origemLat !== null &&
+      origemLng !== null &&
+      destinoLat !== null &&
+      destinoLng !== null
+        ? Math.round(calculateDistance(origemLat, origemLng, destinoLat, destinoLng) * 10) / 10
+        : null
+    const freteEstimado =
+      distanciaKm !== null ? calculateDeliveryPrice(totalPacotes, distanciaKm) : null
+    const canSelect = distanciaKm !== null && freteEstimado !== null
     rows.push({
       lojista_id: lojistaId,
       ml_order_id: order.id,
@@ -208,8 +231,11 @@ export async function POST(request: Request) {
       coleta_endereco: existing?.coleta_endereco || (defaultColetaRow ? defaultColetaRow.endereco : null),
       coleta_latitude: existing?.coleta_latitude ?? (defaultColetaRow ? defaultColetaRow.latitude : null),
       coleta_longitude: existing?.coleta_longitude ?? (defaultColetaRow ? defaultColetaRow.longitude : null),
-      selected: existing?.selected ?? false,
+      selected: canSelect ? (existing?.selected ?? false) : false,
       imported_at: existing?.imported_at ?? null,
+      distancia_km: distanciaKm,
+      frete_estimado: freteEstimado,
+      frete_calculado_em: distanciaKm !== null ? new Date().toISOString() : null,
     })
   }
 

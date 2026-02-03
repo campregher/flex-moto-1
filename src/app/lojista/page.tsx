@@ -68,6 +68,8 @@ interface MlPedido {
   coleta_latitude: number | null
   coleta_longitude: number | null
   selected: boolean | null
+  distancia_km: number | null
+  frete_estimado: number | null
 }
 
 export default function LojistaDashboard() {
@@ -479,7 +481,11 @@ export default function LojistaDashboard() {
             <p className="text-sm text-gray-600">Nenhum pedido sincronizado ainda.</p>
           ) : (
             <div className="space-y-3">
-              {mlPedidos.map((pedido) => (
+              {mlPedidos.map((pedido) => {
+                const distanciaKm = Number(pedido.distancia_km)
+                const freteEstimado = Number(pedido.frete_estimado)
+                const canSelect = Number.isFinite(distanciaKm) && Number.isFinite(freteEstimado)
+                return (
                 <div key={pedido.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
@@ -488,6 +494,7 @@ export default function LojistaDashboard() {
                           type="checkbox"
                           checked={Boolean(pedido.selected)}
                           onChange={(e) => toggleSelect(pedido.id, e.target.checked)}
+                          disabled={!canSelect}
                         />
                         Pedido #{pedido.ml_order_id}
                         {pedido.shipping_status && (
@@ -505,6 +512,15 @@ export default function LojistaDashboard() {
 
                     <div className="text-sm text-gray-600">
                       Entrega: {formatMlAddress(pedido)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {canSelect ? (
+                        <>
+                          {distanciaKm.toFixed(1)} km · {formatCurrency(freteEstimado)}
+                        </>
+                      ) : (
+                        'Frete indisponível: faltam coordenadas'
+                      )}
                     </div>
                     {(pedido.logradouro ||
                       pedido.numero ||
@@ -676,7 +692,8 @@ export default function LojistaDashboard() {
                     )}
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

@@ -54,15 +54,22 @@ export default function EntregadorDashboard() {
     refreshUserStatus()
     loadData()
     
-    // Set up realtime subscription for new corridas
+    // Set up realtime subscription for corridas availability changes
     const channel = supabase
       .channel('corridas-disponiveis')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'corridas' },
+        { event: '*', schema: 'public', table: 'corridas' },
         (payload: any) => {
-          if (payload.new.status === 'aguardando') {
+          const newStatus = payload.new?.status
+          const oldStatus = payload.old?.status
+          const touchesDisponiveis = newStatus === 'aguardando' || oldStatus === 'aguardando'
+
+          if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
             toast('Nova corrida disponível!', { icon: '🚀' })
+          }
+
+          if (touchesDisponiveis) {
             loadCorridasDisponiveis()
           }
         }
