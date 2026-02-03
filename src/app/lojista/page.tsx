@@ -102,34 +102,39 @@ export default function LojistaDashboard() {
     return [linha1, linha2].filter(Boolean).join(' | ') || 'Endereço não informado'
   }
 
+  async function loadCorridasAtivas() {
+    if (!lojistaProfile.id) return
+    const { data: corridas } = await supabase
+      .from('corridas')
+      .select(`
+        id,
+        plataforma,
+        status,
+        valor_total,
+        total_pacotes,
+        created_at,
+        entregador:entregadores(
+          foto_url,
+          avaliacao_media,
+          user:users(nome)
+        )
+      `)
+      .eq('lojista_id', lojistaProfile.id)
+      .in('status', ['aguardando', 'aceita', 'coletando', 'em_entrega'])
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    if (corridas) {
+      setCorridasAtivas(corridas as any)
+    }
+  }
+
   useEffect(() => {
     async function loadData() {
       if (!lojistaProfile.id) return
       if (!user?.id) return
 
-      const { data: corridas } = await supabase
-        .from('corridas')
-        .select(`
-          id,
-          plataforma,
-          status,
-          valor_total,
-          total_pacotes,
-          created_at,
-          entregador:entregadores(
-            foto_url,
-            avaliacao_media,
-            user:users(nome)
-          )
-        `)
-        .eq('lojista_id', lojistaProfile.id)
-        .in('status', ['aguardando', 'aceita', 'coletando', 'em_entrega'])
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      if (corridas) {
-        setCorridasAtivas(corridas as any)
-      }
+      await loadCorridasAtivas()
 
       const hoje = new Date()
       hoje.setHours(0, 0, 0, 0)
@@ -195,6 +200,29 @@ export default function LojistaDashboard() {
 
     loadData()
   }, [lojistaProfile.id, user?.id, supabase])
+
+  useEffect(() => {
+    if (!lojistaProfile.id) return
+
+    const channel = supabase
+      .channel(`corridas-lojista-${lojistaProfile.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'corridas' },
+        (payload: any) => {
+          const newRow = payload.new
+          const oldRow = payload.old
+          const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
+          if (lojistaId !== lojistaProfile.id) return
+          loadCorridasAtivas()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [lojistaProfile.id, supabase])
 
   const mlStatus = searchParams?.get('ml') ?? null
 
@@ -317,6 +345,7 @@ export default function LojistaDashboard() {
         .order('created_at', { ascending: false })
 
       setMlPedidos((pedidosData || []) as MlPedido[])
+      await loadCorridasAtivas()
       setImportMessage('Pedidos importados com sucesso!')
     } catch (err) {
       setImportMessage(err instanceof Error ? err.message : 'Erro ao importar pedidos')
