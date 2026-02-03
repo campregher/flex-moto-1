@@ -76,7 +76,7 @@ export default function CadastroClient() {
   } = useForm<CadastroForm>({
     resolver: zodResolver(cadastroSchema),
     defaultValues: {
-      tipo: tipoInicial || 'lojista',
+      tipo: tipoInicial === 'entregador' || tipoInicial === 'lojista' ? tipoInicial : 'lojista',
     },
   })
 
