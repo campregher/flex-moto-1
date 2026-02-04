@@ -54,10 +54,10 @@ export default function CorridasPage() {
     loadCorridas()
   }, [filter, period, platform, minValor, maxValor])
 
-  useEffect(() => {
-    if (!lojistaProfile?.id) return
-    const channel = supabase
-      .channel(`corridas-lojista-list-${lojistaProfile.id}`)
+    useEffect(() => {
+      if (!lojistaProfile?.id) return
+      const channel = supabase
+        .channel(`corridas-lojista-list-${lojistaProfile.id}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'corridas' },
@@ -92,7 +92,28 @@ export default function CorridasPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [lojistaProfile?.id, filter])
+    }, [lojistaProfile?.id, filter])
+
+    useEffect(() => {
+      if (!lojistaProfile?.id) return
+      const channel = supabase
+        .channel('corridas-rt')
+        .on('broadcast', { event: 'corrida-aceita' }, (payload: any) => {
+          if (payload?.payload?.id) {
+            loadCorridas()
+          }
+        })
+        .on('broadcast', { event: 'corrida-cancelada' }, (payload: any) => {
+          if (payload?.payload?.id) {
+            loadCorridas()
+          }
+        })
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
+    }, [lojistaProfile?.id, filter])
 
   function getPeriodStart(value: string) {
     if (value === 'today') {

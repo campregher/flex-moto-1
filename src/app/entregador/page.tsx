@@ -190,13 +190,14 @@ export default function EntregadorDashboard() {
   }
 
   async function loadCorridasDisponiveis() {
-    const { data } = await supabase
+      const { data } = await supabase
       .from('corridas')
       .select(`
-        id, plataforma, status, valor_total, total_pacotes, distancia_total_km, endereco_coleta, created_at,
+        id, plataforma, status, entregador_id, valor_total, total_pacotes, distancia_total_km, endereco_coleta, created_at,
         lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
       `)
       .eq('status', 'aguardando')
+      .is('entregador_id', null)
       .order('created_at', { ascending: false })
       .limit(5)
 
@@ -209,13 +210,13 @@ export default function EntregadorDashboard() {
     const { data } = await supabase
       .from('corridas')
       .select(`
-        id, plataforma, status, valor_total, total_pacotes, distancia_total_km, endereco_coleta, created_at,
+        id, plataforma, status, entregador_id, valor_total, total_pacotes, distancia_total_km, endereco_coleta, created_at,
         lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
       `)
       .eq('id', corridaId)
       .single()
 
-    if (data) {
+    if (data && data.status === 'aguardando' && data.entregador_id == null) {
       setCorridasDisponiveis((prev) => {
         if (prev.some((c) => c.id === data.id)) return prev
         return [data as any, ...prev].slice(0, 5)

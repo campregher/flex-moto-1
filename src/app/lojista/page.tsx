@@ -274,6 +274,30 @@ export default function LojistaDashboard() {
 
     return () => {
       supabase.removeChannel(channel)
+      }
+    }, [lojistaProfile.id, supabase])
+
+  useEffect(() => {
+    if (!lojistaProfile.id) return
+
+    const channel = supabase
+      .channel('corridas-rt')
+      .on('broadcast', { event: 'corrida-aceita' }, (payload: any) => {
+        if (payload?.payload?.id) {
+          loadCorridasAtivas()
+          loadStats()
+        }
+      })
+      .on('broadcast', { event: 'corrida-cancelada' }, (payload: any) => {
+        if (payload?.payload?.id) {
+          loadCorridasAtivas()
+          loadStats()
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
   }, [lojistaProfile.id, supabase])
 

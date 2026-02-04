@@ -122,11 +122,12 @@ export default function CorridasDisponiveisPage() {
     const { data } = await supabase
       .from('corridas')
       .select(`
-        id, plataforma, valor_total, total_pacotes, distancia_total_km, 
+        id, plataforma, entregador_id, valor_total, total_pacotes, distancia_total_km, 
         endereco_coleta, created_at,
         lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
       `)
       .eq('status', 'aguardando')
+      .is('entregador_id', null)
       .order('created_at', { ascending: false })
 
     if (data) {
@@ -139,14 +140,14 @@ export default function CorridasDisponiveisPage() {
     const { data } = await supabase
       .from('corridas')
       .select(`
-        id, plataforma, valor_total, total_pacotes, distancia_total_km, 
+        id, plataforma, status, entregador_id, valor_total, total_pacotes, distancia_total_km, 
         endereco_coleta, created_at,
         lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
       `)
       .eq('id', corridaId)
       .single()
 
-    if (data) {
+    if (data && data.status === 'aguardando' && data.entregador_id == null) {
       setCorridas((prev) => {
         if (prev.some((c) => c.id === data.id)) return prev
         return [data as any, ...prev]
