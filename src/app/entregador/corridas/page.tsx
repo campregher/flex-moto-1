@@ -58,6 +58,7 @@ export default function CorridasDisponiveisPage() {
           { event: '*', schema: 'public', table: 'corridas' },
           (payload: any) => {
             console.log('[RT corridas]', payload.eventType, payload.new?.id, payload.new?.status, payload.old?.status)
+            
 
             const newStatus = payload.new?.status
             const oldStatus = payload.old?.status
