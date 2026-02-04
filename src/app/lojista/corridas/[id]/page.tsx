@@ -219,68 +219,14 @@ export default function CorridaDetalhePage() {
       }
     }
 
-    try {
-      setCancelLoading(true)
-      const reservado = corrida.valor_reservado || 0
-      const fee = corrida.status === 'coletando' ? PRICING.CANCELLATION_FEE : 0
-      const refund = Math.max(0, reservado - fee)
-      let saldoPosterior: number | null = null
-      if (refund > 0) {
-        const { data: lojistaRow } = await supabase
-          .from('lojistas')
-          .select('id, saldo, user_id')
-          .eq('id', corrida.lojista_id)
-          .single()
-
-        const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
-        if (lojista) {
-          const novoSaldoLojista = (lojista.saldo || 0) + refund
-          await supabase
-            .from('lojistas')
-            .update({ saldo: novoSaldoLojista })
-            .eq('id', lojista.id)
-
-          await supabase.from('financeiro').insert({
-            user_id: lojista.user_id,
-            tipo: 'estorno',
-            valor: refund,
-            saldo_anterior: lojista.saldo || 0,
-            saldo_posterior: novoSaldoLojista,
-            descricao: fee > 0
-              ? `Estorno corrida #${corrida.id.slice(0, 8)} (taxa R$ ${fee.toFixed(2)})`
-              : `Estorno corrida #${corrida.id.slice(0, 8)}`,
-            corrida_id: corrida.id,
-          })
-          saldoPosterior = novoSaldoLojista
-        }
-      }
-
-      if (fee > 0) {
-        const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || ''
-        if (ADMIN_USER_ID) {
-          await supabase.from('financeiro').insert({
-            user_id: ADMIN_USER_ID,
-            tipo: 'multa',
-            valor: fee,
-            saldo_anterior: 0,
-            saldo_posterior: 0,
-            descricao: `Taxa de cancelamento corrida #${corrida.id.slice(0, 8)}`,
-            corrida_id: corrida.id,
-          })
-        }
-      }
-
-      await supabase
-        .from('corridas')
-        .update({
-          status: 'cancelada',
-          cancelada_em: new Date().toISOString(),
-          motivo_cancelamento: fee > 0
-            ? `Cancelado pelo lojista (coletando) - ${cancelReason}${cancelDetails ? `: ${cancelDetails}` : ''}`
-            : `Cancelado pelo lojista - ${cancelReason}${cancelDetails ? `: ${cancelDetails}` : ''}`,
-          valor_reservado: null,
+      try {
+        setCancelLoading(true)
+        const motivo = `${cancelReason}${cancelDetails ? `: ${cancelDetails}` : ''}`
+        const { error } = await supabase.rpc('cancelar_corrida_lojista', {
+          p_corrida_id: corrida.id,
+          p_motivo: motivo,
         })
-        .eq('id', corrida.id)
+        if (error) throw error
 
       if (corrida.plataforma === 'ml_flex') {
         const { data: pedidoRow } = await supabase
@@ -319,10 +265,7 @@ export default function CorridaDetalhePage() {
       setShowCancelModal(false)
       setCancelReason('')
       setCancelDetails('')
-      if (saldoPosterior !== null) {
-        setProfile({ ...(profile as any), saldo: saldoPosterior })
-      }
-      router.push('/lojista/corridas')
+        router.push('/lojista/corridas')
     } catch (err) {
       toast.error('Erro ao cancelar corrida')
     } finally {

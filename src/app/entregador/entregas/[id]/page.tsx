@@ -9,6 +9,7 @@ import { useLocationStore } from '@/stores/location-store'
 import { Avatar, Rating, StatusBadge, PlatformBadge, LoadingSpinner } from '@/components/ui'
 import { Map } from '@/components/Map'
 import { formatCurrency, formatDate, calculateRouteDistance } from '@/lib/utils'
+import { calculateDistance } from '@/lib/utils/pricing'
 import toast from 'react-hot-toast'
 import {
   MapPin,
@@ -84,6 +85,7 @@ export default function EntregaDetalhePage() {
   const supabase = createClient()
   const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || ''
   const TRANSACTION_FEE = 2
+  const DELIVERY_RADIUS_METERS = 100
   const statusRef = useRef<string | null>(null)
 
   const entregadorProfile = profile as any
@@ -210,6 +212,21 @@ export default function EntregaDetalhePage() {
   }
 
   async function confirmarEntrega(enderecoId: string, codigo: string) {
+    if (!currentLocation) {
+      toast.error('Ative o GPS para confirmar a entrega')
+      return
+    }
+    const enderecoAtual = corrida!.enderecos.find((e) => e.id === enderecoId)
+    if (!enderecoAtual) {
+      toast.error('Endereço não encontrado')
+      return
+    }
+    const distanciaM =
+      calculateDistance(currentLocation.lat, currentLocation.lng, enderecoAtual.latitude, enderecoAtual.longitude) * 1000
+    if (distanciaM > DELIVERY_RADIUS_METERS) {
+      toast.error(`Você precisa estar a até ${DELIVERY_RADIUS_METERS}m do endereço`)
+      return
+    }
     if (codeInput.toUpperCase() !== codigo) {
       toast.error('Código incorreto')
       return
@@ -221,8 +238,20 @@ export default function EntregaDetalhePage() {
         p_corrida_id: corrida!.id,
         p_endereco_id: enderecoId,
         p_codigo: codeInput.toUpperCase(),
+        p_lat: currentLocation.lat,
+        p_lng: currentLocation.lng,
       })
-      if (error) throw error
+      if (error) {
+        if (error.message?.includes('fora_raio')) {
+          toast.error(`Você precisa estar a até ${DELIVERY_RADIUS_METERS}m do endereço`)
+          return
+        }
+        if (error.message?.includes('gps_required')) {
+          toast.error('Ative o GPS para confirmar a entrega')
+          return
+        }
+        throw error
+      }
 
       const { data: remaining } = await supabase
         .from('enderecos_entrega')
@@ -302,8 +331,14 @@ export default function EntregaDetalhePage() {
     }
   }
 
-  function openNavigation(lat: number, lng: number) {
-    const url = `https://www.google.com/maps/dir/api=1&destination=${lat},${lng}&travelmode=driving`
+  function openNavigation(lat: number, lng: number, address?: string | null) {
+    const destination = address?.trim()
+      ? encodeURIComponent(address)
+      : `${lat},${lng}`
+    const origin = currentLocation
+      ? `&origin=${currentLocation.lat},${currentLocation.lng}`
+      : ''
+    const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${destination}&travelmode=driving`
     window.open(url, '_blank')
   }
 
@@ -467,13 +502,14 @@ export default function EntregaDetalhePage() {
                       <p className="text-sm text-gray-500 mt-1">{corrida.coleta_observacoes}</p>
                     )}
                     <p className="text-xs text-gray-400 mt-2">
-                      Código: <span className="font-mono font-bold">{corrida.codigo_entrega}</span>
+                      Código de coleta:{' '}
+                      <span className="font-mono font-bold">{corrida.codigo_entrega}</span>
                     </p>
                   </div>
                 </div>
                 {(corrida.status === 'aceita' || corrida.status === 'coletando') && (
                   <button
-                    onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
+                    onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude, corrida.endereco_coleta)}
                     className="btn-ghost text-primary-600"
                   >
                     <MapIcon className="w-5 h-5" />
@@ -538,14 +574,15 @@ export default function EntregaDetalhePage() {
                       )}
                       {endereco.status === 'pendente' && (
                         <p className="text-xs text-gray-400 mt-2">
-                          Código: <span className="font-mono font-bold">{endereco.codigo_confirmacao}</span>
+                          Código da entrega:{' '}
+                          <span className="font-mono font-bold">{endereco.codigo_confirmacao}</span>
                         </p>
                       )}
                     </div>
                   </div>
                   {endereco.status === 'pendente' && corrida.status === 'em_entrega' && (
                     <button
-                      onClick={() => openNavigation(endereco.latitude, endereco.longitude)}
+                      onClick={() => openNavigation(endereco.latitude, endereco.longitude, endereco.endereco)}
                       className="btn-ghost text-secondary-600"
                     >
                       <MapIcon className="w-5 h-5" />
@@ -575,7 +612,7 @@ export default function EntregaDetalhePage() {
               </div>
             </div>
             <button
-              onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
+              onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude, corrida.endereco_coleta)}
               className="btn-secondary w-full flex items-center justify-center gap-2 shadow-sm"
             >
               <MapIcon className="w-5 h-5" />
@@ -613,7 +650,7 @@ export default function EntregaDetalhePage() {
               </div>
             </div>
             <button
-              onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
+              onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude, corrida.endereco_coleta)}
               className="btn-primary w-full flex items-center justify-center gap-2 shadow-sm"
             >
               <MapIcon className="w-5 h-5" />
@@ -639,13 +676,45 @@ export default function EntregaDetalhePage() {
         )}
 
         {corrida.status === 'em_entrega' && nextDelivery && (
-          <button
-            onClick={() => setShowCodeInput(nextDelivery.id)}
-            disabled={actionLoading}
-            className="btn-secondary w-full py-3"
-          >
-            Confirmar Entrega {corrida.enderecos.findIndex((e) => e.id === nextDelivery.id) + 1}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => openNavigation(nextDelivery.latitude, nextDelivery.longitude, nextDelivery.endereco)}
+              className="btn-ghost w-full flex items-center justify-center gap-2"
+            >
+              <MapIcon className="w-5 h-5" />
+              Abrir GPS para entrega
+            </button>
+            <button
+              onClick={() => setShowCodeInput(nextDelivery.id)}
+              disabled={
+                actionLoading ||
+                !currentLocation ||
+                calculateDistance(
+                  currentLocation.lat,
+                  currentLocation.lng,
+                  nextDelivery.latitude,
+                  nextDelivery.longitude
+                ) * 1000 > DELIVERY_RADIUS_METERS
+              }
+              className="btn-secondary w-full py-3"
+            >
+              Confirmar Entrega {corrida.enderecos.findIndex((e) => e.id === nextDelivery.id) + 1}
+            </button>
+            {!currentLocation ? (
+              <p className="text-xs text-gray-500 text-center">Ative o GPS para confirmar a entrega.</p>
+            ) : (
+              <p className="text-xs text-gray-500 text-center">
+                Distância atual: {Math.round(
+                  calculateDistance(
+                    currentLocation.lat,
+                    currentLocation.lng,
+                    nextDelivery.latitude,
+                    nextDelivery.longitude
+                  ) * 1000
+                )}m • limite {DELIVERY_RADIUS_METERS}m
+              </p>
+            )}
+          </div>
         )}
       </div>
 

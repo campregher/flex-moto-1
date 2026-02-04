@@ -9,43 +9,49 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      users: {
-        Row: {
-          id: string
-          nome: string
-          email: string
-          whatsapp: string
-          cpf: string
-          tipo: Database['public']['Enums']['user_type']
-          status: Database['public']['Enums']['user_status'] | null
-          created_at: string | null
-          updated_at: string | null
-          is_admin: boolean | null
-        }
-        Insert: {
-          id: string
-          nome: string
-          email: string
-          whatsapp: string
-          cpf: string
-          tipo: Database['public']['Enums']['user_type']
-          status: Database['public']['Enums']['user_status'] | null
-          created_at: string | null
-          updated_at: string | null
-          is_admin: boolean | null
-        }
-        Update: {
-          id: string
-          nome: string
-          email: string
-          whatsapp: string
-          cpf: string
-          tipo: Database['public']['Enums']['user_type']
-          status: Database['public']['Enums']['user_status'] | null
-          created_at: string | null
-          updated_at: string | null
-          is_admin: boolean | null
-        }
+        users: {
+          Row: {
+            id: string
+            nome: string
+            email: string
+            whatsapp: string
+            cpf: string | null
+            tipo: Database['public']['Enums']['user_type']
+            tipo_pessoa: Database['public']['Enums']['user_person_type']
+            razao_social: string | null
+            status: Database['public']['Enums']['user_status'] | null
+            created_at: string | null
+            updated_at: string | null
+            is_admin: boolean | null
+          }
+          Insert: {
+            id: string
+            nome: string
+            email: string
+            whatsapp: string
+            cpf: string | null
+            tipo: Database['public']['Enums']['user_type']
+            tipo_pessoa: Database['public']['Enums']['user_person_type']
+            razao_social: string | null
+            status: Database['public']['Enums']['user_status'] | null
+            created_at: string | null
+            updated_at: string | null
+            is_admin: boolean | null
+          }
+          Update: {
+            id: string
+            nome: string
+            email: string
+            whatsapp: string
+            cpf: string | null
+            tipo: Database['public']['Enums']['user_type']
+            tipo_pessoa: Database['public']['Enums']['user_person_type']
+            razao_social: string | null
+            status: Database['public']['Enums']['user_status'] | null
+            created_at: string | null
+            updated_at: string | null
+            is_admin: boolean | null
+          }
         Relationships: []
       }
       entregadores: {
@@ -651,6 +657,7 @@ export type Database = {
     }
     Enums: {
       user_type: 'lojista' | 'entregador' | 'admin'
+      user_person_type: 'pf' | 'pj'
       user_status: 'pendente' | 'ativo' | 'bloqueado'
       corrida_status: 'aguardando' | 'aceita' | 'coletando' | 'em_entrega' | 'finalizada' | 'cancelada'
       plataforma: 'ml_flex' | 'shopee_direta'
@@ -666,6 +673,7 @@ export type Enums<T extends keyof Database['public']['Enums']> =
   Database['public']['Enums'][T]
 
 export type UserType = Enums<'user_type'>
+export type UserPersonType = Enums<'user_person_type'>
 export type UserStatus = Enums<'user_status'>
 export type CorridaStatus = Enums<'corrida_status'>
 export type Plataforma = Enums<'plataforma'>

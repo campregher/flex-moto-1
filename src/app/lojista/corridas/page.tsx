@@ -58,28 +58,35 @@ export default function CorridasPage() {
     if (!lojistaProfile?.id) return
     const channel = supabase
       .channel(`corridas-lojista-list-${lojistaProfile.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'corridas' },
-        (payload: any) => {
-          const newRow = payload.new
-          const oldRow = payload.old
-          const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
-          if (lojistaId !== lojistaProfile.id) return
-          if (payload.eventType === 'UPDATE') {
-            const nextStatus = newRow?.status
-            const prevStatus = oldRow?.status
-            if (nextStatus && prevStatus && nextStatus !== prevStatus) {
-              if (nextStatus === 'aceita') toast('Corrida aceita por entregador', { icon: '✅' })
-              if (nextStatus === 'coletando') toast('Entregador a caminho da coleta', { icon: '📦' })
-              if (nextStatus === 'em_entrega') toast('Pedido em entrega', { icon: '🚚' })
-              if (nextStatus === 'finalizada') toast('Corrida finalizada', { icon: '🎉' })
-              if (nextStatus === 'cancelada') toast('Corrida cancelada', { icon: '⚠️' })
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'corridas' },
+          (payload: any) => {
+            const newRow = payload.new
+            const oldRow = payload.old
+            const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
+            if (lojistaId !== lojistaProfile.id) return
+            if (payload.eventType === 'UPDATE') {
+              const nextStatus = newRow?.status
+              const prevStatus = oldRow?.status
+              if (nextStatus && prevStatus && nextStatus !== prevStatus) {
+                if (nextStatus === 'aceita') toast('Corrida aceita por entregador', { icon: '✅' })
+                if (nextStatus === 'coletando') toast('Entregador a caminho da coleta', { icon: '📦' })
+                if (nextStatus === 'em_entrega') toast('Pedido em entrega', { icon: '🚚' })
+                if (nextStatus === 'finalizada') toast('Corrida finalizada', { icon: '🎉' })
+                if (nextStatus === 'cancelada') toast('Corrida cancelada', { icon: '⚠️' })
+              }
             }
+            if (newRow?.id && newRow?.status) {
+              setCorridas((prev) => {
+                const exists = prev.find((c) => c.id === newRow.id)
+                if (!exists) return prev
+                return prev.map((c) => (c.id === newRow.id ? { ...c, status: newRow.status } : c))
+              })
+            }
+            loadCorridas()
           }
-          loadCorridas()
-        }
-      )
+        )
       .subscribe()
 
     return () => {

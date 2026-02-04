@@ -242,18 +242,34 @@ export default function LojistaDashboard() {
 
     const channel = supabase
       .channel(`corridas-lojista-${lojistaProfile.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'corridas' },
-        (payload: any) => {
-          const newRow = payload.new
-          const oldRow = payload.old
-          const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
-          if (lojistaId !== lojistaProfile.id) return
-          loadCorridasAtivas()
-          loadStats()
-        }
-      )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'corridas' },
+          (payload: any) => {
+            const newRow = payload.new
+            const oldRow = payload.old
+            const lojistaId = newRow?.lojista_id || oldRow?.lojista_id
+            if (lojistaId !== lojistaProfile.id) return
+            if (newRow?.id && newRow?.status) {
+              setCorridasAtivas((prev) => {
+                const exists = prev.find((c) => c.id === newRow.id)
+                const isActive = ['aguardando', 'aceita', 'coletando', 'em_entrega'].includes(newRow.status)
+                if (!exists && isActive) {
+                  return prev
+                }
+                if (exists && !isActive) {
+                  return prev.filter((c) => c.id !== newRow.id)
+                }
+                if (exists) {
+                  return prev.map((c) => (c.id === newRow.id ? { ...c, status: newRow.status } : c))
+                }
+                return prev
+              })
+            }
+            loadCorridasAtivas()
+            loadStats()
+          }
+        )
       .subscribe()
 
     return () => {

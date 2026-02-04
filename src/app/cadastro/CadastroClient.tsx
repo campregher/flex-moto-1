@@ -14,29 +14,56 @@ import { validateCPF, validateCNPJ, validateWhatsApp, validatePlaca } from '@/li
 import type { Database, UserType } from '@/lib/database.types'
 
 const baseSchema = z.object({
-  nome: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
   email: z.string().email('Email inválido'),
   whatsapp: z.string().refine(validateWhatsApp, 'WhatsApp inválido'),
-  cpf: z.string().refine(validateCPF, 'CPF inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
   confirmPassword: z.string(),
   tipo: z.enum(['lojista', 'entregador'] as const),
+  tipo_pessoa: z.enum(['pf', 'pj'] as const),
 })
 
-const lojistaSchema = baseSchema.extend({
+const pfSchema = baseSchema.extend({
+  tipo_pessoa: z.literal('pf'),
+  nome: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  cpf: z.string().refine(validateCPF, 'CPF inválido'),
+})
+
+const pjSchema = baseSchema.extend({
+  tipo_pessoa: z.literal('pj'),
+  razao_social: z.string().min(3, 'Razão social obrigatória'),
+  cnpj: z.string().refine(validateCNPJ, 'CNPJ inválido'),
+})
+
+const lojistaPfSchema = pfSchema.extend({
   tipo: z.literal('lojista'),
-  cnpj: z.string().optional().refine((val) => !val || validateCNPJ(val), 'CNPJ inválido'),
   endereco_base: z.string().optional(),
 })
 
-const entregadorSchema = baseSchema.extend({
+const lojistaPjSchema = pjSchema.extend({
+  tipo: z.literal('lojista'),
+  endereco_base: z.string().optional(),
+})
+
+const entregadorPfSchema = pfSchema.extend({
   tipo: z.literal('entregador'),
   placa: z.string().refine(validatePlaca, 'Placa inválida'),
   cidade: z.string().min(2, 'Cidade obrigatória'),
   uf: z.string().length(2, 'UF deve ter 2 caracteres'),
 })
 
-const cadastroSchema = z.discriminatedUnion('tipo', [lojistaSchema, entregadorSchema])
+const entregadorPjSchema = pjSchema.extend({
+  tipo: z.literal('entregador'),
+  placa: z.string().refine(validatePlaca, 'Placa inválida'),
+  cidade: z.string().min(2, 'Cidade obrigatória'),
+  uf: z.string().length(2, 'UF deve ter 2 caracteres'),
+})
+
+const cadastroSchema = z.union([
+  lojistaPfSchema,
+  lojistaPjSchema,
+  entregadorPfSchema,
+  entregadorPjSchema,
+])
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Senhas não conferem',
     path: ['confirmPassword'],
@@ -78,14 +105,18 @@ export default function CadastroClient() {
     resolver: zodResolver(cadastroSchema),
     defaultValues: {
       tipo: tipoInicial === 'entregador' || tipoInicial === 'lojista' ? tipoInicial : 'lojista',
+      tipo_pessoa: 'pf',
     },
   })
 
   const tipoUsuario = watch('tipo')
+  const tipoPessoa = watch('tipo_pessoa')
   const cnpjError = 'cnpj' in errors ? errors.cnpj : undefined
   const placaError = 'placa' in errors ? errors.placa : undefined
   const cidadeError = 'cidade' in errors ? errors.cidade : undefined
   const ufError = 'uf' in errors ? errors.uf : undefined
+  const nomeError = 'nome' in errors ? errors.nome : undefined
+  const razaoError = 'razao_social' in errors ? errors.razao_social : undefined
 
   useEffect(() => {
     if (tipoInicial && (tipoInicial === 'lojista' || tipoInicial === 'entregador')) {
@@ -93,24 +124,60 @@ export default function CadastroClient() {
     }
   }, [tipoInicial, setValue])
 
+  useEffect(() => {
+    // Garante que o cadastro não reutilize uma sessão antiga
+    supabase.auth.signOut()
+  }, [supabase])
+
   const onSubmit = async (data: CadastroForm) => {
     setIsLoading(true)
     try {
       // 1. Create auth user
+      const whatsappClean = data.whatsapp.replace(/\D/g, '')
+
+      const { data: whatsappInUse, error: whatsappError } = await supabase
+        .rpc('whatsapp_em_uso', { p_whatsapp: whatsappClean })
+
+      if (whatsappError) {
+        toast.error('Erro ao validar WhatsApp')
+        return
+      }
+
+      if (whatsappInUse) {
+        toast.error('Este WhatsApp já está cadastrado')
+        return
+      }
+
+      if (data.tipo_pessoa === 'pf') {
+        const cpfClean = data.cpf.replace(/\D/g, '')
+        const { data: cpfInUse, error: cpfError } = await supabase
+          .rpc('cpf_em_uso', { p_cpf: cpfClean })
+        if (cpfError) {
+          toast.error('Erro ao validar CPF')
+          return
+        }
+        if (cpfInUse) {
+          toast.error('Este CPF já está cadastrado')
+          return
+        }
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
-            nome: data.nome,
+            nome: data.tipo_pessoa === 'pj' ? data.razao_social : data.nome,
             tipo: data.tipo,
+            tipo_pessoa: data.tipo_pessoa,
           },
         },
       })
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
-          toast.error('Este email já está cadastrado')
+        if (authError.message.includes('already registered') || authError.code === 'user_already_exists') {
+          toast.error('Este email já está cadastrado. Redirecionando para login...')
+          router.push(`/login?email=${encodeURIComponent(data.email)}&error=exists`)
         } else {
           toast.error(authError.message)
         }
@@ -131,11 +198,13 @@ export default function CadastroClient() {
       // 2. Create user profile
       const userPayload = {
         id: authData.user.id,
-        nome: data.nome,
+        nome: data.tipo_pessoa === 'pj' ? data.razao_social : data.nome,
+        razao_social: data.tipo_pessoa === 'pj' ? data.razao_social : null,
         email: data.email,
-        whatsapp: data.whatsapp.replace(/\D/g, ''),
-        cpf: data.cpf.replace(/\D/g, ''),
+        whatsapp: whatsappClean,
+        cpf: data.tipo_pessoa === 'pf' ? data.cpf.replace(/\D/g, '') : null,
         tipo: data.tipo,
+        tipo_pessoa: data.tipo_pessoa,
         status: data.tipo === 'entregador' ? 'pendente' : 'ativo',
       } as Database['public']['Tables']['users']['Insert']
 
@@ -152,7 +221,7 @@ export default function CadastroClient() {
       if (data.tipo === 'lojista') {
         const lojistaPayload = {
           user_id: authData.user.id,
-          cnpj: data.cnpj ? data.cnpj.replace(/\D/g, '') : null,
+          cnpj: data.tipo_pessoa === 'pj' ? data.cnpj.replace(/\D/g, '') : null,
           endereco_base: data.endereco_base || null,
           endereco_latitude: enderecoBaseCoords.lat,
           endereco_longitude: enderecoBaseCoords.lng,
@@ -255,29 +324,60 @@ export default function CadastroClient() {
 
         <div className="card p-8">
           {/* Tipo de usuário */}
-          <div className="flex gap-4 mb-8">
-            <button
-              type="button"
-              onClick={() => setValue('tipo', 'lojista')}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
-                tipoUsuario === 'lojista'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Sou Lojista
-            </button>
-            <button
-              type="button"
-              onClick={() => setValue('tipo', 'entregador')}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
-                tipoUsuario === 'entregador'
-                  ? 'bg-secondary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Sou Entregador
-            </button>
+          <div className="mb-8">
+            <p className="text-sm font-medium text-gray-700 mb-3">Tipo de conta</p>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setValue('tipo', 'lojista')}
+                className={`flex-1 py-2.5 px-4 rounded-xl font-semibold transition-all ${
+                  tipoUsuario === 'lojista'
+                    ? 'bg-primary-600 text-white shadow-sm'
+                    : 'bg-transparent text-gray-700 hover:bg-white'
+                }`}
+              >
+                Sou Lojista
+              </button>
+              <button
+                type="button"
+                onClick={() => setValue('tipo', 'entregador')}
+                className={`flex-1 py-2.5 px-4 rounded-xl font-semibold transition-all ${
+                  tipoUsuario === 'entregador'
+                    ? 'bg-secondary-600 text-white shadow-sm'
+                    : 'bg-transparent text-gray-700 hover:bg-white'
+                }`}
+              >
+                Sou Entregador
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <p className="text-sm font-medium text-gray-700 mb-3">Tipo de pessoa</p>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setValue('tipo_pessoa', 'pf')}
+                className={`flex-1 py-2.5 px-4 rounded-xl font-semibold transition-all ${
+                  tipoPessoa === 'pf'
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'bg-transparent text-gray-700 hover:bg-white'
+                }`}
+              >
+                Pessoa Física
+              </button>
+              <button
+                type="button"
+                onClick={() => setValue('tipo_pessoa', 'pj')}
+                className={`flex-1 py-2.5 px-4 rounded-xl font-semibold transition-all ${
+                  tipoPessoa === 'pj'
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'bg-transparent text-gray-700 hover:bg-white'
+                }`}
+              >
+                Pessoa Jurídica
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5" noValidate>
@@ -286,38 +386,58 @@ export default function CadastroClient() {
             {/* Step 1: Dados básicos */}
             {step === 1 && (
               <>
-                <div>
-                  <label className="label">Nome Completo</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      {...register('nome')}
-                      className="input pl-10"
-                      placeholder="Seu nome completo"
-                    />
-                  </div>
-                  {errors.nome && (
-                    <p className="text-red-500 text-sm mt-1">{errors.nome.message}</p>
+                  {tipoPessoa === 'pf' ? (
+                    <div>
+                      <label className="label">Nome completo</label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                          type="text"
+                          {...register('nome')}
+                          className="input pl-10"
+                          placeholder="Seu nome completo"
+                        />
+                      </div>
+                      {nomeError && (
+                        <p className="text-red-500 text-sm mt-1">{nomeError.message}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="label">Razão social</label>
+                      <div className="relative">
+                        <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                          type="text"
+                          {...register('razao_social')}
+                          className="input pl-10"
+                          placeholder="Razão social da empresa"
+                        />
+                      </div>
+                      {razaoError && (
+                        <p className="text-red-500 text-sm mt-1">{razaoError.message}</p>
+                      )}
+                    </div>
                   )}
-                </div>
 
-                <div>
-                  <label className="label">CPF</label>
-                  <div className="relative">
-                    <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      {...register('cpf')}
-                      className="input pl-10"
-                      placeholder="000.000.000-00"
-                      maxLength={14}
-                    />
+                {tipoPessoa === 'pf' && (
+                  <div>
+                    <label className="label">CPF</label>
+                    <div className="relative">
+                      <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        {...register('cpf')}
+                        className="input pl-10"
+                        placeholder="000.000.000-00"
+                        maxLength={14}
+                      />
+                    </div>
+                    {errors.cpf && (
+                      <p className="text-red-500 text-sm mt-1">{errors.cpf.message}</p>
+                    )}
                   </div>
-                  {errors.cpf && (
-                    <p className="text-red-500 text-sm mt-1">{errors.cpf.message}</p>
-                  )}
-                </div>
+                )}
 
                 <div>
                   <label className="label">Email</label>
@@ -387,14 +507,28 @@ export default function CadastroClient() {
                 <button
                   type="button"
                   onClick={async () => {
-                    const step1Valid = await trigger([
-                      'nome',
-                      'cpf',
+                    const step1Fields = [
                       'email',
                       'whatsapp',
                       'password',
                       'confirmPassword',
-                    ])
+                    ] as const
+                    const step1Valid = await trigger(step1Fields as any)
+                    if (tipoPessoa === 'pf') {
+                      const nomeValid = await trigger('nome')
+                      const cpfValid = await trigger('cpf')
+                      if (!nomeValid || !cpfValid) {
+                        toast.error('Preencha nome e CPF corretamente')
+                        return
+                      }
+                    } else {
+                      const razaoValid = await trigger('razao_social')
+                      const cnpjValid = await trigger('cnpj')
+                      if (!razaoValid || !cnpjValid) {
+                        toast.error('Preencha razão social e CNPJ corretamente')
+                        return
+                      }
+                    }
                     if (!step1Valid) {
                       toast.error('Preencha corretamente os campos para continuar')
                       return
@@ -413,22 +547,24 @@ export default function CadastroClient() {
               <>
                 {tipoUsuario === 'lojista' ? (
                   <>
-                    <div>
-                      <label className="label">CNPJ (opcional)</label>
-                      <div className="relative">
-                        <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                          type="text"
-                          {...register('cnpj')}
-                          className="input pl-10"
-                          placeholder="00.000.000/0000-00"
-                          maxLength={18}
-                        />
+                    {tipoPessoa === 'pj' && (
+                      <div>
+                        <label className="label">CNPJ</label>
+                        <div className="relative">
+                          <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <input
+                            type="text"
+                            {...register('cnpj')}
+                            className="input pl-10"
+                            placeholder="00.000.000/0000-00"
+                            maxLength={18}
+                          />
+                        </div>
+                        {tipoUsuario === 'lojista' && cnpjError && (
+                          <p className="text-red-500 text-sm mt-1">{cnpjError.message}</p>
+                        )}
                       </div>
-                      {tipoUsuario === 'lojista' && cnpjError && (
-                        <p className="text-red-500 text-sm mt-1">{cnpjError.message}</p>
-                      )}
-                    </div>
+                    )}
 
                     <div>
                       <label className="label">Endereço Base (opcional)</label>

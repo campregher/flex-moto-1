@@ -42,7 +42,7 @@ export default function LojistaPerfilPage() {
   const [profileSaving, setProfileSaving] = useState(false)
   const [whatsapp, setWhatsapp] = useState(user?.whatsapp || '')
   const [fotoFile, setFotoFile] = useState<File | null>(null)
-  const [fotoPreview, setFotoPreview] = useState((profile as any).foto_url || '')
+  const [fotoPreview, setFotoPreview] = useState((profile as any)?.foto_url || '')
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({

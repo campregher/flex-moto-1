@@ -54,7 +54,14 @@ export default function CorridasDisponiveisPage() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'corridas' },
-        () => {
+        (payload) => {
+          const next = (payload as any)?.new
+          // Se uma corrida sair de "aguardando", remove imediatamente da lista
+          if (next?.id && next?.status && next.status !== 'aguardando') {
+            setCorridas((prev) => prev.filter((c) => c.id !== next.id))
+            return
+          }
+          // Para inserções ou updates relevantes, recarrega
           loadCorridas()
         }
       )
@@ -124,7 +131,7 @@ export default function CorridasDisponiveisPage() {
 
       console.log('[aceitarCorrida] update success', updated)
       toast.success('Corrida aceita!')
-      loadCorridas()
+      setCorridas((prev) => prev.filter((c) => c.id !== corridaId))
       router.push(`/entregador/entregas/${corridaId}`)
     } catch (err) {
       toast.error('Erro ao aceitar corrida')
