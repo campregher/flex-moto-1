@@ -45,16 +45,18 @@ interface Corrida {
   aceita_em: string | null
   coletada_em: string | null
   finalizada_em: string | null
-  entregador: {
-    id: string
-    foto_url: string | null
-    avaliacao_media: number
-    latitude: number | null
-    longitude: number | null
-    user: {
+    entregador: {
       id: string
-      nome: string
-      whatsapp: string
+      foto_url: string | null
+      avaliacao_media: number
+      latitude: number | null
+      longitude: number | null
+      tipo_veiculo?: string | null
+      placa?: string | null
+      user: {
+        id: string
+        nome: string
+        whatsapp: string
     }
   } | null
   enderecos: {
@@ -139,7 +141,7 @@ export default function CorridaDetalhePage() {
         *,
         entregador_id,
         entregador:entregadores(
-          id, foto_url, avaliacao_media, latitude, longitude,
+          id, foto_url, avaliacao_media, latitude, longitude, tipo_veiculo, placa,
           user:users(id, nome, whatsapp)
         ),
         enderecos:enderecos_entrega(*)
@@ -646,26 +648,34 @@ export default function CorridaDetalhePage() {
         {corrida.entregador ? (
           <div className="card p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Entregador</h3>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Avatar
-                  src={corrida.entregador.foto_url}
-                  name={corrida.entregador.user?.nome || ''}
-                  size="lg"
-                  className=""
-                />
-                <div>
-                  <p className="font-medium text-gray-900">{corrida.entregador.user?.nome || '-'}</p>
-                  <Rating
-                    value={corrida.entregador.avaliacao_media}
-                    size="sm"
-                    max={5}
-                    showValue={false}
-                    onChange={() => {}}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar
+                    src={corrida.entregador.foto_url}
+                    name={corrida.entregador.user?.nome || ''}
+                    size="lg"
+                    className=""
                   />
+                  <div>
+                    <p className="font-medium text-gray-900">{corrida.entregador.user?.nome || '-'}</p>
+                    <Rating
+                      value={corrida.entregador.avaliacao_media}
+                      size="sm"
+                      max={5}
+                      showValue={false}
+                      onChange={() => {}}
+                    />
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                      <span className="px-2 py-1 rounded-md bg-gray-100">
+                        {corrida.entregador.tipo_veiculo ? `Moto: ${corrida.entregador.tipo_veiculo}` : 'Moto não informada'}
+                      </span>
+                      <span className="px-2 py-1 rounded-md bg-gray-100 font-mono">
+                        {corrida.entregador.placa ? `Placa ${corrida.entregador.placa}` : 'Placa não informada'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <a
+                <a
                 href={`https://wa.me/55${corrida.entregador.user?.whatsapp || ''}`}
                 target="_blank"
                 rel="noopener noreferrer"
