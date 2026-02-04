@@ -123,7 +123,9 @@ export default function CorridasDisponiveisPage() {
             setCorridas((prev) => prev.filter((c) => c.id !== id))
           }
         })
-        .subscribe()
+        .subscribe((status) => {
+          console.log('[RT corridas] subscribe status', status)
+        })
       channelRef.current = channel
 
       return () => {
@@ -378,5 +380,4 @@ export default function CorridasDisponiveisPage() {
     </div>
   )
 }
-
 
