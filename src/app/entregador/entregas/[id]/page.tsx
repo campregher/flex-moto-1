@@ -78,6 +78,9 @@ export default function EntregaDetalhePage() {
   const [showRating, setShowRating] = useState(false)
   const [rating, setRating] = useState(5)
   const [comentario, setComentario] = useState('')
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelDetails, setCancelDetails] = useState('')
   const supabase = createClient()
   const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || ''
   const TRANSACTION_FEE = 2
@@ -299,46 +302,25 @@ export default function EntregaDetalhePage() {
 
   async function cancelarCorrida() {
     if (!corrida || !['aceita', 'coletando'].includes(corrida.status)) return
+    if (!cancelReason) {
+      toast.error('Selecione um motivo para o cancelamento')
+      return
+    }
 
     setActionLoading(true)
     try {
-      const { data: lojistaRow } = await supabase
-        .from('lojistas')
-        .select('id, saldo, user_id')
-        .eq('id', corrida.lojista.id)
-        .single()
+      const motivo = `${cancelReason}${cancelDetails ? `: ${cancelDetails}` : ''}`
+      const { error } = await supabase.rpc('cancelar_corrida_entregador', {
+        p_corrida_id: corrida.id,
+        p_motivo: motivo,
+      })
 
-      const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
-      const reservado = corrida.valor_reservado || 0
-      if (lojista && reservado > 0) {
-        const novoSaldoLojista = (lojista.saldo || 0) + reservado
-        await supabase
-          .from('lojistas')
-          .update({ saldo: novoSaldoLojista })
-          .eq('id', lojista.id)
-
-        await supabase.from('financeiro').insert({
-          user_id: lojista.user_id,
-          tipo: 'estorno',
-          valor: reservado,
-          saldo_anterior: lojista.saldo || 0,
-          saldo_posterior: novoSaldoLojista,
-          descricao: `Estorno corrida #${corrida.id.slice(0, 8)}`,
-          corrida_id: corrida.id,
-        })
-      }
-
-      await supabase
-        .from('corridas')
-        .update({
-          status: 'aguardando',
-          entregador_id: null,
-          aceita_em: null,
-          valor_reservado: null,
-        })
-        .eq('id', corrida.id)
+      if (error) throw error
 
       toast.success('Corrida cancelada')
+      setShowCancelModal(false)
+      setCancelReason('')
+      setCancelDetails('')
       router.push('/entregador')
     } catch (err) {
       toast.error('Erro ao cancelar')
@@ -651,7 +633,11 @@ export default function EntregaDetalhePage() {
               Abrir GPS
             </button>
             <div className="flex gap-4">
-              <button onClick={cancelarCorrida} disabled={actionLoading} className="btn-outline flex-1">
+              <button
+                onClick={() => setShowCancelModal(true)}
+                disabled={actionLoading}
+                className="btn-outline flex-1"
+              >
               Cancelar
               </button>
               <button onClick={iniciarColeta} disabled={actionLoading} className="btn-secondary flex-1">
@@ -685,7 +671,11 @@ export default function EntregaDetalhePage() {
               Abrir GPS
             </button>
             <div className="flex gap-4">
-              <button onClick={cancelarCorrida} disabled={actionLoading} className="btn-outline flex-1">
+              <button
+                onClick={() => setShowCancelModal(true)}
+                disabled={actionLoading}
+                className="btn-outline flex-1"
+              >
                 Cancelar
               </button>
               <button
@@ -809,6 +799,58 @@ export default function EntregaDetalhePage() {
               </button>
               <button onClick={submitRating} className="btn-secondary flex-1">
                 Enviar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="card p-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Cancelar corrida</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Informe o motivo do cancelamento.
+            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Motivo</label>
+            <select
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              className="input mb-4"
+            >
+              <option value="">Selecione</option>
+              <option value="cliente_ausente">Cliente ausente</option>
+              <option value="endereco_invalido">Endereço inválido</option>
+              <option value="sem_contato">Sem contato com o cliente</option>
+              <option value="problema_veiculo">Problema com a moto</option>
+              <option value="problema_rota">Problema na rota</option>
+              <option value="outro">Outro</option>
+            </select>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Detalhes (opcional)</label>
+            <textarea
+              value={cancelDetails}
+              onChange={(e) => setCancelDetails(e.target.value)}
+              className="input mb-4"
+              rows={3}
+              placeholder="Descreva rapidamente o motivo"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false)
+                  setCancelReason('')
+                  setCancelDetails('')
+                }}
+                className="btn-outline flex-1"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={cancelarCorrida}
+                disabled={actionLoading || !cancelReason}
+                className="btn-secondary flex-1"
+              >
+                Confirmar cancelamento
               </button>
             </div>
           </div>

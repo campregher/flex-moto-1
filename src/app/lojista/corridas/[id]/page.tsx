@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { Avatar, Rating, StatusBadge, PlatformBadge, LoadingSpinner } from '@/components/ui'
 import { Map } from '@/components/Map'
 import { formatCurrency, formatDate, timeAgo, calculateRouteDistance } from '@/lib/utils'
+import { PRICING } from '@/lib/utils/pricing'
 import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import { loadGoogleMaps } from '@/lib/google-maps'
 import { calculateDeliveryPrice } from '@/lib/utils/pricing'
@@ -96,6 +97,10 @@ export default function CorridaDetalhePage() {
   const [showRating, setShowRating] = useState(false)
   const [rating, setRating] = useState(5)
   const [comentario, setComentario] = useState('')
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelDetails, setCancelDetails] = useState('')
+  const [cancelLoading, setCancelLoading] = useState(false)
   const [mlInfo, setMlInfo] = useState<{ ml_order_id: number; import_status: string | null; ml_retries: number | null } | null>(null)
   const suppressReloadRef = useRef(false)
   const statusRef = useRef<string | null>(null)
@@ -199,12 +204,28 @@ export default function CorridaDetalhePage() {
   }
 
   async function cancelarCorrida() {
-    if (!corrida || corrida.status !== 'aguardando') return
+    if (!corrida || !['aguardando', 'aceita', 'coletando'].includes(corrida.status)) return
+    if (!cancelReason) {
+      toast.error('Selecione um motivo para o cancelamento')
+      return
+    }
+
+    if (corrida.status === 'aceita' && corrida.aceita_em) {
+      const aceitaEm = new Date(corrida.aceita_em).getTime()
+      const diffMs = Date.now() - aceitaEm
+      if (diffMs < PRICING.WAIT_TIME_MINUTES * 60 * 1000) {
+        toast(`Aguarde ${PRICING.WAIT_TIME_MINUTES} minutos para cancelar.`, { icon: '⏳' })
+        return
+      }
+    }
 
     try {
+      setCancelLoading(true)
       const reservado = corrida.valor_reservado || 0
+      const fee = corrida.status === 'coletando' ? PRICING.CANCELLATION_FEE : 0
+      const refund = Math.max(0, reservado - fee)
       let saldoPosterior: number | null = null
-      if (reservado > 0) {
+      if (refund > 0) {
         const { data: lojistaRow } = await supabase
           .from('lojistas')
           .select('id, saldo, user_id')
@@ -213,7 +234,7 @@ export default function CorridaDetalhePage() {
 
         const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
         if (lojista) {
-          const novoSaldoLojista = (lojista.saldo || 0) + reservado
+          const novoSaldoLojista = (lojista.saldo || 0) + refund
           await supabase
             .from('lojistas')
             .update({ saldo: novoSaldoLojista })
@@ -222,13 +243,30 @@ export default function CorridaDetalhePage() {
           await supabase.from('financeiro').insert({
             user_id: lojista.user_id,
             tipo: 'estorno',
-            valor: reservado,
+            valor: refund,
             saldo_anterior: lojista.saldo || 0,
             saldo_posterior: novoSaldoLojista,
-            descricao: `Estorno corrida #${corrida.id.slice(0, 8)}`,
+            descricao: fee > 0
+              ? `Estorno corrida #${corrida.id.slice(0, 8)} (taxa R$ ${fee.toFixed(2)})`
+              : `Estorno corrida #${corrida.id.slice(0, 8)}`,
             corrida_id: corrida.id,
           })
           saldoPosterior = novoSaldoLojista
+        }
+      }
+
+      if (fee > 0) {
+        const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || ''
+        if (ADMIN_USER_ID) {
+          await supabase.from('financeiro').insert({
+            user_id: ADMIN_USER_ID,
+            tipo: 'multa',
+            valor: fee,
+            saldo_anterior: 0,
+            saldo_posterior: 0,
+            descricao: `Taxa de cancelamento corrida #${corrida.id.slice(0, 8)}`,
+            corrida_id: corrida.id,
+          })
         }
       }
 
@@ -237,7 +275,9 @@ export default function CorridaDetalhePage() {
         .update({
           status: 'cancelada',
           cancelada_em: new Date().toISOString(),
-          motivo_cancelamento: 'Cancelado pelo lojista',
+          motivo_cancelamento: fee > 0
+            ? `Cancelado pelo lojista (coletando) - ${cancelReason}${cancelDetails ? `: ${cancelDetails}` : ''}`
+            : `Cancelado pelo lojista - ${cancelReason}${cancelDetails ? `: ${cancelDetails}` : ''}`,
           valor_reservado: null,
         })
         .eq('id', corrida.id)
@@ -276,12 +316,17 @@ export default function CorridaDetalhePage() {
 
       toast.success('Corrida cancelada')
       toast('O estorno pode levar alguns minutos para aparecer no saldo.', { icon: '⏳' })
+      setShowCancelModal(false)
+      setCancelReason('')
+      setCancelDetails('')
       if (saldoPosterior !== null) {
         setProfile({ ...(profile as any), saldo: saldoPosterior })
       }
       router.push('/lojista/corridas')
     } catch (err) {
       toast.error('Erro ao cancelar corrida')
+    } finally {
+      setCancelLoading(false)
     }
   }
 
@@ -915,37 +960,37 @@ export default function CorridaDetalhePage() {
         </div>
 
         {/* Actions */}
-        {corrida.status === 'aguardando' && (
-          <div className="flex flex-col gap-3">
-            {editing ? (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setEditing(false)}
-                  className="btn-outline flex-1"
-                  disabled={savingEdit}
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={salvarEdicao}
-                  className="btn-primary flex-1"
-                  disabled={savingEdit}
-                >
-                  {savingEdit ? 'Salvando...' : 'Salvar alterações'}
-                </button>
+        {['aguardando', 'aceita', 'coletando'].includes(corrida.status) && (
+            <div className="flex flex-col gap-3">
+              {editing && corrida.status === 'aguardando' ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="btn-outline flex-1"
+                    disabled={savingEdit}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={salvarEdicao}
+                    className="btn-primary flex-1"
+                    disabled={savingEdit}
+                  >
+                    {savingEdit ? 'Salvando...' : 'Salvar alterações'}
+                  </button>
+                </div>
+              ) : (
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="btn-danger w-full py-3"
+                  >
+                    <X className="w-5 h-5 mr-2" />
+                    Cancelar Corrida
+                  </button>
+                )}
               </div>
-            ) : (
-              <button
-                onClick={cancelarCorrida}
-                className="btn-danger w-full py-3"
-              >
-                <X className="w-5 h-5 mr-2" />
-                Cancelar Corrida
-              </button>
             )}
-          </div>
-        )}
-      </div>
+        </div>
 
       {/* Rating Modal */}
       {showRating && corrida.entregador && (
@@ -988,6 +1033,66 @@ export default function CorridaDetalhePage() {
               </button>
               <button onClick={submitRating} className="btn-primary flex-1">
                 Enviar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="card p-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Cancelar corrida</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {corrida?.status === 'coletando'
+                ? `Taxa de cancelamento: R$ ${PRICING.CANCELLATION_FEE.toFixed(2)}`
+                : 'Sem taxa de cancelamento nesta etapa.'}
+            </p>
+            {corrida?.status === 'aceita' && (
+              <p className="text-xs text-gray-500 mb-4">
+                Só é possível cancelar após {PRICING.WAIT_TIME_MINUTES} minutos da aceitação.
+              </p>
+            )}
+            <label className="block text-sm font-medium text-gray-700 mb-2">Motivo</label>
+            <select
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              className="input mb-4"
+            >
+              <option value="">Selecione</option>
+              <option value="cliente_cancelou">Cliente cancelou</option>
+              <option value="endereco_invalido">Endereço inválido</option>
+              <option value="sem_contato">Sem contato com o entregador</option>
+              <option value="erro_pedido">Erro no pedido</option>
+              <option value="problema_loja">Problema na loja</option>
+              <option value="entregador_atrasado">Entregador atrasado</option>
+              <option value="outro">Outro</option>
+            </select>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Detalhes (opcional)</label>
+            <textarea
+              value={cancelDetails}
+              onChange={(e) => setCancelDetails(e.target.value)}
+              className="input mb-4"
+              rows={3}
+              placeholder="Descreva rapidamente o motivo"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false)
+                  setCancelReason('')
+                  setCancelDetails('')
+                }}
+                className="btn-outline flex-1"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={cancelarCorrida}
+                disabled={cancelLoading || !cancelReason}
+                className="btn-secondary flex-1"
+              >
+                {cancelLoading ? 'Cancelando...' : 'Confirmar cancelamento'}
               </button>
             </div>
           </div>
