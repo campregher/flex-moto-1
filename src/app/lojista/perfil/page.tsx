@@ -175,6 +175,13 @@ export default function LojistaPerfilPage() {
     reader.readAsDataURL(file)
   }
 
+  const getExtFromMime = (mime: string) => {
+    if (mime === 'image/jpeg') return 'jpg'
+    if (mime === 'image/png') return 'png'
+    if (mime === 'image/webp') return 'webp'
+    return null
+  }
+
   async function handleSaveProfile() {
     if (!user || !lojistaProfile) return
 
@@ -188,14 +195,28 @@ export default function LojistaPerfilPage() {
     try {
       let fotoUrl = lojistaProfile.foto_url
       if (fotoFile) {
-        const ext = fotoFile.name.split('.').pop() || 'jpg'
-        const filePath = `lojistas/${user.id}/perfil.${ext}`
+        if (!fotoFile.size) {
+          toast.error('Arquivo de foto inválido.')
+          return
+        }
+
+        const ext = getExtFromMime(fotoFile.type) || fotoFile.name.split('.').pop() || 'jpg'
+        if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext.toLowerCase())) {
+          toast.error('Formato de imagem não suportado. Use JPG, PNG ou WEBP.')
+          return
+        }
+
+        const contentType = fotoFile.type || (ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg')
+        const filePath = `lojistas/${user.id}/perfil.${ext === 'jpeg' ? 'jpg' : ext}`
 
         const { error: uploadError } = await supabase.storage
           .from('fotos')
-          .upload(filePath, fotoFile, { upsert: true, contentType: fotoFile.type || 'image/jpeg' })
+          .upload(filePath, fotoFile, { upsert: true, contentType })
 
-        if (uploadError) throw uploadError
+        if (uploadError) {
+          toast.error(uploadError.message || 'Erro ao enviar foto')
+          return
+        }
 
         const { data: urlData } = supabase.storage.from('fotos').getPublicUrl(filePath)
         fotoUrl = urlData.publicUrl || filePath
