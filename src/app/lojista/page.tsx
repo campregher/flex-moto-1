@@ -158,6 +158,7 @@ export default function LojistaDashboard() {
       .from('corridas')
       .select('*', { count: 'exact', head: true })
       .eq('lojista_id', lojistaProfile.id)
+      .eq('status', 'finalizada')
 
     const { count: corridasHoje } = await supabase
       .from('corridas')
@@ -166,14 +167,14 @@ export default function LojistaDashboard() {
       .gte('created_at', hoje.toISOString())
 
     const { data: gastoData } = await supabase
-      .from('financeiro')
-      .select('valor')
-      .eq('user_id', user.id)
-      .eq('tipo', 'corrida')
-      .gte('created_at', inicioMes.toISOString())
+      .from('corridas')
+      .select('valor_total')
+      .eq('lojista_id', lojistaProfile.id)
+      .eq('status', 'finalizada')
+      .gte('finalizada_em', inicioMes.toISOString())
 
-    const gastoRows = (gastoData as { valor: number }[] | null) || []
-    const gastoMes = gastoRows.reduce((acc, item) => acc + Math.abs(item.valor), 0)
+    const gastoRows = (gastoData as { valor_total: number }[] | null) || []
+    const gastoMes = gastoRows.reduce((acc, item) => acc + (item.valor_total || 0), 0)
 
     setStats({
       totalCorridas: totalCorridas || 0,
@@ -414,9 +415,9 @@ export default function LojistaDashboard() {
               <HiOutlineCurrencyDollar className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Saldo</p>
+              <p className="text-sm text-gray-600">Gasto no mês</p>
               <p className="text-lg font-bold text-gray-900">
-                {formatCurrency(lojistaProfile.saldo || 0)}
+                {formatCurrency(stats.gastoMes)}
               </p>
             </div>
           </div>
