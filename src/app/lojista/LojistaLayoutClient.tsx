@@ -116,7 +116,11 @@ export default function LojistaLayoutClient({ children }: { children: React.Reac
           { event: 'INSERT', schema: 'public', table: 'financeiro', filter: `user_id=eq.${session.user.id}` },
           (payload: any) => {
             if (payload.new && typeof payload.new.saldo_posterior === 'number') {
-              setProfile((current: any) => ({ ...(current || {}), saldo: payload.new.saldo_posterior }))
+              const nextProfile = {
+                ...(lojistaProfile || {}),
+                saldo: payload.new.saldo_posterior,
+              }
+              setProfile(nextProfile as any)
             }
           }
         )
