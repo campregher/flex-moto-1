@@ -51,8 +51,8 @@ export default function CorridasDisponiveisPage() {
     loadCorridas()
 
     // Real-time subscription
-      const channel = supabase
-        .channel('corridas-list')
+        const channel = supabase
+          .channel('corridas-rt')
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'corridas' },
@@ -199,11 +199,11 @@ export default function CorridasDisponiveisPage() {
         console.log('[aceitarCorrida] update success', updated)
         toast.success('Corrida aceita!')
         // Broadcast imediato para outros entregadores
-        channelRef.current?.send({
-          type: 'broadcast',
-          event: 'corrida-aceita',
-          payload: { id: corridaId },
-        })
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'corrida-aceita',
+            payload: { id: corridaId },
+          })
         router.push(`/entregador/entregas/${corridaId}`)
       } catch (err) {
         // Recarrega para reverter remoção otimista em caso de erro

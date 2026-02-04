@@ -154,10 +154,15 @@ export default function CorridaDisponivelDetalhePage() {
         return
       }
 
-      supabase.channel('corridas-broadcast').send({
-        type: 'broadcast',
-        event: 'corrida-aceita',
-        payload: { id: corridaId },
+      const broadcastChannel = supabase.channel('corridas-rt')
+      broadcastChannel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          broadcastChannel.send({
+            type: 'broadcast',
+            event: 'corrida-aceita',
+            payload: { id: corridaId },
+          })
+        }
       })
 
       toast.success('Corrida aceita!')

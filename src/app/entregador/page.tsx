@@ -62,7 +62,7 @@ export default function EntregadorDashboard() {
     
     // Set up realtime subscription for corridas availability and assignment changes
     const channel = supabase
-      .channel('corridas-disponiveis')
+      .channel('corridas-rt')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'corridas' },

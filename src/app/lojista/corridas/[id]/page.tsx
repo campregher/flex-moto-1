@@ -228,10 +228,15 @@ export default function CorridaDetalhePage() {
         })
         if (error) throw error
 
-        supabase.channel('corridas-broadcast').send({
-          type: 'broadcast',
-          event: 'corrida-cancelada',
-          payload: { id: corrida.id },
+        const broadcastChannel = supabase.channel('corridas-rt')
+        broadcastChannel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            broadcastChannel.send({
+              type: 'broadcast',
+              event: 'corrida-cancelada',
+              payload: { id: corrida.id },
+            })
+          }
         })
 
       if (corrida.plataforma === 'ml_flex') {
