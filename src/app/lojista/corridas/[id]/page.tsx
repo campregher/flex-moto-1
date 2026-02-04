@@ -271,6 +271,7 @@ export default function CorridaDetalhePage() {
       }
 
       toast.success('Corrida cancelada')
+      toast('O estorno pode levar alguns minutos para aparecer no saldo.', { icon: '⏳' })
       router.push('/lojista/corridas')
     } catch (err) {
       toast.error('Erro ao cancelar corrida')
