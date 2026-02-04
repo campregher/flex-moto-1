@@ -112,6 +112,38 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
     }
   }, [setProfile, supabase])
 
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    async function subscribeFinanceiro() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      channel = supabase
+        .channel(`entregador-financeiro-${session.user.id}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'financeiro', filter: `user_id=eq.${session.user.id}` },
+          (payload: any) => {
+            if (payload.new && typeof payload.new.saldo_posterior === 'number') {
+              const nextProfile = {
+                ...((profile as any) || {}),
+                saldo: payload.new.saldo_posterior,
+              }
+              setProfile(nextProfile as any)
+            }
+          }
+        )
+        .subscribe()
+    }
+
+    subscribeFinanceiro()
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [profile, setProfile, supabase])
+
   const handleLogout = async () => {
     stopTracking()
     await supabase.auth.signOut()

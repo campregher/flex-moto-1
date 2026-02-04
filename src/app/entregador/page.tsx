@@ -1,6 +1,7 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-store'
@@ -50,6 +51,7 @@ export default function EntregadorDashboard() {
   })
   const [loading, setLoading] = useState(true)
   const [togglingOnline, setTogglingOnline] = useState(false)
+  const corridasChannelRef = useRef<RealtimeChannel | null>(null)
   const supabase = createClient()
 
   const entregadorProfile = (profile as any) || {}
@@ -67,7 +69,6 @@ export default function EntregadorDashboard() {
         (payload: any) => {
           const newStatus = payload.new?.status
           const oldStatus = payload.old?.status
-          const touchesDisponiveis = newStatus === 'aguardando' || oldStatus === 'aguardando'
           const entregadorId = entregadorProfile.id
           const touchesEntregador =
             (payload.new?.entregador_id && payload.new.entregador_id === entregadorId) ||
@@ -75,19 +76,38 @@ export default function EntregadorDashboard() {
 
           if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
             toast('Nova corrida disponível!', { icon: '🚀' })
+            const created = payload.new
+            if (created?.id) {
+              setCorridasDisponiveis((prev) => {
+                if (prev.some((c) => c.id === created.id)) return prev
+                return [created as any, ...prev].slice(0, 5)
+              })
+            }
           }
 
-          if (payload.eventType === 'UPDATE' && oldStatus === 'aguardando' && newStatus !== 'aguardando') {
-            setCorridasDisponiveis((prev) => prev.filter((corrida) => corrida.id !== payload.new.id))
+          if (payload.eventType === 'UPDATE') {
+            // Saiu de aguardando (aceita/cancelada)
+            if (oldStatus === 'aguardando' && newStatus !== 'aguardando') {
+              setCorridasDisponiveis((prev) => prev.filter((corrida) => corrida.id !== payload.new.id))
+            }
+
+            // Voltou para aguardando ou update enquanto aguardando
+            if (newStatus === 'aguardando') {
+              const updated = payload.new
+              if (updated?.id) {
+                setCorridasDisponiveis((prev) => {
+                  const exists = prev.find((c) => c.id === updated.id)
+                  if (exists) {
+                    return prev.map((c) => (c.id === updated.id ? { ...c, ...(updated as any) } : c))
+                  }
+                  return [updated as any, ...prev].slice(0, 5)
+                })
+              }
+            }
           }
 
           if (payload.eventType === 'DELETE' && oldStatus === 'aguardando') {
             setCorridasDisponiveis((prev) => prev.filter((corrida) => corrida.id !== payload.old.id))
-          }
-
-          // If a corrida leaves "aguardando" (accepted/cancelled), refresh available list
-          if (touchesDisponiveis) {
-            loadCorridasDisponiveis()
           }
 
           if (touchesEntregador) {
@@ -96,10 +116,24 @@ export default function EntregadorDashboard() {
           }
         }
       )
+      .on('broadcast', { event: 'corrida-aceita' }, (payload: any) => {
+        const id = payload?.payload?.id
+        if (id) {
+          setCorridasDisponiveis((prev) => prev.filter((c) => c.id !== id))
+        }
+      })
+      .on('broadcast', { event: 'corrida-cancelada' }, (payload: any) => {
+        const id = payload?.payload?.id
+        if (id) {
+          setCorridasDisponiveis((prev) => prev.filter((c) => c.id !== id))
+        }
+      })
       .subscribe()
+    corridasChannelRef.current = channel
 
     return () => {
       supabase.removeChannel(channel)
+      corridasChannelRef.current = null
     }
   }, [entregadorProfile.id])
 

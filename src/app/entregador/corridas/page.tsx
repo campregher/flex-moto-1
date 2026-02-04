@@ -57,17 +57,56 @@ export default function CorridasDisponiveisPage() {
           'postgres_changes',
           { event: '*', schema: 'public', table: 'corridas' },
           (payload: any) => {
-            const next = (payload as any)?.new
-            // Se uma corrida sair de "aguardando", remove imediatamente da lista
-            if (next?.id && next?.status && next.status !== 'aguardando') {
-              setCorridas((prev) => prev.filter((c) => c.id !== next.id))
+            const newStatus = payload.new?.status
+            const oldStatus = payload.old?.status
+
+            if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
+              const created = payload.new
+              if (created?.id) {
+                setCorridas((prev) => {
+                  if (prev.some((c) => c.id === created.id)) return prev
+                  return [created as any, ...prev]
+                })
+              }
               return
             }
-            // Para inserções ou updates relevantes, recarrega
-            loadCorridas()
+
+            if (payload.eventType === 'UPDATE') {
+              // Saiu de aguardando (aceita/cancelada)
+              if (oldStatus === 'aguardando' && newStatus !== 'aguardando') {
+                setCorridas((prev) => prev.filter((c) => c.id !== payload.new.id))
+                return
+              }
+
+              // Update enquanto aguardando
+              if (newStatus === 'aguardando') {
+                const updated = payload.new
+                if (updated?.id) {
+                  setCorridas((prev) => {
+                    const exists = prev.find((c) => c.id === updated.id)
+                    if (exists) {
+                      return prev.map((c) => (c.id === updated.id ? { ...c, ...(updated as any) } : c))
+                    }
+                    return [updated as any, ...prev]
+                  })
+                }
+                return
+              }
+            }
+
+            if (payload.eventType === 'DELETE' && oldStatus === 'aguardando') {
+              setCorridas((prev) => prev.filter((c) => c.id !== payload.old.id))
+              return
+            }
           }
         )
         .on('broadcast', { event: 'corrida-aceita' }, (payload: any) => {
+          const id = payload?.payload?.id
+          if (id) {
+            setCorridas((prev) => prev.filter((c) => c.id !== id))
+          }
+        })
+        .on('broadcast', { event: 'corrida-cancelada' }, (payload: any) => {
           const id = payload?.payload?.id
           if (id) {
             setCorridas((prev) => prev.filter((c) => c.id !== id))

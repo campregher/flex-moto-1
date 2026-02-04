@@ -228,6 +228,12 @@ export default function CorridaDetalhePage() {
         })
         if (error) throw error
 
+        supabase.channel('corridas-broadcast').send({
+          type: 'broadcast',
+          event: 'corrida-cancelada',
+          payload: { id: corrida.id },
+        })
+
       if (corrida.plataforma === 'ml_flex') {
         const { data: pedidoRow } = await supabase
           .from('mercadolivre_pedidos')

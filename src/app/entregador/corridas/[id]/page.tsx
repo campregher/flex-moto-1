@@ -154,6 +154,12 @@ export default function CorridaDisponivelDetalhePage() {
         return
       }
 
+      supabase.channel('corridas-broadcast').send({
+        type: 'broadcast',
+        event: 'corrida-aceita',
+        payload: { id: corridaId },
+      })
+
       toast.success('Corrida aceita!')
       router.push(`/entregador/entregas/${corridaId}`)
     } catch (err) {
