@@ -128,18 +128,11 @@ export default function LojistaPerfilPage() {
 
   useEffect(() => {
     const fotoUrl = lojistaProfile.foto_url
-    const fotoPath = extractFotoPath(fotoUrl)
-    if (!fotoPath) return
-
-    supabase.storage
-      .from('fotos')
-        .createSignedUrl(fotoPath, 3600)
-        .then(({ data, error }: { data: { signedUrl: string } | null; error: unknown }) => {
-        if (!error && data?.signedUrl) {
-          setFotoPreview(data.signedUrl)
-        }
-      })
-  }, [lojistaProfile.foto_url, supabase])
+    const normalized = normalizeFotoUrl(fotoUrl)
+    if (normalized) {
+      setFotoPreview(normalized)
+    }
+  }, [lojistaProfile.foto_url])
 
   useEffect(() => {
     const fotoUrl = lojistaProfile.foto_url

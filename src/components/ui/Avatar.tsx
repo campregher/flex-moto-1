@@ -20,6 +20,10 @@ const sizeClasses = {
 function normalizeStorageUrl(url: string) {
   if (!url) return url
   if (url.includes('/storage/v1/object/public/')) return url
+  if (url.includes('/storage/v1/object/sign/')) {
+    const cleaned = url.split('?')[0]
+    return cleaned.replace('/storage/v1/object/sign/', '/storage/v1/object/public/')
+  }
   if (url.includes('/storage/v1/object/fotos/')) {
     return url.replace('/storage/v1/object/fotos/', '/storage/v1/object/public/fotos/')
   }
