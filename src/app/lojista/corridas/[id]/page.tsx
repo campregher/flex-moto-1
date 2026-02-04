@@ -78,7 +78,7 @@ interface Corrida {
 export default function CorridaDetalhePage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { user } = useAuthStore()
+  const { user, profile, setProfile } = useAuthStore()
   const [corrida, setCorrida] = useState<Corrida | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -201,6 +201,7 @@ export default function CorridaDetalhePage() {
 
     try {
       const reservado = corrida.valor_reservado || 0
+      let saldoPosterior: number | null = null
       if (reservado > 0) {
         const { data: lojistaRow } = await supabase
           .from('lojistas')
@@ -225,6 +226,7 @@ export default function CorridaDetalhePage() {
             descricao: `Estorno corrida #${corrida.id.slice(0, 8)}`,
             corrida_id: corrida.id,
           })
+          saldoPosterior = novoSaldoLojista
         }
       }
 
@@ -272,6 +274,9 @@ export default function CorridaDetalhePage() {
 
       toast.success('Corrida cancelada')
       toast('O estorno pode levar alguns minutos para aparecer no saldo.', { icon: '⏳' })
+      if (saldoPosterior !== null) {
+        setProfile({ ...(profile as any), saldo: saldoPosterior })
+      }
       router.push('/lojista/corridas')
     } catch (err) {
       toast.error('Erro ao cancelar corrida')

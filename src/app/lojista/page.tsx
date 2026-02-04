@@ -75,7 +75,7 @@ interface MlPedido {
 
 export default function LojistaDashboard() {
   const searchParams = useSearchParams()
-  const { user, profile } = useAuthStore()
+  const { user, profile, setProfile } = useAuthStore()
   const [corridasAtivas, setCorridasAtivas] = useState<CorridaAtiva[]>([])
   const [mlIntegration, setMlIntegration] = useState<{ site_id: string; ml_user_id: number } | null>(null)
   const [importLoading, setImportLoading] = useState(false)
@@ -367,6 +367,10 @@ export default function LojistaDashboard() {
       if (!res.ok) {
         const details = payload.details.message || payload.details.code || ''
         throw new Error(`${payload.error || 'Erro ao importar'} ${details}`.trim())
+      }
+
+      if (typeof payload.saldo_posterior === 'number') {
+        setProfile({ ...lojistaProfile, saldo: payload.saldo_posterior })
       }
 
       const { data: pedidosData } = await supabase

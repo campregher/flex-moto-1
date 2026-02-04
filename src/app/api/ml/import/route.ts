@@ -378,5 +378,5 @@ export async function POST(request: Request) {
     .eq('lojista_id', lojistaId)
     .eq('ml_order_id', Number(orderId))
 
-  return NextResponse.json({ ok: true, corrida_id: corridaRow.id })
+  return NextResponse.json({ ok: true, corrida_id: corridaRow.id, saldo_posterior: novoSaldo })
 }

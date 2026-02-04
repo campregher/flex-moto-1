@@ -208,7 +208,7 @@ export async function POST() {
       importedIds.push(corridaRow.id)
     }
 
-    return NextResponse.json({ ok: true, imported: importedIds.length })
+    return NextResponse.json({ ok: true, imported: importedIds.length, saldo_posterior: saldoDisponivel })
   } catch (err) {
     console.error('ML import-selected fatal error:', err)
     return NextResponse.json({ error: 'Import failed' }, { status: 500 })
