@@ -42,13 +42,17 @@ export default function CorridasPage() {
   const [corridas, setCorridas] = useState<Corrida[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [period, setPeriod] = useState('all')
+  const [platform, setPlatform] = useState('all')
+  const [minValor, setMinValor] = useState('')
+  const [maxValor, setMaxValor] = useState('')
   const supabase = createClient()
 
   const lojistaProfile = profile as any
 
   useEffect(() => {
     loadCorridas()
-  }, [filter])
+  }, [filter, period, platform, minValor, maxValor])
 
   useEffect(() => {
     if (!lojistaProfile?.id) return
@@ -83,6 +87,25 @@ export default function CorridasPage() {
     }
   }, [lojistaProfile?.id, filter])
 
+  function getPeriodStart(value: string) {
+    if (value === 'today') {
+      const d = new Date()
+      d.setHours(0, 0, 0, 0)
+      return d
+    }
+    if (value === '7d') {
+      const d = new Date()
+      d.setDate(d.getDate() - 7)
+      return d
+    }
+    if (value === '30d') {
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d
+    }
+    return null
+  }
+
   async function loadCorridas() {
     let query = supabase
       .from('corridas')
@@ -93,12 +116,30 @@ export default function CorridasPage() {
       .eq('lojista_id', lojistaProfile.id)
       .order('created_at', { ascending: false })
 
+    if (platform !== 'all') {
+      query = query.eq('plataforma', platform)
+    }
+
     if (filter !== 'all') {
       if (filter === 'em_andamento') {
         query = query.in('status', ['aceita', 'coletando', 'em_entrega'])
       } else {
         query = query.eq('status', filter)
       }
+    }
+
+    const start = getPeriodStart(period)
+    if (start) {
+      query = query.gte('created_at', start.toISOString())
+    }
+
+    const min = parseFloat(minValor.replace(',', '.'))
+    if (!Number.isNaN(min)) {
+      query = query.gte('valor_total', min)
+    }
+    const max = parseFloat(maxValor.replace(',', '.'))
+    if (!Number.isNaN(max)) {
+      query = query.lte('valor_total', max)
     }
 
     const { data } = await query.limit(50)
@@ -119,7 +160,7 @@ export default function CorridasPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
         <HiOutlineFilter className="w-5 h-5 text-gray-400 flex-shrink-0" />
         {statusFilters.map((sf) => (
           <button
@@ -134,6 +175,41 @@ export default function CorridasPage() {
             {sf.label}
           </button>
         ))}
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value)}
+          className="input"
+        >
+          <option value="all">Todos os períodos</option>
+          <option value="today">Hoje</option>
+          <option value="7d">Últimos 7 dias</option>
+          <option value="30d">Últimos 30 dias</option>
+        </select>
+        <select
+          value={platform}
+          onChange={(e) => setPlatform(e.target.value)}
+          className="input"
+        >
+          <option value="all">Todas as plataformas</option>
+          <option value="ml_flex">ML Flex</option>
+          <option value="shopee_direta">Shopee Direta</option>
+        </select>
+        <input
+          type="text"
+          value={minValor}
+          onChange={(e) => setMinValor(e.target.value)}
+          placeholder="Valor mínimo"
+          className="input"
+        />
+        <input
+          type="text"
+          value={maxValor}
+          onChange={(e) => setMaxValor(e.target.value)}
+          placeholder="Valor máximo"
+          className="input"
+        />
       </div>
 
       {/* Corridas List */}

@@ -27,6 +27,10 @@ export default function EntregadorSaldoPage() {
   const { user, profile, setProfile } = useAuthStore()
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
   const [loading, setLoading] = useState(true)
+  const [tipoFilter, setTipoFilter] = useState('all')
+  const [period, setPeriod] = useState('all')
+  const [minValor, setMinValor] = useState('')
+  const [maxValor, setMaxValor] = useState('')
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [valor, setValor] = useState('')
   const [processing, setProcessing] = useState(false)
@@ -36,17 +40,47 @@ export default function EntregadorSaldoPage() {
 
   useEffect(() => {
     loadTransacoes()
-  }, [])
+  }, [tipoFilter, period])
+
+  function getPeriodStart(value: string) {
+    if (value === 'today') {
+      const d = new Date()
+      d.setHours(0, 0, 0, 0)
+      return d
+    }
+    if (value === '7d') {
+      const d = new Date()
+      d.setDate(d.getDate() - 7)
+      return d
+    }
+    if (value === '30d') {
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d
+    }
+    return null
+  }
 
   async function loadTransacoes() {
     if (!user?.id) return
 
-    const { data } = await supabase
+    let query = supabase
       .from('financeiro')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(200)
+
+    if (tipoFilter !== 'all') {
+      query = query.eq('tipo', tipoFilter)
+    }
+
+    const start = getPeriodStart(period)
+    if (start) {
+      query = query.gte('created_at', start.toISOString())
+    }
+
+    const { data } = await query
 
     if (data) {
       setTransacoes(data)
@@ -111,6 +145,15 @@ export default function EntregadorSaldoPage() {
     }
   }
 
+  const min = parseFloat(minValor.replace(',', '.'))
+  const max = parseFloat(maxValor.replace(',', '.'))
+  const transacoesFiltradas = transacoes.filter((t) => {
+    const abs = Math.abs(t.valor || 0)
+    if (!Number.isNaN(min) && abs < min) return false
+    if (!Number.isNaN(max) && abs > max) return false
+    return true
+  })
+
   // Calculate earnings
   const ganhoHoje = transacoes
     .filter((t) => {
@@ -170,11 +213,50 @@ export default function EntregadorSaldoPage() {
           <h2 className="text-lg font-semibold text-gray-900">Histórico</h2>
         </div>
 
+        <div className="p-4 border-b grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <select
+            value={tipoFilter}
+            onChange={(e) => setTipoFilter(e.target.value)}
+            className="input"
+          >
+            <option value="all">Todos os tipos</option>
+            <option value="corrida">Corrida</option>
+            <option value="saque">Saque</option>
+            <option value="estorno">Estorno</option>
+            <option value="multa">Multa</option>
+            <option value="taxa">Taxa</option>
+          </select>
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="input"
+          >
+            <option value="all">Todos os per?odos</option>
+            <option value="today">Hoje</option>
+            <option value="7d">?ltimos 7 dias</option>
+            <option value="30d">?ltimos 30 dias</option>
+          </select>
+          <input
+            type="text"
+            value={minValor}
+            onChange={(e) => setMinValor(e.target.value)}
+            placeholder="Valor m?nimo"
+            className="input"
+          />
+          <input
+            type="text"
+            value={maxValor}
+            onChange={(e) => setMaxValor(e.target.value)}
+            placeholder="Valor m?ximo"
+            className="input"
+          />
+        </div>
+
         {loading ? (
           <div className="p-8 flex justify-center">
             <LoadingSpinner size="md" className="" />
           </div>
-        ) : transacoes.length === 0 ? (
+        ) : transacoesFiltradas.length === 0 ? (
           <EmptyState
             icon={<HiOutlineCash className="w-8 h-8 text-gray-400" />}
             title="Nenhuma transação"
@@ -183,7 +265,7 @@ export default function EntregadorSaldoPage() {
           />
         ) : (
           <div className="divide-y">
-            {transacoes.map((transacao) => (
+            {transacoesFiltradas.map((transacao) => (
               <div key={transacao.id} className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
