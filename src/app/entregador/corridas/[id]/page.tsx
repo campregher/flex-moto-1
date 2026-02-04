@@ -137,23 +137,13 @@ export default function CorridaDisponivelDetalhePage() {
     setAccepting(true)
     try {
       const { data, error } = await supabase
-        .from('corridas')
-        .update({
-          entregador_id: entregadorProfile.id,
-          status: 'aceita',
-          aceita_em: new Date().toISOString(),
-        })
-        .eq('id', corridaId)
-        .eq('status', 'aguardando')
-        .is('entregador_id', null)
-        .not('valor_reservado', 'is', null)
-        .select('id, status, valor_reservado')
+        .rpc('aceitar_corrida_entregador', { p_corrida_id: corridaId })
 
       if (error) {
         throw error
       }
 
-      const updated = Array.isArray(data) ? data[0] : null
+      const updated = data as { id: string; status: string; valor_reservado: number | null } | null
       if (!updated) {
         toast.error('Corrida já foi aceita ou não está disponível')
         return

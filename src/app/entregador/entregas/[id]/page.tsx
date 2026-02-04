@@ -168,10 +168,8 @@ export default function EntregaDetalhePage() {
   async function iniciarColeta() {
     setActionLoading(true)
     try {
-      await supabase
-        .from('corridas')
-        .update({ status: 'coletando' })
-        .eq('id', corrida!.id)
+      const { error } = await supabase.rpc('iniciar_coleta_entregador', { p_corrida_id: corrida!.id })
+      if (error) throw error
 
       toast.success('Indo para coleta!')
       if (corridaId) {
