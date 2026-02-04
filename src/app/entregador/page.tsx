@@ -456,8 +456,8 @@ export default function EntregadorDashboard() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Route className="w-4 h-4" />
-                        {Number.isFinite(corrida.distancia_total_km)
-                          ? `${corrida.distancia_total_km.toFixed(1)} km`
+                        {Number.isFinite(corrida.distancia_total_km ?? Number.NaN)
+                          ? `${(corrida.distancia_total_km ?? 0).toFixed(1)} km`
                           : 'KM indisponível'}
                       </span>
                       <span className="flex items-center gap-1">
