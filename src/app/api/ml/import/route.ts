@@ -367,17 +367,16 @@ export async function POST(request: Request) {
     )
   }
 
-  if (pedidoId) {
-    await (supabase as any)
-      .from('mercadolivre_pedidos')
-      .update({
-        imported_at: new Date().toISOString(),
-        corrida_id: corridaRow.id,
-        import_status: 'pendente_entrega',
-        ml_retries: 0,
-      })
-      .eq('id', pedidoId)
-  }
+  await (supabase as any)
+    .from('mercadolivre_pedidos')
+    .update({
+      imported_at: new Date().toISOString(),
+      corrida_id: corridaRow.id,
+      import_status: 'pendente_entrega',
+      ml_retries: 0,
+    })
+    .eq('lojista_id', lojistaId)
+    .eq('ml_order_id', Number(orderId))
 
   return NextResponse.json({ ok: true, corrida_id: corridaRow.id })
 }
