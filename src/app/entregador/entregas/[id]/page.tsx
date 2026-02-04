@@ -17,7 +17,7 @@ import {
   ArrowLeft,
   Check,
   X,
-  Map,
+  Map as MapIcon,
 } from 'lucide-react'
 
 interface Corrida {
@@ -535,7 +535,7 @@ export default function EntregaDetalhePage() {
                     onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
                     className="btn-ghost text-primary-600"
                   >
-                    <Map className="w-5 h-5" />
+                    <MapIcon className="w-5 h-5" />
                   </button>
                 )}
               </div>
@@ -607,7 +607,7 @@ export default function EntregaDetalhePage() {
                       onClick={() => openNavigation(endereco.latitude, endereco.longitude)}
                       className="btn-ghost text-secondary-600"
                     >
-                      <Map className="w-5 h-5" />
+                      <MapIcon className="w-5 h-5" />
                     </button>
                   )}
                 </div>
@@ -637,7 +637,7 @@ export default function EntregaDetalhePage() {
               onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
               className="btn-secondary w-full flex items-center justify-center gap-2 shadow-sm"
             >
-              <Map className="w-5 h-5" />
+              <MapIcon className="w-5 h-5" />
               Abrir GPS
             </button>
             <div className="flex gap-4">
@@ -671,7 +671,7 @@ export default function EntregaDetalhePage() {
               onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
               className="btn-primary w-full flex items-center justify-center gap-2 shadow-sm"
             >
-              <Map className="w-5 h-5" />
+              <MapIcon className="w-5 h-5" />
               Abrir GPS
             </button>
             <div className="flex gap-4">
