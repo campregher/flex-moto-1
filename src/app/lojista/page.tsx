@@ -28,6 +28,8 @@ interface CorridaAtiva {
   entregador: {
     foto_url: string | null
     avaliacao_media: number
+    tipo_veiculo?: string | null
+    placa?: string | null
     user: {
       nome: string
     }
@@ -107,20 +109,22 @@ export default function LojistaDashboard() {
     if (!lojistaProfile.id) return
     const { data: corridas } = await supabase
       .from('corridas')
-      .select(`
-        id,
-        entregador_id,
-        plataforma,
-        status,
-        valor_total,
-        total_pacotes,
-        created_at,
-        entregador:entregadores(
-          foto_url,
-          avaliacao_media,
-          user:users(nome)
-        )
-      `)
+        .select(`
+          id,
+          entregador_id,
+          plataforma,
+          status,
+          valor_total,
+          total_pacotes,
+          created_at,
+          entregador:entregadores(
+            foto_url,
+            avaliacao_media,
+            tipo_veiculo,
+            placa,
+            user:users(nome)
+          )
+        `)
       .eq('lojista_id', lojistaProfile.id)
       .in('status', ['aguardando', 'aceita', 'coletando', 'em_entrega'])
       .order('created_at', { ascending: false })
@@ -131,10 +135,10 @@ export default function LojistaDashboard() {
       const missing = rows.filter((item) => item.entregador_id && !item.entregador)
       if (missing.length > 0) {
         const ids = missing.map((item) => item.entregador_id).filter(Boolean) as string[]
-        const { data: entregadores } = await supabase
-          .from('entregadores')
-          .select('id, foto_url, avaliacao_media, user:users(nome)')
-          .in('id', ids)
+          const { data: entregadores } = await supabase
+            .from('entregadores')
+            .select('id, foto_url, avaliacao_media, tipo_veiculo, placa, user:users(nome)')
+            .in('id', ids)
         const map = new Map((entregadores || []).map((e: any) => [e.id, e]))
         setCorridasAtivas(rows.map((item) => ({
           ...item,
@@ -790,49 +794,67 @@ export default function LojistaDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {corridasAtivas.map((corrida) => (
-              <Link
-                key={corrida.id}
-                href={`/lojista/corridas/${corrida.id}`}
-                className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  {corrida.entregador && corrida.entregador.user ? (
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
-                      {corrida.entregador.user.nome?.charAt(0) || 'E'}
+            <div className="divide-y divide-gray-200">
+              {corridasAtivas.map((corrida) => (
+                <Link
+                  key={corrida.id}
+                  href={`/lojista/corridas/${corrida.id}`}
+                  className="flex items-start justify-between gap-4 p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-start gap-4">
+                    {corrida.entregador && corrida.entregador.user ? (
+                      <Avatar
+                        src={corrida.entregador.foto_url || null}
+                        name={corrida.entregador.user.nome || 'Entregador'}
+                        size="lg"
+                        className=""
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Truck className="w-6 h-6 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${corrida.plataforma === 'ml_flex' ? 'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'}`}>
+                          {corrida.plataforma === 'ml_flex' ? 'ML Flex' : 'Shopee'}
+                        </span>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          corrida.status === 'aguardando' ? 'bg-gray-100 text-gray-800' :
+                          corrida.status === 'aceita' ? 'bg-blue-100 text-blue-800' :
+                          corrida.status === 'coletando' ? 'bg-yellow-100 text-yellow-800' :
+                          corrida.status === 'em_entrega' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {corrida.status}
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 mt-2 truncate">
+                        {corrida.entregador?.user?.nome || 'Entregador não definido'}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mt-1">
+                        <span>
+                          {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''}
+                        </span>
+                        <span>•</span>
+                        <span>{timeAgo(corrida.created_at)}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-2">
+                        <span className="px-2 py-1 rounded-md bg-gray-100">
+                          {corrida.entregador?.tipo_veiculo ? `Moto: ${corrida.entregador.tipo_veiculo}` : 'Moto não informada'}
+                        </span>
+                        <span className="px-2 py-1 rounded-md bg-gray-100 font-mono">
+                          {corrida.entregador?.placa ? `Placa ${corrida.entregador.placa}` : 'Placa não informada'}
+                        </span>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      <Truck className="w-5 h-5 text-gray-400" />
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${corrida.plataforma === 'ml_flex' ? 'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'}`}>
-                        {corrida.plataforma === 'ml_flex' ? 'ML Flex' : 'Shopee'}
-                      </span>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        corrida.status === 'aguardando' ? 'bg-gray-100 text-gray-800' :
-                        corrida.status === 'aceita' ? 'bg-blue-100 text-blue-800' :
-                        corrida.status === 'coletando' ? 'bg-yellow-100 text-yellow-800' :
-                        corrida.status === 'em_entrega' ? 'bg-purple-100 text-purple-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {corrida.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''} • {timeAgo(corrida.created_at)}
-                    </p>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">
-                    {formatCurrency(corrida.valor_total)}
-                  </p>
-                  {corrida.entregador?.avaliacao_media !== undefined && corrida.entregador?.avaliacao_media !== null && (
-                    <div className="flex items-center gap-1 mt-1">
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900">
+                      {formatCurrency(corrida.valor_total)}
+                    </p>
+                    {corrida.entregador?.avaliacao_media !== undefined && corrida.entregador?.avaliacao_media !== null && (
+                      <div className="flex items-center gap-1 mt-1">
                       <span className="text-yellow-400">★</span>
                       <span className="text-sm text-gray-600">{corrida.entregador.avaliacao_media.toFixed(1)}</span>
                     </div>
