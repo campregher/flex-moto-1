@@ -6,12 +6,12 @@ import { useAuthStore } from '@/stores/auth-store'
 import { LoadingSpinner, EmptyState } from '@/components/ui'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import {
-  HiOutlinePlusCircle,
-  HiOutlineMinusCircle,
-  HiOutlineArrowDown,
-  HiOutlineArrowUp,
-  HiOutlineCash,
-} from 'react-icons/hi'
+  PlusCircle,
+  MinusCircle,
+  ArrowDown,
+  ArrowUp,
+  Banknote,
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Transacao {
@@ -175,17 +175,17 @@ export default function SaldoPage() {
   const getTransacaoIcon = (tipo: string) => {
     switch (tipo) {
       case 'deposito':
-        return <HiOutlineArrowDown className="w-5 h-5 text-green-600" />
+        return <ArrowDown className="w-5 h-5 text-green-600" />
       case 'saque':
-        return <HiOutlineArrowUp className="w-5 h-5 text-red-600" />
+        return <ArrowUp className="w-5 h-5 text-red-600" />
       case 'corrida':
-        return <HiOutlineCash className="w-5 h-5 text-blue-600" />
+        return <Banknote className="w-5 h-5 text-blue-600" />
       case 'multa':
-        return <HiOutlineMinusCircle className="w-5 h-5 text-red-600" />
+        return <MinusCircle className="w-5 h-5 text-red-600" />
       case 'estorno':
-        return <HiOutlinePlusCircle className="w-5 h-5 text-green-600" />
+        return <PlusCircle className="w-5 h-5 text-green-600" />
       default:
-        return <HiOutlineCash className="w-5 h-5 text-gray-600" />
+        return <Banknote className="w-5 h-5 text-gray-600" />
     }
   }
 
@@ -213,14 +213,14 @@ export default function SaldoPage() {
             onClick={() => setShowDepositModal(true)}
             className="flex-1 btn bg-white/20 hover:bg-white/30 text-white py-3"
           >
-            <HiOutlinePlusCircle className="w-5 h-5 mr-2" />
+            <PlusCircle className="w-5 h-5 mr-2" />
             Depositar
           </button>
           <button
             onClick={() => setShowWithdrawModal(true)}
             className="flex-1 btn bg-white/20 hover:bg-white/30 text-white py-3"
           >
-            <HiOutlineMinusCircle className="w-5 h-5 mr-2" />
+            <MinusCircle className="w-5 h-5 mr-2" />
             Sacar
           </button>
         </div>
@@ -278,7 +278,7 @@ export default function SaldoPage() {
           </div>
         ) : transacoesFiltradas.length === 0 ? (
           <EmptyState
-            icon={<HiOutlineCash className="w-8 h-8 text-gray-400" />}
+            icon={<Banknote className="w-8 h-8 text-gray-400" />}
             title="Nenhuma transação"
             description="Suas transações aparecerão aqui"
             action={null}

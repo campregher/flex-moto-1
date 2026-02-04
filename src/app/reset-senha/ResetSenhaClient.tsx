@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi'
+import { Lock, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function ResetSenhaClient() {
@@ -91,7 +91,7 @@ export default function ResetSenhaClient() {
               <div>
                 <label className="label">Nova senha</label>
                 <div className="relative">
-                  <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -105,9 +105,9 @@ export default function ResetSenhaClient() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
-                      <HiOutlineEyeOff className="w-5 h-5" />
+                      <EyeOff className="w-5 h-5" />
                     ) : (
-                      <HiOutlineEye className="w-5 h-5" />
+                      <Eye className="w-5 h-5" />
                     )}
                   </button>
                 </div>
@@ -116,7 +116,7 @@ export default function ResetSenhaClient() {
               <div>
                 <label className="label">Confirmar senha</label>
                 <div className="relative">
-                  <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type={showConfirm ? 'text' : 'password'}
                     value={confirmPassword}
@@ -130,9 +130,9 @@ export default function ResetSenhaClient() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showConfirm ? (
-                      <HiOutlineEyeOff className="w-5 h-5" />
+                      <EyeOff className="w-5 h-5" />
                     ) : (
-                      <HiOutlineEye className="w-5 h-5" />
+                      <Eye className="w-5 h-5" />
                     )}
                   </button>
                 </div>

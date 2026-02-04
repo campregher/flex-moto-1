@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Sora } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import AuthRecoveryRedirect from '@/components/AuthRecoveryRedirect'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+const sora = Sora({ subsets: ['latin'], variable: '--font-display' })
 
 export const metadata: Metadata = {
-  title: 'Flex Entregas - Mercado Livre Flex & Shopee',
-  description: 'Plataforma de entregas urbanas com motos para Mercado Livre Flex e Shopee Entrega Direta',
+  title: 'Flex Moto - Entregas Urbanas',
+  description: 'Entregas urbanas com motos para Mercado Livre Flex e Shopee Entrega Direta',
   manifest: '/manifest.json',
   other: {
    'mobile-web-app-capable': 'yes',
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Flex Entregas',
+    title: 'Flex Moto',
   },
 }
 
@@ -25,7 +26,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#2563eb',
+  themeColor: '#0DD9C4',
 }
 
 export default function RootLayout({
@@ -35,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${sora.variable} font-sans`}>
         <AuthRecoveryRedirect />
         {children}
         <Toaster
@@ -43,20 +44,20 @@ export default function RootLayout({
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#333',
-              color: '#fff',
+              background: '#0D0D0D',
+              color: '#F8F5F7',
               borderRadius: '10px',
             },
             success: {
               iconTheme: {
-                primary: '#22c55e',
-                secondary: '#fff',
+                primary: '#0DD9C4',
+                secondary: '#0D0D0D',
               },
             },
             error: {
               iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
+                primary: '#EF4444',
+                secondary: '#0D0D0D',
               },
             },
           }}

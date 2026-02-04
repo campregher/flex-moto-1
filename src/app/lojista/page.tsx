@@ -9,13 +9,13 @@ import { Avatar, Rating, StatusBadge, PlatformBadge, EmptyState, LoadingSpinner 
 import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import { formatCurrency, timeAgo } from '@/lib/utils'
 import {
-  HiOutlinePlusCircle,
-  HiOutlineTruck,
-  HiOutlineCurrencyDollar,
-  HiOutlineClipboardCheck,
-  HiOutlineStar,
-  HiOutlineArrowRight,
-} from 'react-icons/hi'
+  PlusCircle,
+  Truck,
+  DollarSign,
+  ClipboardCheck,
+  Star,
+  ArrowRight,
+} from 'lucide-react'
 
 interface CorridaAtiva {
   id: string
@@ -403,7 +403,7 @@ export default function LojistaDashboard() {
           <p className="text-gray-600">Gerencie suas entregas</p>
         </div>
         <Link href="/lojista/nova-corrida" className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm">
-          <HiOutlinePlusCircle className="w-5 h-5 mr-2" />
+          <PlusCircle className="w-5 h-5 mr-2" />
           Nova Corrida
         </Link>
       </div>
@@ -413,7 +413,7 @@ export default function LojistaDashboard() {
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <HiOutlineCurrencyDollar className="w-5 h-5 text-blue-600" />
+              <DollarSign className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Gasto no mês</p>
@@ -427,7 +427,7 @@ export default function LojistaDashboard() {
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <HiOutlineTruck className="w-5 h-5 text-green-600" />
+              <Truck className="w-5 h-5 text-green-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Corridas Hoje</p>
@@ -439,7 +439,7 @@ export default function LojistaDashboard() {
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <HiOutlineClipboardCheck className="w-5 h-5 text-purple-600" />
+              <ClipboardCheck className="w-5 h-5 text-purple-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total de Corridas</p>
@@ -451,7 +451,7 @@ export default function LojistaDashboard() {
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <HiOutlineStar className="w-5 h-5 text-orange-600" />
+              <Star className="w-5 h-5 text-orange-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Avaliação</p>
@@ -481,7 +481,7 @@ export default function LojistaDashboard() {
           className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex items-center gap-3"
         >
           <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-            <HiOutlineCurrencyDollar className="w-6 h-6 text-green-600" />
+            <DollarSign className="w-6 h-6 text-green-600" />
           </div>
           <div>
             <p className="font-medium text-gray-900">Depositar Saldo</p>
@@ -494,7 +494,7 @@ export default function LojistaDashboard() {
           className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex items-center gap-3"
         >
           <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <HiOutlineClipboardCheck className="w-6 h-6 text-blue-600" />
+            <ClipboardCheck className="w-6 h-6 text-blue-600" />
           </div>
           <div>
             <p className="font-medium text-gray-900">Histórico</p>
@@ -771,7 +771,7 @@ export default function LojistaDashboard() {
           <h2 className="text-lg font-semibold text-gray-900">Corridas Ativas</h2>
           <Link href="/lojista/corridas" className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
             Ver todas
-            <HiOutlineArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -781,11 +781,11 @@ export default function LojistaDashboard() {
           </div>
         ) : corridasAtivas.length === 0 ? (
           <div className="p-8 text-center">
-            <HiOutlineTruck className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+            <Truck className="w-8 h-8 text-gray-400 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhuma corrida ativa</h3>
             <p className="text-gray-600 mb-4">Solicite uma nova corrida para começar</p>
             <Link href="/lojista/nova-corrida" className="inline-flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-semibold rounded-lg shadow-sm">
-              <HiOutlinePlusCircle className="w-5 h-5 mr-2" />
+              <PlusCircle className="w-5 h-5 mr-2" />
               Nova Corrida
             </Link>
           </div>
@@ -804,7 +804,7 @@ export default function LojistaDashboard() {
                     </div>
                   ) : (
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      <HiOutlineTruck className="w-5 h-5 text-gray-400" />
+                      <Truck className="w-5 h-5 text-gray-400" />
                     </div>
                   )}
                   <div>

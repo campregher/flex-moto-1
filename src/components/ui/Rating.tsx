@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { HiStar } from 'react-icons/hi'
+import { Star } from 'lucide-react'
 
 interface RatingProps {
   value: number
@@ -34,7 +34,7 @@ export function Rating({ value, max = 5, size = 'md', showValue = true, onChange
             disabled={!interactive}
             className={`${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
           >
-            <HiStar
+            <Star
               className={`${sizeClass} ${
                 filled ? 'text-yellow-400' : 'text-gray-300'
               }`}

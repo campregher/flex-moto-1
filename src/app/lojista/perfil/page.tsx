@@ -9,14 +9,14 @@ import { formatCPF, formatPhone } from '@/lib/utils'
 import { validateWhatsApp } from '@/lib/utils/validators'
 import toast from 'react-hot-toast'
 import {
-  HiOutlineMail,
-  HiOutlinePhone,
-  HiOutlineIdentification,
-  HiOutlineLocationMarker,
-  HiOutlinePencil,
-  HiOutlinePlus,
-  HiOutlineTrash,
-} from 'react-icons/hi'
+  Mail,
+  Phone,
+  IdCard,
+  MapPin,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 
 type ColetaForm = {
   label: string
@@ -461,7 +461,7 @@ export default function LojistaPerfilPage() {
             onClick={() => setProfileEditing((prev) => !prev)}
             className="btn-ghost text-primary-600"
           >
-            <HiOutlinePencil className="w-5 h-5" />
+            <Pencil className="w-5 h-5" />
           </button>
         </div>
 
@@ -510,7 +510,7 @@ export default function LojistaPerfilPage() {
         )}
 <div className="grid gap-4">
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlineMail className="w-5 h-5 text-gray-400" />
+            <Mail className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Email</p>
               <p className="font-medium text-gray-900">{user?.email || ''}</p>
@@ -518,7 +518,7 @@ export default function LojistaPerfilPage() {
           </div>
 
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlinePhone className="w-5 h-5 text-gray-400" />
+            <Phone className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">WhatsApp</p>
               <p className="font-medium text-gray-900">{formatPhone(user?.whatsapp || '')}</p>
@@ -526,7 +526,7 @@ export default function LojistaPerfilPage() {
           </div>
 
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlineIdentification className="w-5 h-5 text-gray-400" />
+            <IdCard className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">CPF</p>
               <p className="font-medium text-gray-900">{formatCPF(user?.cpf || '')}</p>
@@ -535,7 +535,7 @@ export default function LojistaPerfilPage() {
 
           {lojistaProfile.cnpj && (
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <HiOutlineIdentification className="w-5 h-5 text-gray-400" />
+              <IdCard className="w-5 h-5 text-gray-400" />
               <div>
                 <p className="text-sm text-gray-500">CNPJ</p>
                 <p className="font-medium text-gray-900">{lojistaProfile.cnpj}</p>
@@ -553,7 +553,7 @@ export default function LojistaPerfilPage() {
             onClick={() => setEditing(!editing)}
             className="btn-ghost text-primary-600"
           >
-            <HiOutlinePencil className="w-5 h-5" />
+            <Pencil className="w-5 h-5" />
           </button>
         </div>
 
@@ -599,7 +599,7 @@ export default function LojistaPerfilPage() {
           </div>
         ) : (
           <div className="flex items-start gap-3">
-            <HiOutlineLocationMarker className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+            <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-gray-700">
               {lojistaProfile.endereco_base || 'Nenhum endereço cadastrado'}
             </p>
@@ -726,7 +726,7 @@ export default function LojistaPerfilPage() {
                           })
                         }}
                       >
-                        <HiOutlinePencil className="w-5 h-5" />
+                        <Pencil className="w-5 h-5" />
                       </button>
                       <button
                         type="button"
@@ -734,7 +734,7 @@ export default function LojistaPerfilPage() {
                         onClick={() => handleDeleteColeta(coleta.id)}
                         disabled={coletaSaving}
                       >
-                        <HiOutlineTrash className="w-5 h-5" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -794,7 +794,7 @@ export default function LojistaPerfilPage() {
               disabled={coletaSaving || coletas.length >= 4}
               className="btn-secondary w-full"
             >
-              <HiOutlinePlus className="w-5 h-5 mr-2" />
+              <Plus className="w-5 h-5 mr-2" />
               Adicionar endereço de coleta
             </button>
           </div>

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-store'
 import { EmptyState, LoadingSpinner } from '@/components/ui'
 import { timeAgo } from '@/lib/utils'
-import { HiOutlineBell } from 'react-icons/hi'
+import { Bell } from 'lucide-react'
 
 type Notificacao = {
   id: string
@@ -90,7 +90,7 @@ export default function EntregadorNotificacoesPage() {
         </div>
       ) : notificacoes.length === 0 ? (
         <EmptyState
-          icon={<HiOutlineBell className="w-8 h-8 text-gray-400" />}
+          icon={<Bell className="w-8 h-8 text-gray-400" />}
           title="Nenhuma notificação"
           description="Quando houver novidades, elas aparecerão aqui."
           action={null}

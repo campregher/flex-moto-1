@@ -10,12 +10,12 @@ import { Map } from '@/components/Map'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import {
-  HiOutlineArrowLeft,
-  HiOutlineLocationMarker,
-  HiOutlineCube,
-  HiOutlineClock,
-  HiOutlineCheck,
-} from 'react-icons/hi'
+  ArrowLeft,
+  MapPin,
+  Package,
+  Clock,
+  Check,
+} from 'lucide-react'
 
 interface CorridaDetalhe {
   id: string
@@ -220,7 +220,7 @@ export default function CorridaDisponivelDetalhePage() {
         href="/entregador/corridas"
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
       >
-        <HiOutlineArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-5 h-5" />
         Voltar
       </Link>
 
@@ -238,11 +238,11 @@ export default function CorridaDisponivelDetalhePage() {
             </div>
             <div className="text-right text-sm text-gray-500">
               <div className="flex items-center gap-1 justify-end">
-                <HiOutlineCube className="w-4 h-4" />
+                <Package className="w-4 h-4" />
                 {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''}
               </div>
               <div className="flex items-center gap-1 justify-end mt-1">
-                <HiOutlineClock className="w-4 h-4" />
+                <Clock className="w-4 h-4" />
                 {Number.isFinite(corrida.distancia_total_km)
                   ? `${corrida.distancia_total_km.toFixed(1)} km`
                   : 'Distância indisponível'}
@@ -292,7 +292,7 @@ export default function CorridaDisponivelDetalhePage() {
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <HiOutlineLocationMarker className="w-4 h-4 text-primary-600" />
+                <MapPin className="w-4 h-4 text-primary-600" />
               </div>
               <div>
                 <p className="text-sm text-primary-600 font-medium">Coleta</p>
@@ -321,7 +321,7 @@ export default function CorridaDisponivelDetalhePage() {
           disabled={accepting || !entregadorProfile.online}
           className="btn-secondary w-full py-3 flex items-center justify-center gap-2"
         >
-          <HiOutlineCheck className="w-5 h-5" />
+          <Check className="w-5 h-5" />
           {accepting ? 'Aceitando...' : 'Aceitar Corrida'}
         </button>
       </div>

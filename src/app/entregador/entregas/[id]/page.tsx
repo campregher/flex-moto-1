@@ -11,14 +11,14 @@ import { Map } from '@/components/Map'
 import { formatCurrency, formatDate, calculateRouteDistance } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import {
-  HiOutlineLocationMarker,
-  HiOutlinePhone,
-  HiOutlineCube,
-  HiOutlineArrowLeft,
-  HiOutlineCheck,
-  HiOutlineX,
-  HiOutlineMap,
-} from 'react-icons/hi'
+  MapPin,
+  Phone,
+  Package,
+  ArrowLeft,
+  Check,
+  X,
+  Map,
+} from 'lucide-react'
 
 interface Corrida {
   id: string
@@ -420,7 +420,7 @@ export default function EntregaDetalhePage() {
         href="/entregador"
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
       >
-        <HiOutlineArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-5 h-5" />
         Voltar
       </Link>
 
@@ -499,7 +499,7 @@ export default function EntregaDetalhePage() {
               rel="noopener noreferrer"
               className="btn-outline flex items-center gap-2"
             >
-              <HiOutlinePhone className="w-5 h-5" />
+              <Phone className="w-5 h-5" />
             </a>
           </div>
         </div>
@@ -514,7 +514,7 @@ export default function EntregaDetalhePage() {
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <HiOutlineLocationMarker className="w-4 h-4 text-primary-600" />
+                    <MapPin className="w-4 h-4 text-primary-600" />
                   </div>
                   <div>
                     <p className="text-sm text-primary-600 font-medium">Coleta</p>
@@ -535,7 +535,7 @@ export default function EntregaDetalhePage() {
                     onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
                     className="btn-ghost text-primary-600"
                   >
-                    <HiOutlineMap className="w-5 h-5" />
+                    <Map className="w-5 h-5" />
                   </button>
                 )}
               </div>
@@ -562,7 +562,7 @@ export default function EntregaDetalhePage() {
                       endereco.status === 'entregue' ? 'bg-green-100' : 'bg-gray-200'
                     }`}>
                       {endereco.status === 'entregue' ? (
-                        <HiOutlineCheck className="w-4 h-4 text-green-600" />
+                        <Check className="w-4 h-4 text-green-600" />
                       ) : (
                         <span className="text-sm font-medium text-gray-600">{index + 1}</span>
                       )}
@@ -607,7 +607,7 @@ export default function EntregaDetalhePage() {
                       onClick={() => openNavigation(endereco.latitude, endereco.longitude)}
                       className="btn-ghost text-secondary-600"
                     >
-                      <HiOutlineMap className="w-5 h-5" />
+                      <Map className="w-5 h-5" />
                     </button>
                   )}
                 </div>
@@ -637,7 +637,7 @@ export default function EntregaDetalhePage() {
               onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
               className="btn-secondary w-full flex items-center justify-center gap-2 shadow-sm"
             >
-              <HiOutlineMap className="w-5 h-5" />
+              <Map className="w-5 h-5" />
               Abrir GPS
             </button>
             <div className="flex gap-4">
@@ -671,7 +671,7 @@ export default function EntregaDetalhePage() {
               onClick={() => openNavigation(corrida.coleta_latitude, corrida.coleta_longitude)}
               className="btn-primary w-full flex items-center justify-center gap-2 shadow-sm"
             >
-              <HiOutlineMap className="w-5 h-5" />
+              <Map className="w-5 h-5" />
               Abrir GPS
             </button>
             <div className="flex gap-4">

@@ -13,14 +13,14 @@ import { loadGoogleMaps } from '@/lib/google-maps'
 import { calculateDeliveryPrice } from '@/lib/utils/pricing'
 import toast from 'react-hot-toast'
 import {
-  HiOutlineLocationMarker,
-  HiOutlinePhone,
-  HiOutlineCube,
-  HiOutlineClock,
-  HiOutlineArrowLeft,
-  HiOutlineCheck,
-  HiOutlineX,
-} from 'react-icons/hi'
+  MapPin,
+  Phone,
+  Package,
+  Clock,
+  ArrowLeft,
+  Check,
+  X,
+} from 'lucide-react'
 
 interface Corrida {
   id: string
@@ -564,7 +564,7 @@ export default function CorridaDetalhePage() {
         href="/lojista/corridas"
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
       >
-        <HiOutlineArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-5 h-5" />
         Voltar
       </Link>
 
@@ -615,11 +615,11 @@ export default function CorridaDetalhePage() {
 
           <div className="flex items-center gap-4 text-sm text-gray-500">
             <span className="flex items-center gap-1">
-              <HiOutlineCube className="w-4 h-4" />
+              <Package className="w-4 h-4" />
               {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''}
             </span>
             <span className="flex items-center gap-1">
-              <HiOutlineClock className="w-4 h-4" />
+              <Clock className="w-4 h-4" />
               {formatDate(corrida.created_at)}
             </span>
           </div>
@@ -671,7 +671,7 @@ export default function CorridaDetalhePage() {
                 rel="noopener noreferrer"
                 className="btn-outline flex items-center gap-2"
               >
-                <HiOutlinePhone className="w-5 h-5" />
+                <Phone className="w-5 h-5" />
                 WhatsApp
               </a>
             </div>
@@ -700,7 +700,7 @@ export default function CorridaDetalhePage() {
             {/* Pickup */}
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <HiOutlineLocationMarker className="w-4 h-4 text-primary-600" />
+                <MapPin className="w-4 h-4 text-primary-600" />
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-500">Coleta</p>
@@ -771,7 +771,7 @@ export default function CorridaDetalhePage() {
                   endereco.status === 'entregue' ? 'bg-green-100' : 'bg-gray-100'
                 }`}>
                   {endereco.status === 'entregue' ? (
-                    <HiOutlineCheck className="w-4 h-4 text-green-600" />
+                    <Check className="w-4 h-4 text-green-600" />
                   ) : (
                     <span className="text-sm font-medium text-gray-600">{index + 1}</span>
                   )}
@@ -929,7 +929,7 @@ export default function CorridaDetalhePage() {
                 onClick={cancelarCorrida}
                 className="btn-danger w-full py-3"
               >
-                <HiOutlineX className="w-5 h-5 mr-2" />
+                <X className="w-5 h-5 mr-2" />
                 Cancelar Corrida
               </button>
             )}

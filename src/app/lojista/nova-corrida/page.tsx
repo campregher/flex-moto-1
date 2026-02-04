@@ -11,11 +11,11 @@ import { generateCode, formatCurrency } from '@/lib/utils'
 import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import { loadGoogleMaps } from '@/lib/google-maps'
 import {
-  HiOutlineLocationMarker,
-  HiOutlinePlus,
-  HiOutlineTrash,
-  HiOutlineInformationCircle,
-} from 'react-icons/hi'
+  MapPin,
+  Plus,
+  Trash2,
+  Info,
+} from 'lucide-react'
 
 interface EnderecoForm {
   endereco: string
@@ -622,7 +622,7 @@ export default function NovaCorridaPage() {
 
             <div className="card p-6 space-y-5">
               <div className="flex items-center gap-2">
-                <HiOutlineLocationMarker className="w-5 h-5 text-primary-600" />
+                <MapPin className="w-5 h-5 text-primary-600" />
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Endereco de coleta</h2>
                   <p className="text-sm text-gray-600">
@@ -764,7 +764,7 @@ export default function NovaCorridaPage() {
                           className="text-red-600 hover:text-red-700 p-1"
                           aria-label={`Remover entrega ${index + 1}`}
                         >
-                          <HiOutlineTrash className="w-5 h-5" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       )}
                     </div>
@@ -847,7 +847,7 @@ export default function NovaCorridaPage() {
                 ))}
 
                 <button type="button" onClick={addEndereco} className="btn-outline w-full">
-                  <HiOutlinePlus className="w-5 h-5 mr-2" />
+                  <Plus className="w-5 h-5 mr-2" />
                   Adicionar endereco
                 </button>
               </div>
@@ -901,7 +901,7 @@ export default function NovaCorridaPage() {
 
               {!saldoSuficiente && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 flex items-start gap-2">
-                  <HiOutlineInformationCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Saldo insuficiente</p>
                     <p className="text-sm">Deposite mais creditos para continuar.</p>

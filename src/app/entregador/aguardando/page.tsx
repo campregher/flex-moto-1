@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { HiOutlineClock, HiOutlineDocumentText, HiOutlinePhone } from 'react-icons/hi'
+import { Clock, FileText, Phone } from 'lucide-react'
 
 export default function AguardandoAprovacaoPage() {
   return (
@@ -9,7 +9,7 @@ export default function AguardandoAprovacaoPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <HiOutlineClock className="w-10 h-10 text-white" />
+            <Clock className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">
             Cadastro em Análise
@@ -22,7 +22,7 @@ export default function AguardandoAprovacaoPage() {
         <div className="card p-6 space-y-6">
           <div className="space-y-4">
             <div className="flex items-start gap-4 p-4 bg-yellow-50 rounded-xl">
-              <HiOutlineDocumentText className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+              <FileText className="w-6 h-6 text-yellow-600 flex-shrink-0" />
               <div>
                 <h3 className="font-medium text-gray-900">Verificação de Documentos</h3>
                 <p className="text-sm text-gray-600">
@@ -60,7 +60,7 @@ export default function AguardandoAprovacaoPage() {
               rel="noopener noreferrer"
               className="btn-outline w-full flex items-center justify-center gap-2"
             >
-              <HiOutlinePhone className="w-5 h-5" />
+              <Phone className="w-5 h-5" />
               Falar com Suporte
             </a>
           </div>

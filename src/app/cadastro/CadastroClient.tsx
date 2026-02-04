@@ -7,7 +7,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { HiOutlineUser, HiOutlineMail, HiOutlinePhone, HiOutlineLockClosed, HiOutlineIdentification, HiOutlinePhotograph, HiOutlineLocationMarker } from 'react-icons/hi'
+import { User, Mail, Phone, Lock, IdCard, Image, MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { AddressAutocomplete, type AddressDetails } from '@/components/AddressAutocomplete'
 import { validateCPF, validateCNPJ, validateWhatsApp, validatePlaca } from '@/lib/utils/validators'
@@ -284,7 +284,7 @@ export default function CadastroClient() {
                 <div>
                   <label className="label">Nome Completo</label>
                   <div className="relative">
-                    <HiOutlineUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="text"
                       {...register('nome')}
@@ -300,7 +300,7 @@ export default function CadastroClient() {
                 <div>
                   <label className="label">CPF</label>
                   <div className="relative">
-                    <HiOutlineIdentification className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="text"
                       {...register('cpf')}
@@ -317,7 +317,7 @@ export default function CadastroClient() {
                 <div>
                   <label className="label">Email</label>
                   <div className="relative">
-                    <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="email"
                       {...register('email')}
@@ -333,7 +333,7 @@ export default function CadastroClient() {
                 <div>
                   <label className="label">WhatsApp</label>
                   <div className="relative">
-                    <HiOutlinePhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="tel"
                       {...register('whatsapp')}
@@ -350,7 +350,7 @@ export default function CadastroClient() {
                 <div>
                   <label className="label">Senha</label>
                   <div className="relative">
-                    <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="password"
                       {...register('password')}
@@ -366,7 +366,7 @@ export default function CadastroClient() {
                 <div>
                   <label className="label">Confirmar Senha</label>
                   <div className="relative">
-                    <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="password"
                       {...register('confirmPassword')}
@@ -397,7 +397,7 @@ export default function CadastroClient() {
                     <div>
                       <label className="label">CNPJ (opcional)</label>
                       <div className="relative">
-                        <HiOutlineIdentification className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="text"
                           {...register('cnpj')}
@@ -414,7 +414,7 @@ export default function CadastroClient() {
                     <div>
                       <label className="label">Endereço Base (opcional)</label>
                       <div className="relative">
-                        <HiOutlineLocationMarker className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+                        <MapPin className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                         <Controller
                           control={control}
                           name="endereco_base"
@@ -502,7 +502,7 @@ export default function CadastroClient() {
                           htmlFor="foto-rosto"
                           className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary-500 transition-colors"
                         >
-                          <HiOutlinePhotograph className="w-5 h-5 text-gray-400" />
+                          <Image className="w-5 h-5 text-gray-400" />
                           <span className="text-gray-600">
                             {fotoRosto ? fotoRosto.name : 'Selecionar foto'}
                           </span>
@@ -524,7 +524,7 @@ export default function CadastroClient() {
                           htmlFor="foto-cnh"
                           className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary-500 transition-colors"
                         >
-                          <HiOutlinePhotograph className="w-5 h-5 text-gray-400" />
+                          <Image className="w-5 h-5 text-gray-400" />
                           <span className="text-gray-600">
                             {fotoCNH ? fotoCNH.name : 'Selecionar foto'}
                           </span>

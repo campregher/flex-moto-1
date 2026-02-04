@@ -8,10 +8,10 @@ import { Avatar, StatusBadge, PlatformBadge, EmptyState, LoadingSpinner } from '
 import { formatCurrency, formatDate } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import {
-  HiOutlineTruck,
-  HiOutlineCube,
-  HiOutlineFilter,
-} from 'react-icons/hi'
+  Truck,
+  Package,
+  Filter,
+} from 'lucide-react'
 
 interface Corrida {
   id: string
@@ -161,7 +161,7 @@ export default function CorridasPage() {
 
       {/* Filters */}
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
-        <HiOutlineFilter className="w-5 h-5 text-gray-400 flex-shrink-0" />
+        <Filter className="w-5 h-5 text-gray-400 flex-shrink-0" />
         {statusFilters.map((sf) => (
           <button
             key={sf.value}
@@ -220,7 +220,7 @@ export default function CorridasPage() {
       ) : corridas.length === 0 ? (
         <div className="card p-8">
           <EmptyState
-            icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
+            icon={<Truck className="w-8 h-8 text-gray-400" />}
             title="Nenhuma corrida encontrada"
             description={filter === 'all' ? 'Suas corridas aparecerão aqui' : 'Não há corridas com esse filtro'}
             action={null}
@@ -264,7 +264,7 @@ export default function CorridasPage() {
                 </div>
                 <div className="text-right text-sm text-gray-500">
                   <div className="flex items-center gap-1">
-                    <HiOutlineCube className="w-4 h-4" />
+                    <Package className="w-4 h-4" />
                     {corrida.total_pacotes}
                   </div>
                   <p>{formatDate(corrida.finalizada_em || corrida.created_at)}</p>

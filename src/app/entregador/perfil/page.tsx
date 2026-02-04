@@ -4,12 +4,12 @@ import { useAuthStore } from '@/stores/auth-store'
 import { Avatar, Rating, StatusBadge } from '@/components/ui'
 import { formatCPF, formatPhone, formatCurrency } from '@/lib/utils'
 import {
-  HiOutlineMail,
-  HiOutlinePhone,
-  HiOutlineIdentification,
-  HiOutlineLocationMarker,
-  HiOutlineTruck,
-} from 'react-icons/hi'
+  Mail,
+  Phone,
+  IdCard,
+  MapPin,
+  Truck,
+} from 'lucide-react'
 
 export default function EntregadorPerfilPage() {
   const { user, profile } = useAuthStore()
@@ -51,7 +51,7 @@ export default function EntregadorPerfilPage() {
 
         <div className="grid gap-4">
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlineMail className="w-5 h-5 text-gray-400" />
+            <Mail className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Email</p>
               <p className="font-medium text-gray-900">{user?.email || ''}</p>
@@ -59,7 +59,7 @@ export default function EntregadorPerfilPage() {
           </div>
 
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlinePhone className="w-5 h-5 text-gray-400" />
+            <Phone className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">WhatsApp</p>
               <p className="font-medium text-gray-900">{formatPhone(user?.whatsapp || '')}</p>
@@ -67,7 +67,7 @@ export default function EntregadorPerfilPage() {
           </div>
 
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlineIdentification className="w-5 h-5 text-gray-400" />
+            <IdCard className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">CPF</p>
               <p className="font-medium text-gray-900">{formatCPF(user?.cpf || '')}</p>
@@ -81,7 +81,7 @@ export default function EntregadorPerfilPage() {
         <h3 className="font-semibold text-gray-900 mb-4">Veículo</h3>
         <div className="grid gap-4">
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlineTruck className="w-5 h-5 text-gray-400" />
+            <Truck className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Tipo</p>
               <p className="font-medium text-gray-900 capitalize">{entregadorProfile?.tipo_veiculo}</p>
@@ -99,7 +99,7 @@ export default function EntregadorPerfilPage() {
           </div>
 
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <HiOutlineLocationMarker className="w-5 h-5 text-gray-400" />
+            <MapPin className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Cidade</p>
               <p className="font-medium text-gray-900">

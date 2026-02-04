@@ -9,23 +9,23 @@ import { useLocationStore } from '@/stores/location-store'
 import { Avatar, LoadingPage } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils'
 import {
-  HiOutlineHome,
-  HiOutlineLocationMarker,
-  HiOutlineClipboardList,
-  HiOutlineCurrencyDollar,
-  HiOutlineUser,
-  HiOutlineLogout,
-  HiOutlineBell,
-  HiOutlineMenu,
-  HiOutlineX,
-} from 'react-icons/hi'
+  Home,
+  MapPin,
+  ClipboardList,
+  DollarSign,
+  User,
+  LogOut,
+  Bell,
+  Menu,
+  X,
+} from 'lucide-react'
 
 const navigation = [
-  { name: 'Início', href: '/entregador', icon: HiOutlineHome },
-  { name: 'Corridas Disponíveis', href: '/entregador/corridas', icon: HiOutlineLocationMarker },
-  { name: 'Minhas Entregas', href: '/entregador/entregas', icon: HiOutlineClipboardList },
-  { name: 'Saldo', href: '/entregador/saldo', icon: HiOutlineCurrencyDollar },
-  { name: 'Perfil', href: '/entregador/perfil', icon: HiOutlineUser },
+  { name: 'Início', href: '/entregador', icon: Home },
+  { name: 'Corridas Disponíveis', href: '/entregador/corridas', icon: MapPin },
+  { name: 'Minhas Entregas', href: '/entregador/entregas', icon: ClipboardList },
+  { name: 'Saldo', href: '/entregador/saldo', icon: DollarSign },
+  { name: 'Perfil', href: '/entregador/perfil', icon: User },
 ]
 
 export default function EntregadorLayoutClient({ children }: { children: React.ReactNode }) {
@@ -126,24 +126,24 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
   const entregadorProfile = (profile as any) || {}
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Mobile menu */}
       <div className={`fixed inset-0 z-50 lg:hidden ${mobileMenuOpen ? '' : 'pointer-events-none'}`}>
         <div
-          className={`fixed inset-0 bg-gray-900/50 transition-opacity ${
+          className={`fixed inset-0 bg-black/60 transition-opacity ${
             mobileMenuOpen ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={() => setMobileMenuOpen(false)}
         />
         <div
-          className={`fixed inset-y-0 left-0 w-72 bg-white shadow-xl transition-transform ${
+          className={`fixed inset-y-0 left-0 w-72 bg-[#0D0D0D] text-white shadow-xl transition-transform ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex items-center justify-between p-4 border-b">
-            <span className="text-xl font-bold text-secondary-600">Flex Entregas</span>
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <span className="text-xl font-bold text-white font-display">Flex Moto</span>
             <button onClick={() => setMobileMenuOpen(false)}>
-              <HiOutlineX className="w-6 h-6" />
+              <X className="w-6 h-6" />
             </button>
           </div>
           <nav className="p-4 space-y-1">
@@ -154,8 +154,8 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   pathname === item.href
-                    ? 'bg-secondary-50 text-secondary-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/70 hover:bg-white/10'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -164,9 +164,9 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
             ))}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-300 hover:bg-white/10 w-full"
             >
-              <HiOutlineLogout className="w-5 h-5" />
+              <LogOut className="w-5 h-5" />
               Sair
             </button>
           </nav>
@@ -175,22 +175,22 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-white border-r">
-          <div className="flex items-center h-16 px-6 border-b">
-            <span className="text-xl font-bold text-secondary-600">Flex Entregas</span>
+        <div className="flex flex-col flex-grow bg-[#0D0D0D] text-white border-r border-white/10">
+          <div className="flex items-center h-16 px-6 border-b border-white/10">
+            <span className="text-xl font-bold text-white font-display">Flex Moto</span>
           </div>
           
-          <div className="p-4 border-b">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
               <div className="relative">
                 <Avatar src={entregadorProfile?.foto_url || null} name={user?.nome || ''} size="lg" className="" />
                 {entregadorProfile?.online && (
-                  <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full pulse-online"></span>
+                  <span className="absolute bottom-0 right-0 w-4 h-4 bg-[#0DD9C4] border-2 border-[#0D0D0D] rounded-full pulse-online"></span>
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-medium text-gray-900 truncate">{user?.nome || ''}</p>
-                <p className="text-sm text-secondary-600 font-semibold">
+                <p className="font-medium text-white truncate">{user?.nome || ''}</p>
+                <p className="text-sm text-[#0DD9C4] font-semibold">
                   {formatCurrency(entregadorProfile?.saldo || 0)}
                 </p>
               </div>
@@ -204,8 +204,8 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   pathname === item.href
-                    ? 'bg-secondary-50 text-secondary-700 font-medium'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-white/10 text-white font-medium'
+                    : 'text-white/70 hover:bg-white/10'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -214,12 +214,12 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
             ))}
           </nav>
 
-          <div className="p-4 border-t">
+          <div className="p-4 border-t border-white/10">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-300 hover:bg-white/10 w-full"
             >
-              <HiOutlineLogout className="w-5 h-5" />
+              <LogOut className="w-5 h-5" />
               Sair
             </button>
           </div>
@@ -229,24 +229,24 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
       {/* Main content */}
       <div className="lg:pl-72">
         {/* Top bar */}
-        <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-4 bg-white border-b lg:px-8">
+        <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-4 bg-white/80 backdrop-blur border-b border-gray-200/70 lg:px-8">
           <button
             onClick={() => setMobileMenuOpen(true)}
             className="lg:hidden"
           >
-            <HiOutlineMenu className="w-6 h-6" />
+            <Menu className="w-6 h-6" />
           </button>
           
           <div className="flex-1 lg:hidden text-center">
-            <span className="text-lg font-bold text-secondary-600">Flex</span>
+            <span className="text-lg font-bold text-[#0D0D0D] font-display">Flex Moto</span>
           </div>
 
           <div className="flex items-center gap-4">
             <Link
               href="/entregador/notificacoes"
-              className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
             >
-              <HiOutlineBell className="w-6 h-6" />
+              <Bell className="w-6 h-6" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </Link>
             <div className="lg:hidden">

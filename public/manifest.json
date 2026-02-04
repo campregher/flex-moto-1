@@ -1,11 +1,11 @@
 {
-  "name": "Flex Entregas",
-  "short_name": "Flex",
-  "description": "Plataforma de entregas urbanas - Mercado Livre Flex e Shopee",
+  "name": "Flex Moto",
+  "short_name": "Flex Moto",
+  "description": "Entregas urbanas com motos - Mercado Livre Flex e Shopee",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#D9C5D2",
+  "theme_color": "#0DD9C4",
   "icons": [
     {
       "src": "/icon-192.png",

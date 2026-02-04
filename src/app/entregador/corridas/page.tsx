@@ -9,11 +9,11 @@ import { formatCurrency, timeAgo } from '@/lib/utils'
 import { PRICING } from '@/lib/utils/pricing'
 import toast from 'react-hot-toast'
 import {
-  HiOutlineLocationMarker,
-  HiOutlineTruck,
-  HiOutlineCube,
-  HiOutlineClock,
-} from 'react-icons/hi'
+  MapPin,
+  Truck,
+  Package,
+  Clock,
+} from 'lucide-react'
 
 interface CorridaDisponivel {
   id: string
@@ -149,7 +149,7 @@ export default function CorridasDisponiveisPage() {
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Corridas Disponíveis</h1>
         <div className="card p-8">
           <EmptyState
-            icon={<HiOutlineLocationMarker className="w-8 h-8 text-gray-400" />}
+            icon={<MapPin className="w-8 h-8 text-gray-400" />}
             title="Você está offline"
             description="Fique online para ver e aceitar corridas disponíveis"
             action={
@@ -179,7 +179,7 @@ export default function CorridasDisponiveisPage() {
       ) : corridas.length === 0 ? (
         <div className="card p-8">
           <EmptyState
-            icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
+            icon={<Truck className="w-8 h-8 text-gray-400" />}
             title="Nenhuma corrida disponível"
             description="Novas corridas aparecerão aqui automaticamente"
             action={null}
@@ -211,22 +211,22 @@ export default function CorridasDisponiveisPage() {
 
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <HiOutlineLocationMarker className="w-5 h-5 text-gray-400" />
+                  <MapPin className="w-5 h-5 text-gray-400" />
                   <span className="text-sm truncate">{corrida.endereco_coleta}</span>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <span className="flex items-center gap-1">
-                    <HiOutlineCube className="w-4 h-4" />
+                    <Package className="w-4 h-4" />
                     {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''}
                   </span>
                   <span className="flex items-center gap-1">
-                    <HiOutlineTruck className="w-4 h-4" />
+                    <Truck className="w-4 h-4" />
                     {Number.isFinite(corrida.distancia_total_km)
                       ? `${corrida.distancia_total_km.toFixed(1)} km`
                       : 'Distância indisponível'}
                   </span>
                   <span className="flex items-center gap-1">
-                    <HiOutlineClock className="w-4 h-4" />
+                    <Clock className="w-4 h-4" />
                     {timeAgo(corrida.created_at)}
                   </span>
                 </div>

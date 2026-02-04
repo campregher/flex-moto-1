@@ -7,10 +7,10 @@ import { useAuthStore } from '@/stores/auth-store'
 import { Avatar, StatusBadge, PlatformBadge, EmptyState, LoadingSpinner } from '@/components/ui'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import {
-  HiOutlineTruck,
-  HiOutlineCube,
-  HiOutlineFilter,
-} from 'react-icons/hi'
+  Truck,
+  Package,
+  Filter,
+} from 'lucide-react'
 
 interface Entrega {
   id: string
@@ -127,7 +127,7 @@ export default function EntregasPage() {
 
       {/* Filters */}
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
-        <HiOutlineFilter className="w-5 h-5 text-gray-400 flex-shrink-0" />
+        <Filter className="w-5 h-5 text-gray-400 flex-shrink-0" />
         {statusFilters.map((sf) => (
           <button
             key={sf.value}
@@ -186,7 +186,7 @@ export default function EntregasPage() {
       ) : entregas.length === 0 ? (
         <div className="card p-8">
           <EmptyState
-            icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
+            icon={<Truck className="w-8 h-8 text-gray-400" />}
             title="Nenhuma entrega encontrada"
             description={filter === 'all' ? 'Suas entregas aparecerão aqui' : 'Não há entregas com esse filtro'}
             action={null}
@@ -228,7 +228,7 @@ export default function EntregasPage() {
                 </div>
                 <div className="text-right text-sm text-gray-500">
                   <div className="flex items-center gap-1">
-                    <HiOutlineCube className="w-4 h-4" />
+                    <Package className="w-4 h-4" />
                     {entrega.total_pacotes}
                   </div>
                   <p>{formatDate(entrega.finalizada_em || entrega.created_at)}</p>

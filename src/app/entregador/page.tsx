@@ -9,13 +9,13 @@ import { Avatar, Rating, StatusBadge, PlatformBadge, EmptyState, LoadingSpinner 
 import { formatCurrency, timeAgo } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import {
-  HiOutlineLocationMarker,
-  HiOutlineTruck,
-  HiOutlineCurrencyDollar,
-  HiOutlineClipboardCheck,
-  HiOutlineStar,
-  HiOutlineArrowRight,
-} from 'react-icons/hi'
+  MapPin,
+  Truck,
+  DollarSign,
+  ClipboardCheck,
+  Star,
+  ArrowRight,
+} from 'lucide-react'
 
 interface CorridaAtiva {
   id: string
@@ -299,7 +299,7 @@ export default function EntregadorDashboard() {
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-secondary-100 rounded-lg flex items-center justify-center">
-              <HiOutlineCurrencyDollar className="w-5 h-5 text-secondary-600" />
+              <DollarSign className="w-5 h-5 text-secondary-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Saldo</p>
@@ -313,7 +313,7 @@ export default function EntregadorDashboard() {
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <HiOutlineTruck className="w-5 h-5 text-blue-600" />
+              <Truck className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Entregas Hoje</p>
@@ -325,7 +325,7 @@ export default function EntregadorDashboard() {
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <HiOutlineClipboardCheck className="w-5 h-5 text-purple-600" />
+              <ClipboardCheck className="w-5 h-5 text-purple-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Entregas</p>
@@ -337,7 +337,7 @@ export default function EntregadorDashboard() {
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <HiOutlineStar className="w-5 h-5 text-orange-600" />
+              <Star className="w-5 h-5 text-orange-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Avaliação</p>
@@ -401,7 +401,7 @@ export default function EntregadorDashboard() {
           <h2 className="text-lg font-semibold text-gray-900">Corridas Disponíveis</h2>
           <Link href="/entregador/corridas" className="text-secondary-600 hover:text-secondary-700 text-sm font-medium flex items-center gap-1">
             Ver todas
-            <HiOutlineArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -411,14 +411,14 @@ export default function EntregadorDashboard() {
           </div>
         ) : !entregadorProfile.online ? (
           <EmptyState
-            icon={<HiOutlineLocationMarker className="w-8 h-8 text-gray-400" />}
+            icon={<MapPin className="w-8 h-8 text-gray-400" />}
             title="Você está offline"
             description="Fique online para ver corridas disponíveis"
             action={null}
           />
         ) : corridasDisponiveis.length === 0 ? (
           <EmptyState
-            icon={<HiOutlineTruck className="w-8 h-8 text-gray-400" />}
+            icon={<Truck className="w-8 h-8 text-gray-400" />}
             title="Nenhuma corrida disponível"
             description="Novas corridas aparecerão aqui"
             action={null}
