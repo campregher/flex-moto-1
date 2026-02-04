@@ -190,13 +190,11 @@ export default function EntregaDetalhePage() {
 
     setActionLoading(true)
     try {
-      await supabase
-        .from('corridas')
-        .update({
-          status: 'em_entrega',
-          coletada_em: new Date().toISOString(),
-        })
-        .eq('id', corrida!.id)
+      const { error } = await supabase.rpc('confirmar_coleta_entregador', {
+        p_corrida_id: corrida!.id,
+        p_codigo: codeInput.toUpperCase(),
+      })
+      if (error) throw error
 
       toast.success('Coleta confirmada!')
       setShowCodeInput(null)
@@ -219,15 +217,13 @@ export default function EntregaDetalhePage() {
 
     setActionLoading(true)
     try {
-      await supabase
-        .from('enderecos_entrega')
-        .update({
-          status: 'entregue',
-          entregue_em: new Date().toISOString(),
-        })
-        .eq('id', enderecoId)
+      const { error } = await supabase.rpc('confirmar_entrega_entregador', {
+        p_corrida_id: corrida!.id,
+        p_endereco_id: enderecoId,
+        p_codigo: codeInput.toUpperCase(),
+      })
+      if (error) throw error
 
-      // Check if all deliveries are complete
       const { data: remaining } = await supabase
         .from('enderecos_entrega')
         .select('id')
@@ -235,51 +231,6 @@ export default function EntregaDetalhePage() {
         .eq('status', 'pendente')
 
       if (!remaining || remaining.length === 0) {
-        // All deliveries complete - finalize corrida
-        await supabase
-          .from('corridas')
-          .update({
-            status: 'finalizada',
-            finalizada_em: new Date().toISOString(),
-            valor_reservado: null,
-          })
-          .eq('id', corrida!.id)
-
-        // Credit entregador (valor_total - taxa)
-        const valorEntregador = Math.max(0, corrida!.valor_total - TRANSACTION_FEE)
-        const novoSaldo = (entregadorProfile.saldo || 0) + valorEntregador
-        await supabase
-          .from('entregadores')
-          .update({
-            saldo: novoSaldo,
-            total_entregas: (entregadorProfile.total_entregas || 0) + 1,
-          })
-          .eq('id', entregadorProfile.id)
-
-        await supabase.from('financeiro').insert({
-          user_id: user!.id,
-          tipo: 'corrida',
-          valor: valorEntregador,
-          saldo_anterior: entregadorProfile.saldo || 0,
-          saldo_posterior: novoSaldo,
-          descricao: `Corrida #${corrida!.id.slice(0, 8)} finalizada`,
-          corrida_id: corrida!.id,
-        })
-
-        // Admin fee
-        if (ADMIN_USER_ID) {
-          await supabase.from('financeiro').insert({
-            user_id: ADMIN_USER_ID,
-            tipo: 'multa',
-            valor: TRANSACTION_FEE,
-            saldo_anterior: 0,
-            saldo_posterior: 0,
-            descricao: `Taxa transacional corrida #${corrida!.id.slice(0, 8)}`,
-            corrida_id: corrida!.id,
-          })
-        }
-
-        setProfile({ ...entregadorProfile, saldo: novoSaldo })
         toast.success('Corrida finalizada!')
         setShowRating(true)
       } else {

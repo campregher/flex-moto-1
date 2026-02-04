@@ -71,6 +71,7 @@ export default function CadastroClient() {
     handleSubmit,
     watch,
     setValue,
+    trigger,
     control,
     formState: { errors },
   } = useForm<CadastroForm>({
@@ -238,6 +239,10 @@ export default function CadastroClient() {
     }
   }
 
+  const onInvalid = () => {
+    toast.error('Revise os campos obrigatórios antes de continuar')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 py-12 px-4">
       <div className="max-w-lg mx-auto">
@@ -275,7 +280,7 @@ export default function CadastroClient() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5" noValidate>
             <input type="hidden" {...register('tipo')} />
 
             {/* Step 1: Dados básicos */}
@@ -381,7 +386,21 @@ export default function CadastroClient() {
 
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={async () => {
+                    const step1Valid = await trigger([
+                      'nome',
+                      'cpf',
+                      'email',
+                      'whatsapp',
+                      'password',
+                      'confirmPassword',
+                    ])
+                    if (!step1Valid) {
+                      toast.error('Preencha corretamente os campos para continuar')
+                      return
+                    }
+                    setStep(2)
+                  }}
                   className="btn-primary w-full py-3"
                 >
                   Continuar
