@@ -94,7 +94,7 @@ export async function POST(request: Request) {
 
   const { data: lojista } = await supabase
     .from('lojistas')
-    .select('id, saldo, endereco_base, endereco_latitude, endereco_longitude, endereco_logradouro, endereco_numero, endereco_bairro, endereco_cidade, endereco_uf, endereco_cep')
+    .select('id, user_id, saldo, endereco_base, endereco_latitude, endereco_longitude, endereco_logradouro, endereco_numero, endereco_bairro, endereco_cidade, endereco_uf, endereco_cep')
     .eq('user_id', user.id)
     .single()
 
@@ -254,7 +254,7 @@ export async function POST(request: Request) {
     plataforma: 'ml_flex',
     status: 'aguardando',
     valor_total: valorTotal,
-    valor_reservado: null,
+    valor_reservado: valorTotal,
     codigo_entrega: generateCode(6),
     total_pacotes: totalPacotes,
     distancia_total_km: distanciaTotalKm,
@@ -286,6 +286,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create corrida', details: corridaError }, { status: 500 })
   }
 
+  const novoSaldo = saldoDisponivel - valorTotal
+  const { error: saldoError } = await (supabase as any)
+    .from('lojistas')
+    .update({ saldo: novoSaldo })
+    .eq('id', lojistaId)
+
+  if (saldoError) {
+    await (supabase as any).from('corridas').delete().eq('id', corridaRow.id)
+    return NextResponse.json({ error: 'Failed to reserve saldo', details: saldoError }, { status: 500 })
+  }
+
+  const { error: financeiroError } = await (supabase as any)
+    .from('financeiro')
+    .insert({
+      user_id: lojistaData.user_id,
+      tipo: 'corrida',
+      valor: -valorTotal,
+      saldo_anterior: saldoDisponivel,
+      saldo_posterior: novoSaldo,
+      descricao: `Reserva corrida #${corridaRow.id.slice(0, 8)}`,
+      corrida_id: corridaRow.id,
+    })
+
+  if (financeiroError) {
+    await (supabase as any).from('lojistas').update({ saldo: saldoDisponivel }).eq('id', lojistaId)
+    await (supabase as any).from('corridas').delete().eq('id', corridaRow.id)
+    return NextResponse.json({ error: 'Failed to reserve saldo', details: financeiroError }, { status: 500 })
+  }
+
   const enderecoPayload = {
     corrida_id: corridaRow.id,
     endereco: enderecoEntregaCompleto || enderecoEntrega || '',
@@ -313,6 +342,17 @@ export async function POST(request: Request) {
     .insert(enderecoPayload)
 
   if (enderecosError) {
+    await (supabase as any).from('lojistas').update({ saldo: saldoDisponivel }).eq('id', lojistaId)
+    await (supabase as any).from('financeiro').insert({
+      user_id: lojistaData.user_id,
+      tipo: 'estorno',
+      valor: valorTotal,
+      saldo_anterior: novoSaldo,
+      saldo_posterior: saldoDisponivel,
+      descricao: `Estorno reserva corrida #${corridaRow.id.slice(0, 8)}`,
+      corrida_id: corridaRow.id,
+    })
+    await (supabase as any).from('corridas').delete().eq('id', corridaRow.id)
     return NextResponse.json(
       {
         error: 'Failed to create endereco',
@@ -325,6 +365,18 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     )
+  }
+
+  if (pedidoId) {
+    await (supabase as any)
+      .from('mercadolivre_pedidos')
+      .update({
+        imported_at: new Date().toISOString(),
+        corrida_id: corridaRow.id,
+        import_status: 'pendente_entrega',
+        ml_retries: 0,
+      })
+      .eq('id', pedidoId)
   }
 
   return NextResponse.json({ ok: true, corrida_id: corridaRow.id })

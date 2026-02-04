@@ -84,6 +84,34 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
     }
   }, [router, setUser, setProfile, supabase, startTracking, stopTracking])
 
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    async function subscribeProfile() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      channel = supabase
+        .channel(`entregador-profile-${session.user.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'entregadores', filter: `user_id=eq.${session.user.id}` },
+          (payload: any) => {
+            if (payload.new) {
+              setProfile(payload.new)
+            }
+          }
+        )
+        .subscribe()
+    }
+
+    subscribeProfile()
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [setProfile, supabase])
+
   const handleLogout = async () => {
     stopTracking()
     await supabase.auth.signOut()

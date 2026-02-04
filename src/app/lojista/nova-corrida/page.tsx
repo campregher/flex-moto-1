@@ -65,7 +65,7 @@ interface CorridaForm {
 
 export default function NovaCorridaPage() {
   const router = useRouter()
-  const { user, profile } = useAuthStore()
+  const { user, profile, setProfile } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [distanciaRota, setDistanciaRota] = useState(0)
   const [calculandoRota, setCalculandoRota] = useState(false)
@@ -491,21 +491,24 @@ export default function NovaCorridaPage() {
     }
 
     setIsLoading(true)
-    try {
-      const codigoEntrega = generateCode(6)
+      try {
+        const codigoEntrega = generateCode(6)
+        const saldoAtual = lojistaProfile.saldo || 0
+        let corridaId: string | null = null
+        let saldoAtualizado = false
 
-      // Create corrida
-      const { data: corrida, error: corridaError } = await supabase
-        .from('corridas')
-        .insert({
-          lojista_id: lojistaProfile.id,
-          plataforma: data.plataforma,
-          valor_total: valorTotal,
-            valor_reservado: null,
-          codigo_entrega: codigoEntrega,
-          total_pacotes: totalPacotes,
-          distancia_total_km: distanciaRota,
-          frete_valor: valorTotal,
+        // Create corrida
+        const { data: corrida, error: corridaError } = await supabase
+          .from('corridas')
+          .insert({
+            lojista_id: lojistaProfile.id,
+            plataforma: data.plataforma,
+            valor_total: valorTotal,
+            valor_reservado: valorTotal,
+            codigo_entrega: codigoEntrega,
+            total_pacotes: totalPacotes,
+            distancia_total_km: distanciaRota,
+            frete_valor: valorTotal,
           endereco_coleta: data.endereco_coleta,
           coleta_latitude: data.coleta_latitude || -23.55,
           coleta_longitude: data.coleta_longitude || -46.63,
@@ -523,6 +526,7 @@ export default function NovaCorridaPage() {
         .single()
 
       if (corridaError) throw corridaError
+      corridaId = corrida.id
 
       // Create delivery addresses
       const enderecosData = enderecos.map((e, index) => ({
@@ -549,10 +553,53 @@ export default function NovaCorridaPage() {
 
       if (enderecosError) throw enderecosError
 
-        toast.success('Corrida criada com sucesso!')
+      const novoSaldo = saldoAtual - valorTotal
+      const { error: saldoError } = await supabase
+        .from('lojistas')
+        .update({ saldo: novoSaldo })
+        .eq('id', lojistaProfile.id)
+
+      if (saldoError) throw saldoError
+      saldoAtualizado = true
+
+      if (user?.id) {
+        const { error: financeiroError } = await supabase
+          .from('financeiro')
+          .insert({
+            user_id: user.id,
+            tipo: 'corrida',
+            valor: -valorTotal,
+            saldo_anterior: saldoAtual,
+            saldo_posterior: novoSaldo,
+            descricao: `Reserva corrida #${corrida.id.slice(0, 8)}`,
+            corrida_id: corrida.id,
+          })
+        if (financeiroError) throw financeiroError
+      }
+
+      setProfile({ ...lojistaProfile, saldo: novoSaldo })
+      toast.success('Corrida criada com sucesso!')
       router.push(`/lojista/corridas/${corrida.id}`)
     } catch (err) {
       console.error(err)
+      if (corridaId) {
+        if (saldoAtualizado) {
+          await supabase.from('lojistas').update({ saldo: lojistaProfile.saldo || 0 }).eq('id', lojistaProfile.id)
+          if (user?.id) {
+            await supabase.from('financeiro').insert({
+              user_id: user.id,
+              tipo: 'estorno',
+              valor: valorTotal,
+              saldo_anterior: (lojistaProfile.saldo || 0) - valorTotal,
+              saldo_posterior: lojistaProfile.saldo || 0,
+              descricao: `Estorno corrida #${corridaId.slice(0, 8)}`,
+              corrida_id: corridaId,
+            })
+          }
+        }
+        await supabase.from('enderecos_entrega').delete().eq('corrida_id', corridaId)
+        await supabase.from('corridas').delete().eq('id', corridaId)
+      }
       toast.error('Erro ao criar corrida')
     } finally {
       setIsLoading(false)

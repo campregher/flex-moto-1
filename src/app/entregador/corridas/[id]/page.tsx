@@ -1,4 +1,4 @@
-Ôªø'use client'
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -107,7 +107,7 @@ export default function CorridaDisponivelDetalhePage() {
     if (data) {
       if (statusRef.current && statusRef.current !== data.status) {
         if (data.status !== 'aguardando') {
-          toast('Essa corrida n√£o est√° mais dispon√≠vel.', { icon: '‚ö†Ô∏è' })
+          toast('Essa corrida n„o est· mais disponÌvel.', { icon: '??' })
         }
       }
       statusRef.current = data.status
@@ -119,7 +119,7 @@ export default function CorridaDisponivelDetalhePage() {
   async function aceitarCorrida() {
     if (!corridaId) return
     if (!entregadorProfile.online) {
-      toast.error('Voc√™ precisa estar online para aceitar corridas')
+      toast.error('VocÍ precisa estar online para aceitar corridas')
       return
     }
 
@@ -133,28 +133,12 @@ export default function CorridaDisponivelDetalhePage() {
 
       const corridaAtual = corridaRow as { id: string; lojista_id: string; valor_total: number; valor_reservado: number | null; status: string } | null
       if (!corridaAtual || corridaAtual.status !== 'aguardando') {
-        toast.error('Corrida j√° foi aceita ou n√£o est√° dispon√≠vel')
+        toast.error('Corrida j· foi aceita ou n„o est· disponÌvel')
         return
       }
 
-      const { data: lojistaRow } = await supabase
-        .from('lojistas')
-        .select('id, saldo, user_id')
-        .eq('id', corridaAtual.lojista_id)
-        .single()
-
-      const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
-      if (!lojista) {
-        toast.error('Lojista n√£o encontrado para esta corrida')
-        return
-      }
-      const saldoAtual = lojista.saldo ?? 0
-      if (saldoAtual < corridaAtual.valor_total) {
-        toast.error('Lojista sem saldo suficiente para reservar a corrida')
-        return
-      }
-      if (!lojista?.user_id) {
-        toast.error('N√£o foi poss√≠vel identificar o usu√°rio do lojista')
+      if (corridaAtual.valor_reservado === null) {
+        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
         return
       }
 
@@ -164,7 +148,6 @@ export default function CorridaDisponivelDetalhePage() {
           entregador_id: entregadorProfile.id,
           status: 'aceita',
           aceita_em: new Date().toISOString(),
-          valor_reservado: corridaAtual.valor_total,
         })
         .eq('id', corridaId)
         .eq('status', 'aguardando')
@@ -177,24 +160,6 @@ export default function CorridaDisponivelDetalhePage() {
         }
         return
       }
-
-      const novoSaldo = saldoAtual - corridaAtual.valor_total
-      await supabase
-        .from('lojistas')
-        .update({ saldo: novoSaldo })
-        .eq('id', corridaAtual.lojista_id)
-
-      await supabase
-        .from('financeiro')
-        .insert({
-          user_id: lojista.user_id,
-          tipo: 'corrida',
-          valor: -corridaAtual.valor_total,
-          saldo_anterior: saldoAtual,
-          saldo_posterior: novoSaldo,
-          descricao: `Reserva corrida #${corridaAtual.id.slice(0, 8)}`,
-          corrida_id: corridaAtual.id,
-        })
 
       toast.success('Corrida aceita!')
       router.push(`/entregador/entregas/${corridaId}`)
@@ -216,7 +181,7 @@ export default function CorridaDisponivelDetalhePage() {
   if (!corrida) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Corrida n√£o encontrada</p>
+        <p className="text-gray-500">Corrida n„o encontrada</p>
         <Link href="/entregador/corridas" className="btn-secondary mt-4">
           Voltar
         </Link>
@@ -227,7 +192,7 @@ export default function CorridaDisponivelDetalhePage() {
   if (corrida.status !== 'aguardando') {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Essa corrida n√£o est√° mais dispon√≠vel.</p>
+        <p className="text-gray-500">Essa corrida n„o est· mais disponÌvel.</p>
         <Link href="/entregador/corridas" className="btn-secondary mt-4">
           Ver outras corridas
         </Link>
@@ -278,7 +243,9 @@ export default function CorridaDisponivelDetalhePage() {
               </div>
               <div className="flex items-center gap-1 justify-end mt-1">
                 <HiOutlineClock className="w-4 h-4" />
-                {corrida.distancia_total_km.toFixed(1)} km
+                {Number.isFinite(corrida.distancia_total_km)
+                  ? `${corrida.distancia_total_km.toFixed(1)} km`
+                  : 'Dist‚ncia indisponÌvel'}
               </div>
             </div>
           </div>
@@ -321,7 +288,7 @@ export default function CorridaDisponivelDetalhePage() {
         )}
 
         <div className="card p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Endere√ßos</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">EndereÁos</h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
@@ -340,7 +307,7 @@ export default function CorridaDisponivelDetalhePage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    Entrega {i + 1} ‚Ä¢ {e.pacotes} pacote{e.pacotes > 1 ? 's' : ''}
+                    Entrega {i + 1} ï {e.pacotes} pacote{e.pacotes > 1 ? 's' : ''}
                   </p>
                   <p className="text-gray-900">{e.endereco}</p>
                 </div>
@@ -361,4 +328,5 @@ export default function CorridaDisponivelDetalhePage() {
     </div>
   )
 }
+
 

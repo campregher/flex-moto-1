@@ -94,6 +94,7 @@ export default function CorridaDetalhePage() {
   const [showRating, setShowRating] = useState(false)
   const [rating, setRating] = useState(5)
   const [comentario, setComentario] = useState('')
+  const [mlInfo, setMlInfo] = useState<{ ml_order_id: number; import_status: string | null; ml_retries: number | null } | null>(null)
   const suppressReloadRef = useRef(false)
   const statusRef = useRef<string | null>(null)
   const supabase = createClient()
@@ -166,6 +167,17 @@ export default function CorridaDetalhePage() {
       }
       statusRef.current = data.status
       setCorrida(data as any)
+
+      if (data.plataforma === 'ml_flex') {
+        const { data: pedidoData } = await supabase
+          .from('mercadolivre_pedidos')
+          .select('ml_order_id, import_status, ml_retries')
+          .eq('corrida_id', data.id)
+          .maybeSingle()
+        setMlInfo(pedidoData as any || null)
+      } else {
+        setMlInfo(null)
+      }
       
       // Show rating modal if corrida just finished
       if (data.status === 'finalizada' && data.entregador && user?.id) {
@@ -225,6 +237,38 @@ export default function CorridaDetalhePage() {
           valor_reservado: null,
         })
         .eq('id', corrida.id)
+
+      if (corrida.plataforma === 'ml_flex') {
+        const { data: pedidoRow } = await supabase
+          .from('mercadolivre_pedidos')
+          .select('id, ml_retries')
+          .eq('corrida_id', corrida.id)
+          .maybeSingle()
+
+        const retries = (pedidoRow as { id: string; ml_retries: number | null } | null)?.ml_retries ?? 0
+
+        if (pedidoRow?.id) {
+          if (retries < 3) {
+            await supabase
+              .from('mercadolivre_pedidos')
+              .update({
+                imported_at: null,
+                selected: false,
+                corrida_id: null,
+                import_status: 'sincronizado',
+                ml_retries: retries + 1,
+              })
+              .eq('id', pedidoRow.id)
+          } else {
+            await supabase
+              .from('mercadolivre_pedidos')
+              .update({
+                import_status: 'cancelado_final',
+              })
+              .eq('id', pedidoRow.id)
+          }
+        }
+      }
 
       toast.success('Corrida cancelada')
       router.push('/lojista/corridas')
@@ -526,6 +570,17 @@ export default function CorridaDetalhePage() {
               <div className="flex items-center gap-2 mb-2">
                 <PlatformBadge platform={corrida.plataforma} size="md" />
                 <StatusBadge status={corrida.status} size="md" />
+                {mlInfo && (
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                    {mlInfo.import_status === 'pendente_entrega'
+                      ? 'Pedido ML pendente'
+                      : mlInfo.import_status === 'sincronizado'
+                        ? 'Pedido ML reaberto'
+                        : mlInfo.import_status === 'cancelado_final'
+                          ? 'Pedido ML cancelado'
+                          : 'Pedido ML importado'}
+                  </span>
+                )}
               </div>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(corrida.valor_total)}

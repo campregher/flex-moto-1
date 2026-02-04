@@ -110,24 +110,8 @@ export default function CorridasDisponiveisPage() {
         return
       }
 
-      const { data: lojistaRow } = await supabase
-        .from('lojistas')
-        .select('id, saldo, user_id')
-        .eq('id', corrida.lojista_id)
-        .single()
-
-      const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
-      if (!lojista) {
-        toast.error('Lojista não encontrado para esta corrida')
-        return
-      }
-      const saldoAtual = lojista.saldo ?? 0
-      if (saldoAtual < corrida.valor_total) {
-        toast.error('Lojista sem saldo suficiente para reservar a corrida')
-        return
-      }
-      if (!lojista?.user_id) {
-        toast.error('Não foi possível identificar o usuário do lojista')
+      if (corrida.valor_reservado === null) {
+        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
         return
       }
 
@@ -137,7 +121,6 @@ export default function CorridasDisponiveisPage() {
           entregador_id: entregadorProfile.id,
           status: 'aceita',
           aceita_em: new Date().toISOString(),
-          valor_reservado: corrida.valor_total,
         })
         .eq('id', corridaId)
         .eq('status', 'aguardando') // Ensure still available
@@ -150,24 +133,6 @@ export default function CorridasDisponiveisPage() {
         }
         return
       }
-
-      const novoSaldo = saldoAtual - corrida.valor_total
-      await supabase
-        .from('lojistas')
-        .update({ saldo: novoSaldo })
-        .eq('id', corrida.lojista_id)
-
-      await supabase
-        .from('financeiro')
-        .insert({
-          user_id: lojista.user_id,
-          tipo: 'corrida',
-          valor: -corrida.valor_total,
-          saldo_anterior: saldoAtual,
-          saldo_posterior: novoSaldo,
-          descricao: `Reserva corrida #${corrida.id.slice(0, 8)}`,
-          corrida_id: corrida.id,
-        })
 
       toast.success('Corrida aceita!')
       loadCorridas()
@@ -256,7 +221,9 @@ export default function CorridasDisponiveisPage() {
                   </span>
                   <span className="flex items-center gap-1">
                     <HiOutlineTruck className="w-4 h-4" />
-                    {corrida.distancia_total_km.toFixed(1)} km
+                    {Number.isFinite(corrida.distancia_total_km)
+                      ? `${corrida.distancia_total_km.toFixed(1)} km`
+                      : 'Distância indisponível'}
                   </span>
                   <span className="flex items-center gap-1">
                     <HiOutlineClock className="w-4 h-4" />

@@ -342,7 +342,9 @@ export default function EntregadorDashboard() {
             <div>
               <p className="text-sm text-gray-600">Avaliação</p>
               <p className="text-lg font-bold text-gray-900">
-                {entregadorProfile.avaliacao_media.toFixed(1) || '5.0'}
+                {Number.isFinite(entregadorProfile.avaliacao_media)
+                  ? entregadorProfile.avaliacao_media.toFixed(1)
+                  : '5.0'}
               </p>
             </div>
           </div>

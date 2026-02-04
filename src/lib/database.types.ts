@@ -548,6 +548,8 @@ export type Database = {
           id: string
           lojista_id: string
           corrida_id: string | null
+          import_status: string | null
+          ml_retries: number | null
           ml_order_id: number
           ml_shipment_id: number | null
           order_status: string | null
@@ -580,6 +582,8 @@ export type Database = {
           id: string
           lojista_id: string
           corrida_id: string | null
+          import_status: string | null
+          ml_retries: number | null
           ml_order_id: number
           ml_shipment_id: number | null
           order_status: string | null
@@ -612,6 +616,8 @@ export type Database = {
           id: string
           lojista_id: string
           corrida_id: string | null
+          import_status: string | null
+          ml_retries: number | null
           ml_order_id: number
           ml_shipment_id: number | null
           order_status: string | null
