@@ -95,7 +95,7 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
     return <LoadingPage />
   }
 
-  const entregadorProfile = profile as any
+  const entregadorProfile = (profile as any) || {}
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -156,14 +156,14 @@ export default function EntregadorLayoutClient({ children }: { children: React.R
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
               <div className="relative">
                 <Avatar src={entregadorProfile?.foto_url || null} name={user?.nome || ''} size="lg" className="" />
-                {entregadorProfile.online && (
+                {entregadorProfile?.online && (
                   <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full pulse-online"></span>
                 )}
               </div>
               <div className="min-w-0">
                 <p className="font-medium text-gray-900 truncate">{user?.nome || ''}</p>
                 <p className="text-sm text-secondary-600 font-semibold">
-                  {formatCurrency(entregadorProfile.saldo || 0)}
+                  {formatCurrency(entregadorProfile?.saldo || 0)}
                 </p>
               </div>
             </div>
