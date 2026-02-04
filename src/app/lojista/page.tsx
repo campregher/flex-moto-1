@@ -15,6 +15,11 @@ import {
   ClipboardCheck,
   Star,
   ArrowRight,
+  MapPin,
+  Package,
+  Clock,
+  Pencil,
+  BadgeCheck,
 } from 'lucide-react'
 
 interface CorridaAtiva {
@@ -45,10 +50,11 @@ interface ColetaOption {
   longitude: number | null
 }
 
-interface MlPedido {
-  id: string
-  ml_order_id: number
-  ml_shipment_id: number | null
+  interface MlPedido {
+    id: string
+    created_at: string
+    ml_order_id: number
+    ml_shipment_id: number | null
   order_status: string | null
   shipping_status: string | null
   buyer_name: string | null
@@ -557,54 +563,83 @@ export default function LojistaDashboard() {
                 const freteEstimado = Number(pedido.frete_estimado)
                 const canSelect = Number.isFinite(distanciaKm) && Number.isFinite(freteEstimado)
                 return (
-                <div key={pedido.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(pedido.selected)}
-                          onChange={(e) => toggleSelect(pedido.id, e.target.checked)}
-                          disabled={!canSelect}
-                        />
-                        Pedido #{pedido.ml_order_id}
-                        {pedido.shipping_status && (
-                          <span className="text-xs text-gray-500">({pedido.shipping_status})</span>
-                        )}
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => startEdit(pedido)}
-                        className="text-sm text-blue-600 hover:text-blue-700"
-                      >
-                        Editar
-                      </button>
-                    </div>
-
-                    <div className="text-sm text-gray-600">
-                      Entrega: {formatMlAddress(pedido)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {canSelect ? (
-                        <>
-                          {distanciaKm.toFixed(1)} km · {formatCurrency(freteEstimado)}
-                        </>
-                      ) : (
-                        'Frete indisponível: faltam coordenadas'
-                      )}
-                    </div>
-                    {(pedido.logradouro ||
-                      pedido.numero ||
-                      pedido.bairro ||
-                      pedido.cidade ||
-                      pedido.uf ||
-                      pedido.cep) && (
-                      <div className="text-xs text-gray-500">
-                        {[pedido.logradouro, pedido.numero, pedido.bairro, pedido.cidade, pedido.uf, pedido.cep]
-                          .filter(Boolean)
-                          .join(' - ')}
+                  <div
+                    key={pedido.id}
+                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <label className="flex items-start gap-3 text-sm font-medium text-gray-900">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(pedido.selected)}
+                            onChange={(e) => toggleSelect(pedido.id, e.target.checked)}
+                            disabled={!canSelect}
+                            className="mt-1"
+                          />
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-semibold">Pedido #{pedido.ml_order_id}</span>
+                              {pedido.shipping_status && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                                  <BadgeCheck className="h-3.5 w-3.5" />
+                                  {pedido.shipping_status}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {pedido.receiver_name || 'Destinatário não informado'}
+                            </p>
+                          </div>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(pedido)}
+                          className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Editar
+                        </button>
                       </div>
-                    )}
+
+                      <div className="flex items-start gap-2 text-sm text-gray-700">
+                        <MapPin className="h-4 w-4 text-primary-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium">Entrega:</span> {formatMlAddress(pedido)}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1">
+                          <Package className="h-3.5 w-3.5" />
+                          {pedido.pacotes} pacote{pedido.pacotes > 1 ? 's' : ''}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {timeAgo(pedido.created_at)}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1">
+                          <Truck className="h-3.5 w-3.5" />
+                          {canSelect ? `${distanciaKm.toFixed(1)} km` : 'KM indisponível'}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary-50 text-secondary-700 px-2 py-1">
+                          <DollarSign className="h-3.5 w-3.5" />
+                          {canSelect ? formatCurrency(freteEstimado) : 'Frete indisponível'}
+                        </span>
+                      </div>
+
+                      {(pedido.logradouro ||
+                        pedido.numero ||
+                        pedido.bairro ||
+                        pedido.cidade ||
+                        pedido.uf ||
+                        pedido.cep) && (
+                        <div className="text-xs text-gray-500">
+                          {[pedido.logradouro, pedido.numero, pedido.bairro, pedido.cidade, pedido.uf, pedido.cep]
+                            .filter(Boolean)
+                            .join(' - ')}
+                        </div>
+                      )}
 
                     {editingPedidoId === pedido.id && editPedido && (
                       <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
