@@ -1,6 +1,7 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -41,6 +42,7 @@ export default function CorridasDisponiveisPage() {
   const [corridas, setCorridas] = useState<CorridaDisponivel[]>([])
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState<string | null>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const supabase = createClient()
 
   const entregadorProfile = profile as any
@@ -49,28 +51,36 @@ export default function CorridasDisponiveisPage() {
     loadCorridas()
 
     // Real-time subscription
-    const channel = supabase
-      .channel('corridas-list')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'corridas' },
-        (payload: any) => {
-          const next = (payload as any)?.new
-          // Se uma corrida sair de "aguardando", remove imediatamente da lista
-          if (next?.id && next?.status && next.status !== 'aguardando') {
-            setCorridas((prev) => prev.filter((c) => c.id !== next.id))
-            return
+      const channel = supabase
+        .channel('corridas-list')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'corridas' },
+          (payload: any) => {
+            const next = (payload as any)?.new
+            // Se uma corrida sair de "aguardando", remove imediatamente da lista
+            if (next?.id && next?.status && next.status !== 'aguardando') {
+              setCorridas((prev) => prev.filter((c) => c.id !== next.id))
+              return
+            }
+            // Para inserções ou updates relevantes, recarrega
+            loadCorridas()
           }
-          // Para inserções ou updates relevantes, recarrega
-          loadCorridas()
-        }
-      )
-      .subscribe()
+        )
+        .on('broadcast', { event: 'corrida-aceita' }, (payload: any) => {
+          const id = payload?.payload?.id
+          if (id) {
+            setCorridas((prev) => prev.filter((c) => c.id !== id))
+          }
+        })
+        .subscribe()
+      channelRef.current = channel
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
+      return () => {
+        supabase.removeChannel(channel)
+        channelRef.current = null
+      }
+    }, [])
 
   async function loadCorridas() {
     const { data } = await supabase
@@ -89,11 +99,11 @@ export default function CorridasDisponiveisPage() {
     setLoading(false)
   }
 
-  async function aceitarCorrida(corridaId: string) {
-    if (!entregadorProfile.online) {
-      toast.error('Você precisa estar online para aceitar corridas')
-      return
-    }
+    async function aceitarCorrida(corridaId: string) {
+      if (!entregadorProfile.online) {
+        toast.error('Você precisa estar online para aceitar corridas')
+        return
+      }
 
     // Check active corridas limit
     const { count } = await supabase
@@ -107,16 +117,18 @@ export default function CorridasDisponiveisPage() {
       return
     }
 
-    setAccepting(corridaId)
-    try {
-      console.log('[aceitarCorrida] start', { corridaId, entregadorId: entregadorProfile.id })
-      const { data, error } = await supabase
-        .rpc('aceitar_corrida_entregador', { p_corrida_id: corridaId })
+      setAccepting(corridaId)
+      // Otimista: remove imediatamente da lista local
+      setCorridas((prev) => prev.filter((c) => c.id !== corridaId))
+      try {
+        console.log('[aceitarCorrida] start', { corridaId, entregadorId: entregadorProfile.id })
+        const { data, error } = await supabase
+          .rpc('aceitar_corrida_entregador', { p_corrida_id: corridaId })
 
-      if (error) {
-        console.error('[aceitarCorrida] update error', error)
-        throw error
-      }
+        if (error) {
+          console.error('[aceitarCorrida] update error', error)
+          throw error
+        }
 
       const updated = data as { id: string; status: string; valor_reservado: number | null } | null
       if (!updated) {
@@ -129,16 +141,23 @@ export default function CorridasDisponiveisPage() {
         return
       }
 
-      console.log('[aceitarCorrida] update success', updated)
-      toast.success('Corrida aceita!')
-      setCorridas((prev) => prev.filter((c) => c.id !== corridaId))
-      router.push(`/entregador/entregas/${corridaId}`)
-    } catch (err) {
-      toast.error('Erro ao aceitar corrida')
-    } finally {
-      setAccepting(null)
+        console.log('[aceitarCorrida] update success', updated)
+        toast.success('Corrida aceita!')
+        // Broadcast imediato para outros entregadores
+        channelRef.current?.send({
+          type: 'broadcast',
+          event: 'corrida-aceita',
+          payload: { id: corridaId },
+        })
+        router.push(`/entregador/entregas/${corridaId}`)
+      } catch (err) {
+        // Recarrega para reverter remoção otimista em caso de erro
+        loadCorridas()
+        toast.error('Erro ao aceitar corrida')
+      } finally {
+        setAccepting(null)
+      }
     }
-  }
 
   async function toggleOnline() {
     if (!entregadorProfile?.id) return
