@@ -150,8 +150,7 @@ export default function CorridaDisponivelDetalhePage() {
       }
 
       if (updated.valor_reservado === null) {
-        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
-        return
+        toast('Reserva de saldo ainda não confirmada. Você pode prosseguir.', { icon: 'ℹ️' })
       }
 
       const broadcastChannel = supabase.channel('corridas-rt')

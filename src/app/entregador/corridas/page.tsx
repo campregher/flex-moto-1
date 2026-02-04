@@ -193,8 +193,7 @@ export default function CorridasDisponiveisPage() {
       }
 
       if (updated.valor_reservado === null) {
-        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
-        return
+        toast('Reserva de saldo ainda não confirmada. Você pode prosseguir.', { icon: 'ℹ️' })
       }
 
         console.log('[aceitarCorrida] update success', updated)
