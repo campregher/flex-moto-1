@@ -76,12 +76,9 @@ export default function EntregadorDashboard() {
 
           if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
             toast('Nova corrida disponível!', { icon: '🚀' })
-            const created = payload.new
-            if (created?.id) {
-              setCorridasDisponiveis((prev) => {
-                if (prev.some((c) => c.id === created.id)) return prev
-                return [created as any, ...prev].slice(0, 5)
-              })
+            const createdId = payload.new?.id
+            if (createdId) {
+              loadCorridaDisponivelById(createdId)
             }
           }
 
@@ -205,6 +202,24 @@ export default function EntregadorDashboard() {
 
     if (data) {
       setCorridasDisponiveis(data as any)
+    }
+  }
+
+  async function loadCorridaDisponivelById(corridaId: string) {
+    const { data } = await supabase
+      .from('corridas')
+      .select(`
+        id, plataforma, status, valor_total, total_pacotes, distancia_total_km, endereco_coleta, created_at,
+        lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
+      `)
+      .eq('id', corridaId)
+      .single()
+
+    if (data) {
+      setCorridasDisponiveis((prev) => {
+        if (prev.some((c) => c.id === data.id)) return prev
+        return [data as any, ...prev].slice(0, 5)
+      })
     }
   }
 

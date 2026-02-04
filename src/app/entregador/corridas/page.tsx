@@ -71,6 +71,14 @@ export default function CorridasDisponiveisPage() {
               return
             }
 
+            if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
+              const createdId = payload.new?.id
+              if (createdId) {
+                loadCorridaById(createdId)
+              }
+              return
+            }
+
             if (payload.eventType === 'UPDATE') {
               // Saiu de aguardando (aceita/cancelada)
               if (oldStatus === 'aguardando' && newStatus !== 'aguardando') {
@@ -136,6 +144,25 @@ export default function CorridasDisponiveisPage() {
       setCorridas(data as any)
     }
     setLoading(false)
+  }
+
+  async function loadCorridaById(corridaId: string) {
+    const { data } = await supabase
+      .from('corridas')
+      .select(`
+        id, plataforma, valor_total, total_pacotes, distancia_total_km, 
+        endereco_coleta, created_at,
+        lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
+      `)
+      .eq('id', corridaId)
+      .single()
+
+    if (data) {
+      setCorridas((prev) => {
+        if (prev.some((c) => c.id === data.id)) return prev
+        return [data as any, ...prev]
+      })
+    }
   }
 
     async function aceitarCorrida(corridaId: string) {
