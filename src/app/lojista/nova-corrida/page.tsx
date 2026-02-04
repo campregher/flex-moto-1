@@ -491,11 +491,11 @@ export default function NovaCorridaPage() {
     }
 
     setIsLoading(true)
-      try {
-        const codigoEntrega = generateCode(6)
-        const saldoAtual = lojistaProfile.saldo || 0
-        let corridaId: string | null = null
-        let saldoAtualizado = false
+    let corridaId: string | null = null
+    let saldoAtualizado = false
+    try {
+      const codigoEntrega = generateCode(6)
+      const saldoAtual = lojistaProfile.saldo || 0
 
         // Create corrida
         const { data: corrida, error: corridaError } = await supabase
