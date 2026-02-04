@@ -57,22 +57,8 @@ export default function CorridasDisponiveisPage() {
           'postgres_changes',
           { event: '*', schema: 'public', table: 'corridas' },
           (payload: any) => {
-            console.log('[RT corridas]', payload.eventType, payload.new?.id, payload.new?.status, payload.old?.status)
-            
-
             const newStatus = payload.new?.status
             const oldStatus = payload.old?.status
-
-            if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
-              const created = payload.new
-              if (created?.id) {
-                setCorridas((prev) => {
-                  if (prev.some((c) => c.id === created.id)) return prev
-                  return [created as any, ...prev]
-                })
-              }
-              return
-            }
 
             if (payload.eventType === 'INSERT' && newStatus === 'aguardando') {
               const createdId = payload.new?.id
@@ -123,9 +109,7 @@ export default function CorridasDisponiveisPage() {
             setCorridas((prev) => prev.filter((c) => c.id !== id))
           }
         })
-        .subscribe((status: any) => {
-          console.log('[RT corridas] subscribe status', status)
-        })
+        .subscribe()
       channelRef.current = channel
 
       return () => {
