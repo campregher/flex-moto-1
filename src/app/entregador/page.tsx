@@ -15,6 +15,9 @@ import {
   ClipboardCheck,
   Star,
   ArrowRight,
+  Route,
+  Package,
+  Clock,
 } from 'lucide-react'
 
 interface CorridaAtiva {
@@ -23,6 +26,7 @@ interface CorridaAtiva {
   status: string
   valor_total: number
   total_pacotes: number
+  distancia_total_km?: number | null
   endereco_coleta: string
   created_at: string
   lojista: {
@@ -158,7 +162,7 @@ export default function EntregadorDashboard() {
     const { data } = await supabase
       .from('corridas')
       .select(`
-        id, plataforma, status, valor_total, total_pacotes, endereco_coleta, created_at,
+        id, plataforma, status, valor_total, total_pacotes, distancia_total_km, endereco_coleta, created_at,
         lojista:lojistas(foto_url, avaliacao_media, user:users(nome))
       `)
       .eq('status', 'aguardando')
@@ -231,7 +235,7 @@ export default function EntregadorDashboard() {
         toast.success('Você está online!')
       } else {
         stopTracking()
-        toast.success('Você está offline')
+        toast('Você está offline', { icon: '❌' })
       }
 
       setProfile({ ...entregadorProfile, ...updateData })
@@ -442,19 +446,32 @@ export default function EntregadorDashboard() {
                     <div className="flex items-center gap-2">
                       <PlatformBadge platform={corrida.plataforma} size="sm" />
                     </div>
-                    <p className="text-sm text-gray-600 mt-1 truncate max-w-[200px]">
+                    <p className="text-sm text-gray-600 mt-1 whitespace-normal break-words">
                       {corrida.endereco_coleta}
                     </p>
-                    <p className="text-xs text-gray-400">{timeAgo(corrida.created_at)}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Package className="w-4 h-4" />
+                        {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Route className="w-4 h-4" />
+                        {Number.isFinite(corrida.distancia_total_km)
+                          ? `${corrida.distancia_total_km.toFixed(1)} km`
+                          : 'KM indisponível'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {timeAgo(corrida.created_at)}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-secondary-600">
                     {formatCurrency(corrida.valor_total)}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {corrida.total_pacotes} pacote{corrida.total_pacotes > 1 ? 's' : ''}
-                  </p>
+                  <p className="text-sm text-gray-500">Ver detalhes</p>
                 </div>
               </Link>
             ))}

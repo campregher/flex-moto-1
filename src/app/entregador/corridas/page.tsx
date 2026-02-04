@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-store'
 import { Avatar, PlatformBadge, EmptyState, LoadingSpinner } from '@/components/ui'
 import { formatCurrency, timeAgo } from '@/lib/utils'
 import { PRICING } from '@/lib/utils/pricing'
 import toast from 'react-hot-toast'
+import { useLocationStore } from '@/stores/location-store'
 import {
   MapPin,
   Truck,
@@ -33,7 +35,9 @@ interface CorridaDisponivel {
 }
 
 export default function CorridasDisponiveisPage() {
-  const { profile } = useAuthStore()
+  const { profile, setProfile } = useAuthStore()
+  const { startTracking, stopTracking, currentLocation } = useLocationStore()
+  const router = useRouter()
   const [corridas, setCorridas] = useState<CorridaDisponivel[]>([])
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState<string | null>(null)
@@ -98,24 +102,8 @@ export default function CorridasDisponiveisPage() {
 
     setAccepting(corridaId)
     try {
-      const { data: corridaRow } = await supabase
-        .from('corridas')
-        .select('id, lojista_id, valor_total, valor_reservado, status')
-        .eq('id', corridaId)
-        .single()
-
-      const corrida = corridaRow as { id: string; lojista_id: string; valor_total: number; valor_reservado: number | null; status: string } | null
-      if (!corrida || corrida.status !== 'aguardando') {
-        toast.error('Corrida já foi aceita ou não está disponível')
-        return
-      }
-
-      if (corrida.valor_reservado === null) {
-        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
-        return
-      }
-
-      const { error } = await supabase
+      console.log('[aceitarCorrida] start', { corridaId, entregadorId: entregadorProfile.id })
+      const { data, error } = await supabase
         .from('corridas')
         .update({
           entregador_id: entregadorProfile.id,
@@ -123,23 +111,66 @@ export default function CorridasDisponiveisPage() {
           aceita_em: new Date().toISOString(),
         })
         .eq('id', corridaId)
-        .eq('status', 'aguardando') // Ensure still available
+        .eq('status', 'aguardando')
+        .is('entregador_id', null)
+        .not('valor_reservado', 'is', null)
+        .select('id, status, valor_reservado')
 
       if (error) {
-        if (error.message.includes('no rows')) {
-          toast.error('Corrida j? foi aceita por outro entregador')
-        } else {
-          throw error
-        }
+        console.error('[aceitarCorrida] update error', error)
+        throw error
+      }
+
+      const updated = Array.isArray(data) ? data[0] : null
+      if (!updated) {
+        toast.error('Corrida já foi aceita ou não está disponível')
         return
       }
 
+      if (updated.valor_reservado === null) {
+        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
+        return
+      }
+
+      console.log('[aceitarCorrida] update success', updated)
       toast.success('Corrida aceita!')
       loadCorridas()
+      router.push(`/entregador/entregas/${corridaId}`)
     } catch (err) {
       toast.error('Erro ao aceitar corrida')
     } finally {
       setAccepting(null)
+    }
+  }
+
+  async function toggleOnline() {
+    if (!entregadorProfile?.id) return
+    try {
+      const newOnlineStatus = !entregadorProfile.online
+      let updateData: any = { online: newOnlineStatus }
+      if (newOnlineStatus && currentLocation) {
+        updateData.latitude = currentLocation.lat
+        updateData.longitude = currentLocation.lng
+      }
+
+      const { error } = await supabase
+        .from('entregadores')
+        .update(updateData)
+        .eq('id', entregadorProfile.id)
+
+      if (error) throw error
+
+      if (newOnlineStatus) {
+        startTracking()
+        toast.success('Você está online!')
+      } else {
+        stopTracking()
+        toast('Você está offline', { icon: '❌' })
+      }
+
+      setProfile({ ...entregadorProfile, ...updateData })
+    } catch (err) {
+      toast.error('Erro ao atualizar status')
     }
   }
 
@@ -153,9 +184,9 @@ export default function CorridasDisponiveisPage() {
             title="Você está offline"
             description="Fique online para ver e aceitar corridas disponíveis"
             action={
-              <Link href="/entregador" className="btn-secondary">
-                Ir para o Dashboard
-              </Link>
+              <button onClick={toggleOnline} className="btn-secondary">
+                {entregadorProfile.online ? 'Você está online' : 'Ficar online'}
+              </button>
             }
           />
         </div>
@@ -167,9 +198,17 @@ export default function CorridasDisponiveisPage() {
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Corridas Disponíveis</h1>
-        <span className="badge-success">
-          {corridas.length} disponível{corridas.length !== 1 ? 's' : ''}
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleOnline}
+            className={`btn ${entregadorProfile.online ? 'bg-green-600 text-white' : 'btn-secondary'}`}
+          >
+            {entregadorProfile.online ? 'Online' : 'Ficar online'}
+          </button>
+          <span className="badge-success">
+            {corridas.length} disponível{corridas.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
 
       {loading ? (

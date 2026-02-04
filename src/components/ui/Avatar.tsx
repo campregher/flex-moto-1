@@ -8,6 +8,7 @@ interface AvatarProps {
   name: string
   size: 'sm' | 'md' | 'lg' | 'xl'
   className: string
+  priority?: boolean
 }
 
 const sizeClasses = {
@@ -33,6 +34,14 @@ function normalizeStorageUrl(url: string) {
 export function Avatar({ src, name, size = 'md', className = '' }: AvatarProps) {
   const sizeClass = sizeClasses[size]
   const normalizedSrc = src ? normalizeStorageUrl(src) : null
+  const sizesMap = {
+    sm: '32px',
+    md: '40px',
+    lg: '56px',
+    xl: '80px',
+  }
+  const sizes = sizesMap[size] || '40px'
+  const priority = size === 'xl'
 
   if (normalizedSrc) {
     return (
@@ -41,6 +50,8 @@ export function Avatar({ src, name, size = 'md', className = '' }: AvatarProps) 
           src={normalizedSrc}
           alt={name}
           fill
+          sizes={sizes}
+          priority={priority}
           className="object-cover"
         />
       </div>

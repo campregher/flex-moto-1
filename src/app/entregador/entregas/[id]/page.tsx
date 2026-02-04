@@ -122,7 +122,7 @@ export default function EntregaDetalhePage() {
       .select(`
         *,
         lojista:lojistas(
-          id, foto_url, avaliacao_media,
+          id, user_id, foto_url, avaliacao_media,
           user:users(id, nome, whatsapp)
         ),
         enderecos:enderecos_entrega(*)
@@ -131,6 +131,16 @@ export default function EntregaDetalhePage() {
       .single()
 
     if (data) {
+      if (data.lojista && !data.lojista.user && data.lojista.user_id) {
+        const { data: userRow } = await supabase
+          .from('users_public')
+          .select('id, nome')
+          .eq('id', data.lojista.user_id)
+          .single()
+        if (userRow) {
+          data.lojista.user = { ...data.lojista.user, ...userRow }
+        }
+      }
       if (statusRef.current && statusRef.current !== data.status) {
         if (data.status === 'coletando') {
           toast('Status atualizado: coletando', { icon: '📦' })

@@ -30,6 +30,7 @@ interface CorridaDetalhe {
   created_at: string
   lojista: {
     id: string
+    user_id: string
     foto_url: string | null
     avaliacao_media: number
     user: {
@@ -96,7 +97,7 @@ export default function CorridaDisponivelDetalhePage() {
         id, plataforma, status, valor_total, total_pacotes, distancia_total_km,
         endereco_coleta, coleta_latitude, coleta_longitude, created_at,
         lojista:lojistas(
-          id, foto_url, avaliacao_media,
+          id, user_id, foto_url, avaliacao_media,
           user:users(nome)
         ),
         enderecos:enderecos_entrega(id, endereco, latitude, longitude, pacotes, status)
@@ -105,6 +106,16 @@ export default function CorridaDisponivelDetalhePage() {
       .single()
 
     if (data) {
+      if (data.lojista && !data.lojista.user && data.lojista.user_id) {
+        const { data: userRow } = await supabase
+          .from('users_public')
+          .select('nome')
+          .eq('id', data.lojista.user_id)
+          .single()
+        if (userRow) {
+          data.lojista.user = { nome: userRow.nome }
+        }
+      }
       if (statusRef.current && statusRef.current !== data.status) {
         if (data.status !== 'aguardando') {
           toast('Essa corrida não está mais disponível.', { icon: '??' })
@@ -125,24 +136,7 @@ export default function CorridaDisponivelDetalhePage() {
 
     setAccepting(true)
     try {
-      const { data: corridaRow } = await supabase
-        .from('corridas')
-        .select('id, lojista_id, valor_total, valor_reservado, status')
-        .eq('id', corridaId)
-        .single()
-
-      const corridaAtual = corridaRow as { id: string; lojista_id: string; valor_total: number; valor_reservado: number | null; status: string } | null
-      if (!corridaAtual || corridaAtual.status !== 'aguardando') {
-        toast.error('Corrida já foi aceita ou não está disponível')
-        return
-      }
-
-      if (corridaAtual.valor_reservado === null) {
-        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
-        return
-      }
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('corridas')
         .update({
           entregador_id: entregadorProfile.id,
@@ -151,13 +145,22 @@ export default function CorridaDisponivelDetalhePage() {
         })
         .eq('id', corridaId)
         .eq('status', 'aguardando')
+        .is('entregador_id', null)
+        .not('valor_reservado', 'is', null)
+        .select('id, status, valor_reservado')
 
       if (error) {
-        if (error.message.includes('no rows')) {
-          toast.error('Corrida j? foi aceita por outro entregador')
-        } else {
-          throw error
-        }
+        throw error
+      }
+
+      const updated = Array.isArray(data) ? data[0] : null
+      if (!updated) {
+        toast.error('Corrida já foi aceita ou não está disponível')
+        return
+      }
+
+      if (updated.valor_reservado === null) {
+        toast.error('Corrida sem reserva de saldo. Contate o suporte.')
         return
       }
 
