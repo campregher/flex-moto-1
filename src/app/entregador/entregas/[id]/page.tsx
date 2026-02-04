@@ -295,6 +295,12 @@ export default function EntregaDetalhePage() {
 
       if (error) throw error
 
+      supabase.channel('corridas-broadcast').send({
+        type: 'broadcast',
+        event: 'corrida-cancelada',
+        payload: { id: corrida.id },
+      })
+
       toast.success('Corrida cancelada')
       setShowCancelModal(false)
       setCancelReason('')
