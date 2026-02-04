@@ -296,7 +296,7 @@ export default function EntregaDetalhePage() {
       if (error) throw error
 
       const broadcastChannel = supabase.channel('corridas-rt')
-      broadcastChannel.subscribe((status) => {
+      broadcastChannel.subscribe((status: any) => {
         if (status === 'SUBSCRIBED') {
           broadcastChannel.send({
             type: 'broadcast',

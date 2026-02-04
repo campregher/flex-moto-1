@@ -155,7 +155,7 @@ export default function CorridaDisponivelDetalhePage() {
       }
 
       const broadcastChannel = supabase.channel('corridas-rt')
-      broadcastChannel.subscribe((status) => {
+      broadcastChannel.subscribe((status: any) => {
         if (status === 'SUBSCRIBED') {
           broadcastChannel.send({
             type: 'broadcast',
