@@ -111,6 +111,7 @@ export default function CadastroClient() {
 
   const tipoUsuario = watch('tipo')
   const tipoPessoa = watch('tipo_pessoa')
+  const cpfFieldError = 'cpf' in errors ? errors.cpf : undefined
   const cnpjError = 'cnpj' in errors ? errors.cnpj : undefined
   const placaError = 'placa' in errors ? errors.placa : undefined
   const cidadeError = 'cidade' in errors ? errors.cidade : undefined
@@ -433,8 +434,8 @@ export default function CadastroClient() {
                         maxLength={14}
                       />
                     </div>
-                    {errors.cpf && (
-                      <p className="text-red-500 text-sm mt-1">{errors.cpf.message}</p>
+                    {cpfFieldError && (
+                      <p className="text-red-500 text-sm mt-1">{cpfFieldError.message}</p>
                     )}
                   </div>
                 )}

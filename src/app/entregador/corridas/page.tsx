@@ -54,7 +54,7 @@ export default function CorridasDisponiveisPage() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'corridas' },
-        (payload) => {
+        (payload: any) => {
           const next = (payload as any)?.new
           // Se uma corrida sair de "aguardando", remove imediatamente da lista
           if (next?.id && next?.status && next.status !== 'aguardando') {
