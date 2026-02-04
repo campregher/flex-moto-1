@@ -164,7 +164,8 @@ export default function LojistaDashboard() {
       .from('corridas')
       .select('*', { count: 'exact', head: true })
       .eq('lojista_id', lojistaProfile.id)
-      .gte('created_at', hoje.toISOString())
+      .eq('status', 'finalizada')
+      .gte('finalizada_em', hoje.toISOString())
 
     const { data: gastoData } = await supabase
       .from('corridas')
