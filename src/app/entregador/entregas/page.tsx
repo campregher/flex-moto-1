@@ -145,7 +145,7 @@ export default function EntregasPage() {
                         className=""
                       />
                       <span className="text-sm text-gray-600">
-                        {entrega.lojista.user?.nome || '-'}
+                        {entrega.lojista?.user?.nome || '-'}
                       </span>
                     </>
                   )}

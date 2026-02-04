@@ -339,6 +339,10 @@ export default function EntregaDetalhePage() {
 
   async function submitRating() {
     if (!corrida) return
+    if (!corrida.lojista?.user?.id) {
+      toast.error('Dados do lojista indisponíveis para avaliar')
+      return
+    }
 
     try {
       await supabase.from('avaliacoes').insert({
@@ -479,7 +483,7 @@ export default function EntregaDetalhePage() {
                 className=""
               />
               <div>
-                <p className="font-medium text-gray-900">{corrida.lojista.user?.nome || '-'}</p>
+                <p className="font-medium text-gray-900">{corrida.lojista?.user?.nome || '-'}</p>
                 <Rating
                   value={corrida.lojista.avaliacao_media}
                   size="sm"
@@ -490,7 +494,7 @@ export default function EntregaDetalhePage() {
               </div>
             </div>
             <a
-              href={`https://wa.me/55${corrida.lojista.user?.whatsapp || ''}`}
+              href={`https://wa.me/55${corrida.lojista?.user?.whatsapp || ''}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-outline flex items-center gap-2"
@@ -771,7 +775,7 @@ export default function EntregaDetalhePage() {
               />
             </div>
             <p className="text-center font-medium text-gray-900 mb-4">
-              {corrida.lojista.user?.nome || '-'}
+              {corrida.lojista?.user?.nome || '-'}
             </p>
 
             <div className="flex justify-center mb-4">

@@ -117,7 +117,11 @@ export default function CorridasDisponiveisPage() {
         .single()
 
       const lojista = lojistaRow as { id: string; saldo: number; user_id: string } | null
-      const saldoAtual = lojista?.saldo ?? 0
+      if (!lojista) {
+        toast.error('Lojista não encontrado para esta corrida')
+        return
+      }
+      const saldoAtual = lojista.saldo ?? 0
       if (saldoAtual < corrida.valor_total) {
         toast.error('Lojista sem saldo suficiente para reservar a corrida')
         return
@@ -229,7 +233,7 @@ export default function CorridasDisponiveisPage() {
                     className=""
                   />
                   <div>
-                    <p className="font-medium text-gray-900">{corrida.lojista.user?.nome || '-'}</p>
+                    <p className="font-medium text-gray-900">{corrida.lojista?.user?.nome || '-'}</p>
                     <PlatformBadge platform={corrida.plataforma} size="sm" />
                   </div>
                 </div>
